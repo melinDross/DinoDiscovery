@@ -76,6 +76,10 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     });
   }
 
+  // KV reads are eventually consistent, so two concurrent requests for the
+  // same uncached combo can both miss here and both call the upstream APIs.
+  // Accepted for the MVP's traffic scale (bounded by the 5/hour rate limit);
+  // the last cache write simply wins.
   try {
     const text = await generateDinoText(attrs, env.ANTHROPIC_API_KEY);
     const base64Image = await generateDinoImage(attrs, env.OPENAI_API_KEY);
@@ -95,7 +99,8 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       description: text.description,
       imageUrl: `/images/${imageKey}`,
     });
-  } catch {
+  } catch (err) {
+    console.error('generate-dino failed:', err instanceof Error ? err.stack : err);
     return Response.json(
       { error: 'API_ERROR', message: 'No se pudo generar el dinosaurio' },
       { status: 502 }

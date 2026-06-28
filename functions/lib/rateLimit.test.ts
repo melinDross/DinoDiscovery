@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { checkAndIncrementRateLimit, type KVLike } from './rateLimit';
 
 function createFakeKV(): KVLike {
@@ -18,6 +18,10 @@ describe('checkAndIncrementRateLimit', () => {
 
   beforeEach(() => {
     kv = createFakeKV();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('allows the first 5 requests from an IP', async () => {
@@ -42,5 +46,36 @@ describe('checkAndIncrementRateLimit', () => {
     }
     const result = await checkAndIncrementRateLimit(kv, '2.2.2.2');
     expect(result.allowed).toBe(true);
+  });
+
+  it('allows requests again once the window has fully elapsed', async () => {
+    vi.useFakeTimers();
+    const start = new Date('2026-01-01T00:00:00Z');
+    vi.setSystemTime(start);
+
+    for (let i = 0; i < 5; i++) {
+      await checkAndIncrementRateLimit(kv, '5.5.5.5');
+    }
+    expect((await checkAndIncrementRateLimit(kv, '5.5.5.5')).allowed).toBe(false);
+
+    vi.setSystemTime(new Date(start.getTime() + 3601 * 1000));
+    const result = await checkAndIncrementRateLimit(kv, '5.5.5.5');
+    expect(result.allowed).toBe(true);
+  });
+
+  it('returns retryAfterSeconds reflecting the real remaining window, not always the full hour', async () => {
+    vi.useFakeTimers();
+    const start = new Date('2026-01-01T00:00:00Z');
+    vi.setSystemTime(start);
+
+    for (let i = 0; i < 5; i++) {
+      await checkAndIncrementRateLimit(kv, '7.7.7.7');
+    }
+
+    vi.setSystemTime(new Date(start.getTime() + 1800 * 1000));
+    const result = await checkAndIncrementRateLimit(kv, '7.7.7.7');
+    expect(result.allowed).toBe(false);
+    expect(result.retryAfterSeconds).toBeLessThanOrEqual(1800);
+    expect(result.retryAfterSeconds).toBeGreaterThan(1700);
   });
 });
