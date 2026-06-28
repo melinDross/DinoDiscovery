@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AttributeGroup } from './components/AttributeGroup';
 import { DiscovererForm } from './components/DiscovererForm';
 import { DiscoverButton } from './components/DiscoverButton';
@@ -11,6 +11,7 @@ import { isSelectionComplete } from './validation';
 import { generateDino, RateLimitError, DinoApiError } from './api';
 import { saveEmail } from './emailStore';
 import { captureCertificateAsPng } from './certificate';
+import { captureAdminKeyFromUrl } from './adminAuth';
 import type {
   Size,
   Habitat,
@@ -36,6 +37,10 @@ export default function App() {
   const [showEmailGate, setShowEmailGate] = useState(false);
 
   const certificateRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    captureAdminKeyFromUrl();
+  }, []);
 
   const partial = { size, habitat, diet, feature, personality };
   const canDiscover = isSelectionComplete(partial, discovererName);

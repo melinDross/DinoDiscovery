@@ -5,6 +5,7 @@ import { getCachedDino, setCachedDino } from '../lib/cache';
 import { generateDinoText } from '../lib/anthropic';
 import { generateDinoImage } from '../lib/openai';
 import { storeImageInR2, type R2BucketLike } from '../lib/r2';
+import { isValidAdminKey } from '../lib/adminAuth';
 
 interface Env {
   RATE_LIMIT_KV: KVLike;
@@ -12,6 +13,7 @@ interface Env {
   DINO_IMAGES: R2BucketLike;
   ANTHROPIC_API_KEY: string;
   OPENAI_API_KEY: string;
+  ADMIN_KEY?: string;
 }
 
 const VALID_SIZES = ['Pequeño', 'Mediano', 'Gigante'];
@@ -37,13 +39,16 @@ function isValidRequest(body: unknown): body is GenerateDinoRequest {
 export async function onRequestPost(context: { request: Request; env: Env }): Promise<Response> {
   const { request, env } = context;
   const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+  const isAdmin = isValidAdminKey(request.headers.get('X-Admin-Key'), env.ADMIN_KEY);
 
-  const rateLimitResult = await checkAndIncrementRateLimit(env.RATE_LIMIT_KV, ip);
-  if (!rateLimitResult.allowed) {
-    return Response.json(
-      { error: 'RATE_LIMITED', retryAfterSeconds: rateLimitResult.retryAfterSeconds },
-      { status: 429 }
-    );
+  if (!isAdmin) {
+    const rateLimitResult = await checkAndIncrementRateLimit(env.RATE_LIMIT_KV, ip);
+    if (!rateLimitResult.allowed) {
+      return Response.json(
+        { error: 'RATE_LIMITED', retryAfterSeconds: rateLimitResult.retryAfterSeconds },
+        { status: 429 }
+      );
+    }
   }
 
   let body: unknown;

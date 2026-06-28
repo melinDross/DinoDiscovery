@@ -34,6 +34,7 @@ function createEnv() {
     DINO_IMAGES: { put: vi.fn() },
     ANTHROPIC_API_KEY: 'fake-anthropic-key',
     OPENAI_API_KEY: 'fake-openai-key',
+    ADMIN_KEY: 'super-secret-admin-key',
   };
 }
 
@@ -46,10 +47,17 @@ const validBody = {
   discovererName: 'Lucía',
 };
 
-function createRequest(body: unknown, ip = '1.2.3.4') {
+function createRequest(body: unknown, ip = '1.2.3.4', adminKey?: string) {
+  const headers: Record<string, string> = {
+    'content-type': 'application/json',
+    'CF-Connecting-IP': ip,
+  };
+  if (adminKey) {
+    headers['X-Admin-Key'] = adminKey;
+  }
   return new Request('https://example.com/api/generate-dino', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'CF-Connecting-IP': ip },
+    headers,
     body: JSON.stringify(body),
   });
 }
@@ -75,6 +83,32 @@ describe('onRequestPost /api/generate-dino', () => {
     expect(response.status).toBe(429);
     const json = (await response.json()) as any;
     expect(json.error).toBe('RATE_LIMITED');
+  });
+
+  it('bypasses the rate limit when a valid X-Admin-Key header is sent', async () => {
+    const env = createEnv();
+    for (let i = 0; i < 7; i++) {
+      const response = await onRequestPost({
+        request: createRequest(validBody, '1.2.3.4', env.ADMIN_KEY),
+        env,
+      } as any);
+      expect(response.status).toBe(200);
+    }
+  });
+
+  it('does not bypass the rate limit when the X-Admin-Key header is wrong', async () => {
+    const env = createEnv();
+    for (let i = 0; i < 5; i++) {
+      await onRequestPost({
+        request: createRequest(validBody, '9.8.7.6', 'totally-wrong-key'),
+        env,
+      } as any);
+    }
+    const response = await onRequestPost({
+      request: createRequest(validBody, '9.8.7.6', 'totally-wrong-key'),
+      env,
+    } as any);
+    expect(response.status).toBe(429);
   });
 
   it('returns 400 when attributes are invalid', async () => {

@@ -1,4 +1,5 @@
 import type { GenerateDinoRequest, GenerateDinoResponse, ApiErrorResponse } from '../shared/types';
+import { getAdminKey } from './adminAuth';
 
 export class RateLimitError extends Error {
   retryAfterSeconds: number;
@@ -11,9 +12,15 @@ export class RateLimitError extends Error {
 export class DinoApiError extends Error {}
 
 export async function generateDino(req: GenerateDinoRequest): Promise<GenerateDinoResponse> {
+  const adminKey = getAdminKey();
+  const headers: Record<string, string> = { 'content-type': 'application/json' };
+  if (adminKey) {
+    headers['X-Admin-Key'] = adminKey;
+  }
+
   const response = await fetch('/api/generate-dino', {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers,
     body: JSON.stringify(req),
   });
 
