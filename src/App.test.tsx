@@ -108,4 +108,41 @@ describe('App wizard flow', () => {
 
     expect(screen.getByLabelText('Tu nombre')).toBeInTheDocument();
   });
+
+  it(
+    'does not trigger generation twice when two personality options are clicked in quick succession',
+    async () => {
+      vi.mocked(generateDino).mockResolvedValue({
+        scientificName: 'Volcanius ferox',
+        commonName: 'Volcanrex',
+        description: 'Un dinosaurio feroz que vive en volcanes.',
+        imageUrl: '/images/abc.png',
+      });
+
+      render(<App />);
+      await userEvent.click(screen.getByRole('button', { name: '¡Empezar!' }));
+      await userEvent.type(screen.getByLabelText('Tu nombre'), 'Lucía');
+      await userEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
+
+      await userEvent.click(screen.getByRole('button', { name: 'Gigante' }));
+      await wait(550);
+      await userEvent.click(screen.getByRole('button', { name: 'Volcán' }));
+      await wait(550);
+      await userEvent.click(screen.getByRole('button', { name: 'Carnívoro' }));
+      await wait(550);
+      await userEvent.click(screen.getByRole('button', { name: 'Cuernos' }));
+      await wait(550);
+
+      await userEvent.click(screen.getByRole('button', { name: 'Feroz' }));
+      await userEvent.click(screen.getByRole('button', { name: 'Amigable' }));
+      await wait(600);
+
+      await screen.findByRole('heading', { name: 'Volcanrex' });
+      expect(generateDino).toHaveBeenCalledTimes(1);
+      expect(generateDino).toHaveBeenCalledWith(
+        expect.objectContaining({ personality: 'Amigable' })
+      );
+    },
+    10000
+  );
 });
