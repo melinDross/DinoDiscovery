@@ -31,6 +31,7 @@ export const Certificate = forwardRef<HTMLDivElement, CertificateProps>(
         />
         <p className="text-2xl font-bold text-purple-700">{result.commonName}</p>
         <p className="italic text-gray-600">{result.scientificName}</p>
+        <p className="mt-4 text-gray-800">{result.description}</p>
         <p className="mt-4 text-gray-700">Fecha de descubrimiento: {discoveryDate}</p>
       </div>
     );

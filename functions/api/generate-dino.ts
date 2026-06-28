@@ -81,8 +81,10 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
   // Accepted for the MVP's traffic scale (bounded by the 5/hour rate limit);
   // the last cache write simply wins.
   try {
-    const text = await generateDinoText(attrs, env.ANTHROPIC_API_KEY);
-    const base64Image = await generateDinoImage(attrs, env.OPENAI_API_KEY);
+    const [text, base64Image] = await Promise.all([
+      generateDinoText(attrs, env.ANTHROPIC_API_KEY),
+      generateDinoImage(attrs, env.OPENAI_API_KEY),
+    ]);
     const imageKey = `${cacheKey}.png`;
     await storeImageInR2(env.DINO_IMAGES, imageKey, base64Image);
 

@@ -98,6 +98,31 @@ describe('onRequestPost /api/generate-dino', () => {
     expect(storeImageInR2).toHaveBeenCalledTimes(1);
   });
 
+  it('calls generateDinoText and generateDinoImage in parallel, not sequentially', async () => {
+    const env = createEnv();
+    const callOrder: string[] = [];
+    vi.mocked(generateDinoText).mockImplementation(async () => {
+      callOrder.push('text:start');
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      callOrder.push('text:end');
+      return {
+        scientificName: 'Volcanius ferox',
+        commonName: 'Volcanrex',
+        description: 'Un dinosaurio feroz que vive en volcanes.',
+      };
+    });
+    vi.mocked(generateDinoImage).mockImplementation(async () => {
+      callOrder.push('image:start');
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      callOrder.push('image:end');
+      return 'ZmFrZS1pbWFnZS1ieXRlcw==';
+    });
+
+    await onRequestPost({ request: createRequest(validBody), env } as any);
+
+    expect(callOrder.indexOf('image:start')).toBeLessThan(callOrder.indexOf('text:end'));
+  });
+
   it('serves from cache on the second identical request without calling upstream APIs again', async () => {
     const env = createEnv();
     await onRequestPost({ request: createRequest(validBody, '9.9.9.9'), env } as any);
