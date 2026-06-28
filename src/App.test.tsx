@@ -82,4 +82,30 @@ describe('App wizard flow', () => {
 
     expect(screen.getByDisplayValue('Lucía')).toBeInTheDocument();
   });
+
+  it('does not skip a screen when two options on the same step are clicked in quick succession', async () => {
+    render(<App />);
+    await userEvent.click(screen.getByRole('button', { name: '¡Empezar!' }));
+    await userEvent.type(screen.getByLabelText('Tu nombre'), 'Lucía');
+    await userEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Mediano' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Gigante' }));
+    await wait(600);
+
+    expect(screen.getByText('Hábitat')).toBeInTheDocument();
+  });
+
+  it('cancels a pending auto-advance when the user navigates back before it fires', async () => {
+    render(<App />);
+    await userEvent.click(screen.getByRole('button', { name: '¡Empezar!' }));
+    await userEvent.type(screen.getByLabelText('Tu nombre'), 'Lucía');
+    await userEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Gigante' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Atrás' }));
+    await wait(600);
+
+    expect(screen.getByLabelText('Tu nombre')).toBeInTheDocument();
+  });
 });

@@ -43,10 +43,31 @@ export default function App() {
   const [showEmailGate, setShowEmailGate] = useState(false);
 
   const certificateRef = useRef<HTMLDivElement>(null);
+  const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     captureAdminKeyFromUrl();
+    return () => {
+      if (advanceTimerRef.current !== null) {
+        clearTimeout(advanceTimerRef.current);
+      }
+    };
   }, []);
+
+  function clearPendingAdvance() {
+    if (advanceTimerRef.current !== null) {
+      clearTimeout(advanceTimerRef.current);
+      advanceTimerRef.current = null;
+    }
+  }
+
+  function scheduleAdvance(action: () => void) {
+    clearPendingAdvance();
+    advanceTimerRef.current = setTimeout(() => {
+      advanceTimerRef.current = null;
+      action();
+    }, AUTO_ADVANCE_DELAY_MS);
+  }
 
   async function handleDiscover(attrs: DinoAttributes, name: string) {
     setFlowState('loading');
@@ -69,31 +90,41 @@ export default function App() {
 
   function handleSizeSelect(value: Size) {
     setSize(value);
-    setTimeout(() => setWizardStep((step) => step + 1), AUTO_ADVANCE_DELAY_MS);
+    scheduleAdvance(() => setWizardStep((step) => step + 1));
   }
 
   function handleHabitatSelect(value: Habitat) {
     setHabitat(value);
-    setTimeout(() => setWizardStep((step) => step + 1), AUTO_ADVANCE_DELAY_MS);
+    scheduleAdvance(() => setWizardStep((step) => step + 1));
   }
 
   function handleDietSelect(value: Diet) {
     setDiet(value);
-    setTimeout(() => setWizardStep((step) => step + 1), AUTO_ADVANCE_DELAY_MS);
+    scheduleAdvance(() => setWizardStep((step) => step + 1));
   }
 
   function handleFeatureSelect(value: Feature) {
     setFeature(value);
-    setTimeout(() => setWizardStep((step) => step + 1), AUTO_ADVANCE_DELAY_MS);
+    scheduleAdvance(() => setWizardStep((step) => step + 1));
   }
 
   function handlePersonalitySelect(value: Personality) {
     setPersonality(value);
     const attempted = { size, habitat, diet, feature, personality: value };
     if (!isSelectionComplete(attempted, discovererName)) return;
-    setTimeout(() => {
+    scheduleAdvance(() => {
       void handleDiscover(attempted, discovererName);
-    }, AUTO_ADVANCE_DELAY_MS);
+    });
+  }
+
+  function handleWizardBack(targetStep: number) {
+    clearPendingAdvance();
+    setWizardStep(targetStep);
+  }
+
+  function handleBackToLanding() {
+    clearPendingAdvance();
+    setFlowState('landing');
   }
 
   async function handleEmailConfirm(email: string) {
@@ -112,7 +143,7 @@ export default function App() {
       {flowState === 'landing' && <Landing onStart={() => setFlowState('wizard')} />}
 
       {flowState === 'wizard' && wizardStep === 0 && (
-        <WizardShell step={1} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => setFlowState('landing')}>
+        <WizardShell step={1} totalSteps={TOTAL_WIZARD_STEPS} onBack={handleBackToLanding}>
           <NameStep
             value={discovererName}
             onChange={setDiscovererName}
@@ -122,13 +153,13 @@ export default function App() {
       )}
 
       {flowState === 'wizard' && wizardStep === 1 && (
-        <WizardShell step={2} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => setWizardStep(0)}>
+        <WizardShell step={2} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => handleWizardBack(0)}>
           <AttributeGroup label="Tamaño" options={SIZES} selected={size} onSelect={handleSizeSelect} />
         </WizardShell>
       )}
 
       {flowState === 'wizard' && wizardStep === 2 && (
-        <WizardShell step={3} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => setWizardStep(1)}>
+        <WizardShell step={3} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => handleWizardBack(1)}>
           <AttributeGroup
             label="Hábitat"
             options={HABITATS}
@@ -139,13 +170,13 @@ export default function App() {
       )}
 
       {flowState === 'wizard' && wizardStep === 3 && (
-        <WizardShell step={4} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => setWizardStep(2)}>
+        <WizardShell step={4} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => handleWizardBack(2)}>
           <AttributeGroup label="Dieta" options={DIETS} selected={diet} onSelect={handleDietSelect} />
         </WizardShell>
       )}
 
       {flowState === 'wizard' && wizardStep === 4 && (
-        <WizardShell step={5} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => setWizardStep(3)}>
+        <WizardShell step={5} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => handleWizardBack(3)}>
           <AttributeGroup
             label="Característica especial"
             options={FEATURES}
@@ -156,7 +187,7 @@ export default function App() {
       )}
 
       {flowState === 'wizard' && wizardStep === 5 && (
-        <WizardShell step={6} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => setWizardStep(4)}>
+        <WizardShell step={6} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => handleWizardBack(4)}>
           <AttributeGroup
             label="Personalidad"
             options={PERSONALITIES}
@@ -174,6 +205,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => {
+              clearPendingAdvance();
               setWizardStep(0);
               setFlowState('wizard');
             }}
