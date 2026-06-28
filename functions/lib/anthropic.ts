@@ -46,5 +46,10 @@ La descripción debe tener 2-3 líneas, ser divertida y apta para niños de 5 a 
     throw new Error('No text content in Anthropic response');
   }
 
-  return JSON.parse(textBlock.text) as DinoText;
+  const jsonText = textBlock.text
+    .trim()
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/, '');
+
+  return JSON.parse(jsonText) as DinoText;
 }

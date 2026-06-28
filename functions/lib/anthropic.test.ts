@@ -41,6 +41,35 @@ describe('generateDinoText', () => {
     );
   });
 
+  it('strips markdown code fences before parsing the JSON', async () => {
+    const fakeFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        content: [
+          {
+            type: 'text',
+            text:
+              '```json\n' +
+              JSON.stringify({
+                scientificName: 'Volcanius ferox',
+                commonName: 'Volcanrex',
+                description: 'Un dinosaurio feroz que vive en volcanes.',
+              }) +
+              '\n```',
+          },
+        ],
+      }),
+    });
+
+    const result = await generateDinoText(attrs, 'fake-key', fakeFetch as unknown as typeof fetch);
+
+    expect(result).toEqual({
+      scientificName: 'Volcanius ferox',
+      commonName: 'Volcanrex',
+      description: 'Un dinosaurio feroz que vive en volcanes.',
+    });
+  });
+
   it('throws when the Anthropic API returns a non-OK status', async () => {
     const fakeFetch = vi.fn().mockResolvedValue({ ok: false, status: 500 });
 
