@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
+import { Landing } from './components/Landing';
+import { WizardShell } from './components/WizardShell';
+import { NameStep } from './components/NameStep';
 import { AttributeGroup } from './components/AttributeGroup';
-import { DiscovererForm } from './components/DiscovererForm';
-import { DiscoverButton } from './components/DiscoverButton';
 import { LoadingDino } from './components/LoadingDino';
 import { ResultScreen } from './components/ResultScreen';
 import { EmailGateModal } from './components/EmailGateModal';
@@ -18,10 +19,14 @@ import type {
   Diet,
   Feature,
   Personality,
+  DinoAttributes,
   GenerateDinoResponse,
 } from '../shared/types';
 
-type FlowState = 'idle' | 'loading' | 'result' | 'error';
+type FlowState = 'landing' | 'wizard' | 'loading' | 'result' | 'error';
+
+const TOTAL_WIZARD_STEPS = 6;
+const AUTO_ADVANCE_DELAY_MS = 500;
 
 export default function App() {
   const [size, setSize] = useState<Size | null>(null);
@@ -31,7 +36,8 @@ export default function App() {
   const [personality, setPersonality] = useState<Personality | null>(null);
   const [discovererName, setDiscovererName] = useState('');
 
-  const [flowState, setFlowState] = useState<FlowState>('idle');
+  const [flowState, setFlowState] = useState<FlowState>('landing');
+  const [wizardStep, setWizardStep] = useState(0);
   const [result, setResult] = useState<GenerateDinoResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [showEmailGate, setShowEmailGate] = useState(false);
@@ -42,14 +48,10 @@ export default function App() {
     captureAdminKeyFromUrl();
   }, []);
 
-  const partial = { size, habitat, diet, feature, personality };
-  const canDiscover = isSelectionComplete(partial, discovererName);
-
-  async function handleDiscover() {
-    if (!isSelectionComplete(partial, discovererName)) return;
+  async function handleDiscover(attrs: DinoAttributes, name: string) {
     setFlowState('loading');
     try {
-      const response = await generateDino({ ...partial, discovererName });
+      const response = await generateDino({ ...attrs, discovererName: name });
       setResult(response);
       setFlowState('result');
     } catch (err) {
@@ -65,6 +67,35 @@ export default function App() {
     }
   }
 
+  function handleSizeSelect(value: Size) {
+    setSize(value);
+    setTimeout(() => setWizardStep((step) => step + 1), AUTO_ADVANCE_DELAY_MS);
+  }
+
+  function handleHabitatSelect(value: Habitat) {
+    setHabitat(value);
+    setTimeout(() => setWizardStep((step) => step + 1), AUTO_ADVANCE_DELAY_MS);
+  }
+
+  function handleDietSelect(value: Diet) {
+    setDiet(value);
+    setTimeout(() => setWizardStep((step) => step + 1), AUTO_ADVANCE_DELAY_MS);
+  }
+
+  function handleFeatureSelect(value: Feature) {
+    setFeature(value);
+    setTimeout(() => setWizardStep((step) => step + 1), AUTO_ADVANCE_DELAY_MS);
+  }
+
+  function handlePersonalitySelect(value: Personality) {
+    setPersonality(value);
+    const attempted = { size, habitat, diet, feature, personality: value };
+    if (!isSelectionComplete(attempted, discovererName)) return;
+    setTimeout(() => {
+      void handleDiscover(attempted, discovererName);
+    }, AUTO_ADVANCE_DELAY_MS);
+  }
+
   async function handleEmailConfirm(email: string) {
     saveEmail(email);
     setShowEmailGate(false);
@@ -77,41 +108,75 @@ export default function App() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-green-100 to-blue-100 p-4">
-      <h1 className="text-3xl font-bold text-center text-purple-700 mb-6">
-        Generador de Descubrimiento de Dinosaurios
-      </h1>
+    <main className="min-h-screen bg-gradient-to-b from-green-100 to-blue-100">
+      {flowState === 'landing' && <Landing onStart={() => setFlowState('wizard')} />}
 
-      {flowState === 'idle' && (
-        <div className="max-w-2xl mx-auto">
-          <AttributeGroup label="Tamaño" options={SIZES} selected={size} onSelect={setSize} />
-          <AttributeGroup label="Hábitat" options={HABITATS} selected={habitat} onSelect={setHabitat} />
-          <AttributeGroup label="Dieta" options={DIETS} selected={diet} onSelect={setDiet} />
+      {flowState === 'wizard' && wizardStep === 0 && (
+        <WizardShell step={1} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => setFlowState('landing')}>
+          <NameStep
+            value={discovererName}
+            onChange={setDiscovererName}
+            onNext={() => setWizardStep(1)}
+          />
+        </WizardShell>
+      )}
+
+      {flowState === 'wizard' && wizardStep === 1 && (
+        <WizardShell step={2} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => setWizardStep(0)}>
+          <AttributeGroup label="Tamaño" options={SIZES} selected={size} onSelect={handleSizeSelect} />
+        </WizardShell>
+      )}
+
+      {flowState === 'wizard' && wizardStep === 2 && (
+        <WizardShell step={3} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => setWizardStep(1)}>
+          <AttributeGroup
+            label="Hábitat"
+            options={HABITATS}
+            selected={habitat}
+            onSelect={handleHabitatSelect}
+          />
+        </WizardShell>
+      )}
+
+      {flowState === 'wizard' && wizardStep === 3 && (
+        <WizardShell step={4} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => setWizardStep(2)}>
+          <AttributeGroup label="Dieta" options={DIETS} selected={diet} onSelect={handleDietSelect} />
+        </WizardShell>
+      )}
+
+      {flowState === 'wizard' && wizardStep === 4 && (
+        <WizardShell step={5} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => setWizardStep(3)}>
           <AttributeGroup
             label="Característica especial"
             options={FEATURES}
             selected={feature}
-            onSelect={setFeature}
+            onSelect={handleFeatureSelect}
           />
+        </WizardShell>
+      )}
+
+      {flowState === 'wizard' && wizardStep === 5 && (
+        <WizardShell step={6} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => setWizardStep(4)}>
           <AttributeGroup
             label="Personalidad"
             options={PERSONALITIES}
             selected={personality}
-            onSelect={setPersonality}
+            onSelect={handlePersonalitySelect}
           />
-          <DiscovererForm value={discovererName} onChange={setDiscovererName} />
-          <DiscoverButton disabled={!canDiscover} onClick={handleDiscover} />
-        </div>
+        </WizardShell>
       )}
 
       {flowState === 'loading' && <LoadingDino />}
 
       {flowState === 'error' && (
-        <div className="max-w-md mx-auto text-center">
+        <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
           <p className="text-red-700 font-semibold mb-4">{errorMessage}</p>
           <button
             type="button"
-            onClick={() => setFlowState('idle')}
+            onClick={() => {
+              setWizardStep(0);
+              setFlowState('wizard');
+            }}
             className="px-6 py-3 rounded-full bg-purple-600 text-white font-bold"
           >
             Volver a intentar

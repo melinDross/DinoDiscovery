@@ -1,22 +1,85 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App';
 
-describe('App attribute selection', () => {
-  it('disables the discover button until all attributes and a name are set', async () => {
+vi.mock('./api', () => ({
+  generateDino: vi.fn(),
+  RateLimitError: class RateLimitError extends Error {},
+  DinoApiError: class DinoApiError extends Error {},
+}));
+
+import { generateDino } from './api';
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+describe('App wizard flow', () => {
+  beforeEach(() => {
+    vi.mocked(generateDino).mockReset();
+  });
+
+  it('shows the landing page first, then the name step after clicking ¡Empezar!', async () => {
     render(<App />);
-    const button = screen.getByRole('button', { name: /Descubrir/i });
-    expect(button).toBeDisabled();
+    expect(screen.getByText('Dino Discovery Generator')).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: 'Gigante' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Volcán' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Carnívoro' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Cuernos' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Feroz' }));
-    expect(button).toBeDisabled();
+    await userEvent.click(screen.getByRole('button', { name: '¡Empezar!' }));
+    expect(screen.getByLabelText('Tu nombre')).toBeInTheDocument();
+  });
 
-    await userEvent.type(screen.getByLabelText(/nombre/i), 'Lucía');
-    expect(button).toBeEnabled();
+  it(
+    'walks through all 6 wizard steps and triggers generation on the last selection',
+    async () => {
+      vi.mocked(generateDino).mockResolvedValue({
+        scientificName: 'Volcanius ferox',
+        commonName: 'Volcanrex',
+        description: 'Un dinosaurio feroz que vive en volcanes.',
+        imageUrl: '/images/abc.png',
+      });
+
+      render(<App />);
+      await userEvent.click(screen.getByRole('button', { name: '¡Empezar!' }));
+
+      await userEvent.type(screen.getByLabelText('Tu nombre'), 'Lucía');
+      await userEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
+
+      await userEvent.click(screen.getByRole('button', { name: 'Gigante' }));
+      await wait(550);
+      await userEvent.click(screen.getByRole('button', { name: 'Volcán' }));
+      await wait(550);
+      await userEvent.click(screen.getByRole('button', { name: 'Carnívoro' }));
+      await wait(550);
+      await userEvent.click(screen.getByRole('button', { name: 'Cuernos' }));
+      await wait(550);
+      await userEvent.click(screen.getByRole('button', { name: 'Feroz' }));
+      await wait(550);
+
+      expect(generateDino).toHaveBeenCalledWith({
+        size: 'Gigante',
+        habitat: 'Volcán',
+        diet: 'Carnívoro',
+        feature: 'Cuernos',
+        personality: 'Feroz',
+        discovererName: 'Lucía',
+      });
+      // Querying by heading role (not findByText) because the off-screen
+      // Certificate (kept mounted for html2canvas capture) also renders the
+      // dino's commonName as a <p>, so a plain text query matches twice.
+      expect(await screen.findByRole('heading', { name: 'Volcanrex' })).toBeInTheDocument();
+    },
+    10000
+  );
+
+  it('lets the user go back a step without losing the previously entered name', async () => {
+    render(<App />);
+    await userEvent.click(screen.getByRole('button', { name: '¡Empezar!' }));
+    await userEvent.type(screen.getByLabelText('Tu nombre'), 'Lucía');
+    await userEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
+
+    expect(screen.getByRole('button', { name: 'Gigante' })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Atrás' }));
+
+    expect(screen.getByDisplayValue('Lucía')).toBeInTheDocument();
   });
 });
