@@ -9,3 +9,4 @@ docs/
 .DS_Store
 .claude/
 .playwright-mcp/
+.superpowers/
