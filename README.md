@@ -1,6 +1,8 @@
 # Dino-discovery
 AI-powered dinosaur generator where children invent their own creature via attribute selection and receive a personalized "Official Discoverer" certificate
 
+**Live:** https://dino-discovery-generator.pages.dev
+
 ## Tech stack
 
 Vite + React + TypeScript + Tailwind CSS, deployed on Cloudflare Pages with Wrangler.
