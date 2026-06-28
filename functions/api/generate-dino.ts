@@ -78,9 +78,9 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
 
   try {
     const text = await generateDinoText(attrs, env.ANTHROPIC_API_KEY);
-    const tempImageUrl = await generateDinoImage(attrs, env.OPENAI_API_KEY);
+    const base64Image = await generateDinoImage(attrs, env.OPENAI_API_KEY);
     const imageKey = `${cacheKey}.png`;
-    await storeImageInR2(env.DINO_IMAGES, imageKey, tempImageUrl);
+    await storeImageInR2(env.DINO_IMAGES, imageKey, base64Image);
 
     await setCachedDino(env.CACHE_KV, cacheKey, {
       scientificName: text.scientificName,

@@ -9,13 +9,12 @@ export interface R2BucketLike {
 export async function storeImageInR2(
   bucket: R2BucketLike,
   key: string,
-  imageUrl: string,
-  fetchFn: typeof fetch = fetch
+  base64Image: string
 ): Promise<void> {
-  const response = await fetchFn(imageUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to download image: ${response.status}`);
+  const binary = atob(base64Image);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
   }
-  const buffer = await response.arrayBuffer();
-  await bucket.put(key, buffer, { httpMetadata: { contentType: 'image/png' } });
+  await bucket.put(key, bytes.buffer, { httpMetadata: { contentType: 'image/png' } });
 }

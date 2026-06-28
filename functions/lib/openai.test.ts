@@ -11,15 +11,15 @@ const attrs: DinoAttributes = {
 };
 
 describe('generateDinoImage', () => {
-  it('returns the image URL from the OpenAI response', async () => {
+  it('returns the base64 image data from the OpenAI response', async () => {
     const fakeFetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: async () => ({ data: [{ url: 'https://oaidalleapi.example/temp-image.png' }] }),
+      json: async () => ({ data: [{ b64_json: 'ZmFrZS1pbWFnZS1ieXRlcw==' }] }),
     });
 
-    const url = await generateDinoImage(attrs, 'fake-key', fakeFetch as unknown as typeof fetch);
+    const base64Image = await generateDinoImage(attrs, 'fake-key', fakeFetch as unknown as typeof fetch);
 
-    expect(url).toBe('https://oaidalleapi.example/temp-image.png');
+    expect(base64Image).toBe('ZmFrZS1pbWFnZS1ieXRlcw==');
     expect(fakeFetch).toHaveBeenCalledWith(
       'https://api.openai.com/v1/images/generations',
       expect.objectContaining({ method: 'POST' })
@@ -34,11 +34,11 @@ describe('generateDinoImage', () => {
     ).rejects.toThrow('OpenAI API error: 500');
   });
 
-  it('throws when the response has no image URL', async () => {
+  it('throws when the response has no image data', async () => {
     const fakeFetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ data: [] }) });
 
     await expect(
       generateDinoImage(attrs, 'fake-key', fakeFetch as unknown as typeof fetch)
-    ).rejects.toThrow('No image URL in OpenAI response');
+    ).rejects.toThrow('No image data in OpenAI response');
   });
 });

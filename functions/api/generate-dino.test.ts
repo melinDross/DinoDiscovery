@@ -62,7 +62,7 @@ describe('onRequestPost /api/generate-dino', () => {
       commonName: 'Volcanrex',
       description: 'Un dinosaurio feroz que vive en volcanes.',
     });
-    vi.mocked(generateDinoImage).mockResolvedValue('https://oaidalleapi.example/temp.png');
+    vi.mocked(generateDinoImage).mockResolvedValue('ZmFrZS1pbWFnZS1ieXRlcw==');
     vi.mocked(storeImageInR2).mockResolvedValue(undefined);
   });
 

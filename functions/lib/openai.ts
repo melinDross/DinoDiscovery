@@ -14,11 +14,11 @@ export async function generateDinoImage(
       authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: 'dall-e-3',
+      model: 'gpt-image-2',
       prompt,
       n: 1,
       size: '1024x1024',
-      quality: 'standard',
+      quality: 'low',
     }),
   });
 
@@ -26,9 +26,9 @@ export async function generateDinoImage(
     throw new Error(`OpenAI API error: ${response.status}`);
   }
 
-  const data = (await response.json()) as { data: { url: string }[] };
-  if (!data.data?.[0]?.url) {
-    throw new Error('No image URL in OpenAI response');
+  const data = (await response.json()) as { data: { b64_json: string }[] };
+  if (!data.data?.[0]?.b64_json) {
+    throw new Error('No image data in OpenAI response');
   }
-  return data.data[0].url;
+  return data.data[0].b64_json;
 }
