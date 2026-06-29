@@ -17,7 +17,7 @@ export function WizardShell({ step, totalSteps, onBack, children }: WizardShellP
           type="button"
           onClick={onBack}
           aria-label="Atrás"
-          className="text-2xl text-accent hover:text-cream mb-3"
+          className="min-w-[44px] min-h-[44px] flex items-center justify-center text-2xl text-accent hover:text-cream mb-3 -ml-2"
         >
           ←
         </button>
@@ -31,7 +31,9 @@ export function WizardShell({ step, totalSteps, onBack, children }: WizardShellP
           <div className="h-full bg-accent transition-all" style={{ width: `${progressPercent}%` }} />
         </div>
       </div>
-      <div className="flex-1 flex items-center justify-center p-4">{children}</div>
+      <div className="flex-1 flex items-start sm:items-center justify-center p-4 pt-8 sm:pt-4">
+        {children}
+      </div>
     </div>
   );
 }

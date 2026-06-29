@@ -9,14 +9,14 @@ export function ResultScreen({ result, onDownloadClick }: ResultScreenProps) {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-xl w-full text-center">
-        <div className="relative w-64 h-64 mx-auto corner-brackets">
+        <div className="relative w-48 h-48 sm:w-64 sm:h-64 md:w-72 md:h-72 mx-auto corner-brackets">
           <img
             src={result.imageUrl}
             alt={result.commonName}
             className="w-full h-full object-contain bg-surface2"
           />
         </div>
-        <h2 className="mt-6 font-display text-3xl text-cream uppercase tracking-wide">
+        <h2 className="mt-6 font-display text-2xl sm:text-3xl text-cream uppercase tracking-wide">
           {result.commonName}
         </h2>
         <p className="italic text-moss">{result.scientificName}</p>

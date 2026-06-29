@@ -37,10 +37,10 @@ export function AttributeGroup<T extends string>({
 }: AttributeGroupProps<T>) {
   return (
     <div className="mb-6">
-      <h3 className="font-display text-2xl text-cream mb-4 uppercase tracking-wide text-center">
+      <h3 className="font-display text-2xl sm:text-3xl text-cream mb-3 sm:mb-4 uppercase tracking-wide text-center">
         {label}
       </h3>
-      <div className="flex flex-wrap gap-3 justify-center">
+      <div className="flex flex-wrap gap-2 sm:gap-3 justify-center">
         {options.map((option) => (
           <button
             key={option}
@@ -48,16 +48,18 @@ export function AttributeGroup<T extends string>({
             onClick={() => onSelect(option)}
             aria-pressed={selected === option}
             aria-label={option}
-            className={`flex flex-col items-center gap-2 px-5 py-4 min-w-[110px] border transition-colors ${
+            className={`flex flex-col items-center justify-center gap-1.5 sm:gap-2 px-3 py-3 sm:px-5 sm:py-4 w-[104px] sm:w-[130px] min-h-[44px] border transition-colors ${
               selected === option
                 ? 'bg-accent/[0.12] border-accent shadow-[0_0_20px_rgba(178,255,0,0.3)]'
                 : 'bg-accent/5 border-accent/20 hover:border-accent/50'
             }`}
           >
-            <span className="text-3xl" aria-hidden="true">
+            <span className="text-2xl sm:text-3xl" aria-hidden="true">
               {OPTION_EMOJIS[option] ?? ''}
             </span>
-            <span className="font-display text-cream uppercase tracking-wide">{option}</span>
+            <span className="font-display text-cream uppercase tracking-wide text-sm sm:text-base">
+              {option}
+            </span>
           </button>
         ))}
       </div>

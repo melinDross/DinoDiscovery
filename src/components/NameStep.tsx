@@ -8,8 +8,8 @@ export function NameStep({ value, onChange, onNext }: NameStepProps) {
   const canContinue = value.trim().length > 0;
 
   return (
-    <div className="text-center max-w-sm w-full">
-      <h2 className="font-display text-2xl text-cream mb-4 uppercase tracking-wide">
+    <div className="text-center max-w-sm sm:max-w-md w-full">
+      <h2 className="font-display text-2xl sm:text-3xl text-cream mb-4 uppercase tracking-wide">
         ¿Cómo te llamas, descubridor/a?
       </h2>
       <input

@@ -20,8 +20,8 @@ export function EmailGateModal({ onConfirm, onCancel }: EmailGateModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4">
-      <div className="bg-bg border border-accent p-6 max-w-sm w-full">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-bg border border-accent p-6 max-w-sm w-full my-auto max-h-[90vh] overflow-y-auto">
         <h3 className="font-display text-xl text-cream mb-2 uppercase tracking-wide">¡Casi listo!</h3>
         <p className="text-sage mb-4">
           Escribe tu email para descargar el certificado de descubrimiento.
@@ -41,14 +41,14 @@ export function EmailGateModal({ onConfirm, onCancel }: EmailGateModalProps) {
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-2 border border-moss text-sage font-semibold"
+            className="flex-1 px-4 py-3 border border-moss text-sage font-semibold"
           >
             Cancelar
           </button>
           <button
             type="button"
             onClick={handleConfirm}
-            className="flex-1 px-4 py-2 bg-accent text-bg font-display uppercase tracking-wide"
+            className="flex-1 px-4 py-3 bg-accent text-bg font-display uppercase tracking-wide"
           >
             Confirmar
           </button>

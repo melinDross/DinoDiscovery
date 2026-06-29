@@ -6,6 +6,18 @@ export async function captureCertificateAsPng(element: HTMLElement, fileName: st
   if (!blob) {
     throw new Error('No se pudo generar la imagen del certificado');
   }
+
+  const file = new File([blob], fileName, { type: 'image/png' });
+  if (navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file] });
+      return;
+    } catch {
+      // El usuario canceló el share sheet o el navegador lo rechazó en tiempo
+      // de ejecución pese a anunciar soporte; seguimos con la descarga clásica.
+    }
+  }
+
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
