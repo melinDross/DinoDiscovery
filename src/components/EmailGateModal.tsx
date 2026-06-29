@@ -20,13 +20,13 @@ export function EmailGateModal({ onConfirm, onCancel }: EmailGateModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl p-6 max-w-sm w-full">
-        <h3 className="text-xl font-bold text-purple-700 mb-2">¡Casi listo!</h3>
-        <p className="text-gray-700 mb-4">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4">
+      <div className="bg-bg border border-accent p-6 max-w-sm w-full">
+        <h3 className="font-display text-xl text-cream mb-2 uppercase tracking-wide">¡Casi listo!</h3>
+        <p className="text-sage mb-4">
           Escribe tu email para descargar el certificado de descubrimiento.
         </p>
-        <label htmlFor="gate-email" className="block font-semibold mb-1">
+        <label htmlFor="gate-email" className="block font-semibold mb-1 text-cream">
           Email
         </label>
         <input
@@ -34,21 +34,21 @@ export function EmailGateModal({ onConfirm, onCancel }: EmailGateModalProps) {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg border-2 border-purple-300 focus:outline-none focus:border-purple-600"
+          className="w-full px-3 py-2 bg-surface2 border border-accent/20 text-cream focus:outline-none focus:border-accent"
         />
-        {error && <p className="text-red-600 mt-1 text-sm">{error}</p>}
+        {error && <p className="text-red-400 mt-1 text-sm">{error}</p>}
         <div className="flex gap-2 mt-4">
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-2 rounded-full border-2 border-gray-300 font-semibold"
+            className="flex-1 px-4 py-2 border border-moss text-sage font-semibold"
           >
             Cancelar
           </button>
           <button
             type="button"
             onClick={handleConfirm}
-            className="flex-1 px-4 py-2 rounded-full bg-purple-600 text-white font-semibold"
+            className="flex-1 px-4 py-2 bg-accent text-bg font-display uppercase tracking-wide"
           >
             Confirmar
           </button>
