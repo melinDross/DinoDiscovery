@@ -19,10 +19,6 @@ function resultKey(resultId: string): string {
   return `result:${resultId}`;
 }
 
-function pendingEmailKey(email: string): string {
-  return `pending-email:${email}`;
-}
-
 export async function getResult(kv: KVLike, resultId: string): Promise<ResultRecord | null> {
   const raw = await kv.get(resultKey(resultId));
   return raw ? (JSON.parse(raw) as ResultRecord) : null;
@@ -47,15 +43,6 @@ export async function setResultEmail(
   if (!record) return;
   record.email = email;
   await saveResult(kv, resultId, record);
-
-  const raw = await kv.get(pendingEmailKey(email));
-  const pending = raw ? (JSON.parse(raw) as string[]) : [];
-  if (!pending.includes(resultId)) {
-    pending.push(resultId);
-  }
-  await kv.put(pendingEmailKey(email), JSON.stringify(pending), {
-    expirationTtl: RESULT_TTL_SECONDS,
-  });
 }
 
 export async function markEmailConfirmed(kv: KVLike, resultId: string): Promise<void> {
@@ -63,13 +50,4 @@ export async function markEmailConfirmed(kv: KVLike, resultId: string): Promise<
   if (!record) return;
   record.emailConfirmed = true;
   await saveResult(kv, resultId, record);
-}
-
-export async function confirmResultsForEmail(kv: KVLike, email: string): Promise<string[]> {
-  const raw = await kv.get(pendingEmailKey(email));
-  const resultIds = raw ? (JSON.parse(raw) as string[]) : [];
-  for (const resultId of resultIds) {
-    await markEmailConfirmed(kv, resultId);
-  }
-  return resultIds;
 }

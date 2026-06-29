@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { subscribeToKitForm } from './kit';
+import { subscribeToKitForm, isEmailConfirmed } from './kit';
 
 function createFetchSequence(...responses: { ok: boolean; status?: number; json?: () => Promise<unknown> }[]) {
   const fakeFetch = vi.fn();
@@ -76,5 +76,50 @@ describe('subscribeToKitForm', () => {
         fakeFetch as unknown as typeof fetch
       )
     ).rejects.toThrow('Kit API error: 404');
+  });
+});
+
+describe('isEmailConfirmed', () => {
+  it('returns true when Kit reports an active subscriber for that email', async () => {
+    const fakeFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ subscribers: [{ id: 349, state: 'active' }] }),
+    });
+
+    const confirmed = await isEmailConfirmed(
+      'nina@example.com',
+      { apiKey: 'fake-kit-key', formId: 'form-42' },
+      fakeFetch as unknown as typeof fetch
+    );
+
+    expect(confirmed).toBe(true);
+    expect(fakeFetch).toHaveBeenCalledWith(
+      'https://api.kit.com/v4/subscribers?email_address=nina%40example.com',
+      expect.objectContaining({ headers: expect.objectContaining({ 'X-Kit-Api-Key': 'fake-kit-key' }) })
+    );
+  });
+
+  it('returns false when Kit reports no active subscriber for that email', async () => {
+    const fakeFetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ subscribers: [] }) });
+
+    const confirmed = await isEmailConfirmed(
+      'nina@example.com',
+      { apiKey: 'fake-kit-key', formId: 'form-42' },
+      fakeFetch as unknown as typeof fetch
+    );
+
+    expect(confirmed).toBe(false);
+  });
+
+  it('throws when the Kit API returns a non-OK status', async () => {
+    const fakeFetch = vi.fn().mockResolvedValue({ ok: false, status: 500 });
+
+    await expect(
+      isEmailConfirmed(
+        'nina@example.com',
+        { apiKey: 'fake-kit-key', formId: 'form-42' },
+        fakeFetch as unknown as typeof fetch
+      )
+    ).rejects.toThrow('Kit API error: 500');
   });
 });
