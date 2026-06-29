@@ -63,10 +63,14 @@ describe('App wizard flow', () => {
         personality: 'Feroz',
         discovererName: 'Lucía',
       });
+
+      expect(screen.queryByRole('heading', { name: 'Volcanrex' })).not.toBeInTheDocument();
       // Querying by heading role (not findByText) because the off-screen
       // Certificate (kept mounted for html2canvas capture) also renders the
       // dino's commonName as a <p>, so a plain text query matches twice.
-      expect(await screen.findByRole('heading', { name: 'Volcanrex' })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { name: 'Volcanrex' }, { timeout: 2000 })
+      ).toBeInTheDocument();
     },
     10000
   );
@@ -137,7 +141,7 @@ describe('App wizard flow', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Amigable' }));
       await wait(600);
 
-      await screen.findByRole('heading', { name: 'Volcanrex' });
+      await screen.findByRole('heading', { name: 'Volcanrex' }, { timeout: 2000 });
       expect(generateDino).toHaveBeenCalledTimes(1);
       expect(generateDino).toHaveBeenCalledWith(
         expect.objectContaining({ personality: 'Amigable' })

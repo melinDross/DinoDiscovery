@@ -41,6 +41,7 @@ export default function App() {
   const [result, setResult] = useState<GenerateDinoResponse | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [showEmailGate, setShowEmailGate] = useState(false);
+  const [isDiscoveryDone, setIsDiscoveryDone] = useState(false);
 
   const certificateRef = useRef<HTMLDivElement>(null);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -71,10 +72,10 @@ export default function App() {
 
   async function handleDiscover(attrs: DinoAttributes, name: string) {
     setFlowState('loading');
+    setIsDiscoveryDone(false);
     try {
       const response = await generateDino({ ...attrs, discovererName: name });
       setResult(response);
-      setFlowState('result');
     } catch (err) {
       if (err instanceof RateLimitError) {
         const minutes = Math.ceil(err.retryAfterSeconds / 60);
@@ -84,8 +85,14 @@ export default function App() {
       } else {
         setErrorMessage('Algo salió mal. Inténtalo de nuevo.');
       }
-      setFlowState('error');
+      setResult(null);
+    } finally {
+      setIsDiscoveryDone(true);
     }
+  }
+
+  function handleLoadingTransitionEnd() {
+    setFlowState(result ? 'result' : 'error');
   }
 
   function handleSizeSelect(value: Size) {
@@ -137,6 +144,7 @@ export default function App() {
     setDiscovererName('');
     setResult(null);
     setErrorMessage('');
+    setIsDiscoveryDone(false);
     setWizardStep(0);
     setFlowState('landing');
   }
@@ -211,7 +219,9 @@ export default function App() {
         </WizardShell>
       )}
 
-      {flowState === 'loading' && <LoadingDino />}
+      {flowState === 'loading' && (
+        <LoadingDino isDone={isDiscoveryDone} onTransitionEnd={handleLoadingTransitionEnd} />
+      )}
 
       {flowState === 'error' && (
         <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
