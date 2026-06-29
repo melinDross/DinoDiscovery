@@ -38,6 +38,9 @@ export function EmailGateModal({
               Te hemos enviado un email para confirmar tu suscripción. En cuanto lo confirmes, el
               certificado se descargará automáticamente.
             </p>
+            <p className="text-sage mb-4 text-sm">
+              Si no lo ves, revisa también la carpeta de spam o correo no deseado.
+            </p>
             <button
               type="button"
               onClick={onCancel}

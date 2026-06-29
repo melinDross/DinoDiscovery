@@ -30,6 +30,7 @@ describe('EmailGateModal', () => {
       />
     );
     expect(screen.getByText(/revisa tu correo/i)).toBeInTheDocument();
+    expect(screen.getByText(/spam|correo no deseado/i)).toBeInTheDocument();
     expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
   });
 
