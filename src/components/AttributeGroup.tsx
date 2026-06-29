@@ -1,3 +1,27 @@
+const OPTION_EMOJIS: Record<string, string> = {
+  Pequeño: '🐭',
+  Mediano: '🦎',
+  Gigante: '🦕',
+  Selva: '🌴',
+  Desierto: '🏜️',
+  Océano: '🌊',
+  Montaña: '🏔️',
+  Volcán: '🌋',
+  Carnívoro: '🥩',
+  Herbívoro: '🌿',
+  Omnívoro: '🍖',
+  Cuernos: '🦄',
+  Alas: '🦅',
+  'Escamas coloridas': '✨',
+  'Cola poderosa': '💥',
+  Armadura: '🛡️',
+  'Súper garras': '⚡',
+  Feroz: '😤',
+  Amigable: '😊',
+  Veloz: '⚡',
+  Sigiloso: '🥷',
+};
+
 interface AttributeGroupProps<T extends string> {
   label: string;
   options: T[];
@@ -13,21 +37,27 @@ export function AttributeGroup<T extends string>({
 }: AttributeGroupProps<T>) {
   return (
     <div className="mb-6">
-      <h3 className="text-lg font-bold mb-2 text-purple-700">{label}</h3>
-      <div className="flex flex-wrap gap-2">
+      <h3 className="font-display text-2xl text-cream mb-4 uppercase tracking-wide text-center">
+        {label}
+      </h3>
+      <div className="flex flex-wrap gap-3 justify-center">
         {options.map((option) => (
           <button
             key={option}
             type="button"
             onClick={() => onSelect(option)}
             aria-pressed={selected === option}
-            className={`px-4 py-2 rounded-full font-semibold border-2 transition-colors ${
+            aria-label={option}
+            className={`flex flex-col items-center gap-2 px-5 py-4 min-w-[110px] border transition-colors ${
               selected === option
-                ? 'bg-purple-600 text-white border-purple-600'
-                : 'bg-white text-purple-700 border-purple-300 hover:bg-purple-100'
+                ? 'bg-accent/[0.12] border-accent shadow-[0_0_20px_rgba(178,255,0,0.3)]'
+                : 'bg-accent/5 border-accent/20 hover:border-accent/50'
             }`}
           >
-            {option}
+            <span className="text-3xl" aria-hidden="true">
+              {OPTION_EMOJIS[option] ?? ''}
+            </span>
+            <span className="font-display text-cream uppercase tracking-wide">{option}</span>
           </button>
         ))}
       </div>
