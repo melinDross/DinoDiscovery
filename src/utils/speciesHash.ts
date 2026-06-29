@@ -85,7 +85,7 @@ function getMultiplier(attrs: RarityAttributes): number {
   return 1;
 }
 
-export function calculateRarity(attrs: RarityAttributes): Rarity {
+export function calculateRarityScore(attrs: RarityAttributes): number {
   const base =
     (SIZE_POINTS[attrs.size] ?? 1) +
     (DIET_POINTS[attrs.diet] ?? 1) +
@@ -93,7 +93,11 @@ export function calculateRarity(attrs: RarityAttributes): Rarity {
     (PERSONALITY_POINTS[attrs.personality] ?? 1) +
     (HABITAT_POINTS[attrs.habitat] ?? 1);
 
-  const total = Math.round(base * getMultiplier(attrs));
+  return Math.round(base * getMultiplier(attrs));
+}
+
+export function calculateRarity(attrs: RarityAttributes): Rarity {
+  const total = calculateRarityScore(attrs);
 
   if (total >= 18) return 'legendary';
   if (total >= 15) return 'epic';
@@ -101,3 +105,11 @@ export function calculateRarity(attrs: RarityAttributes): Rarity {
   if (total >= 9) return 'uncommon';
   return 'common';
 }
+
+export const RARITY_TIER_NUMBERS: Record<Rarity, number> = {
+  common: 1,
+  uncommon: 2,
+  rare: 3,
+  epic: 4,
+  legendary: 5,
+};
