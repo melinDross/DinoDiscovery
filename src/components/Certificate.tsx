@@ -17,11 +17,13 @@ export const Certificate = forwardRef<HTMLDivElement, CertificateProps>(
     return (
       <div
         ref={ref}
-        className="w-[800px] p-10 bg-white border-8 border-yellow-500 text-center"
+        className="relative w-[800px] p-10 bg-bg border border-accent/20 text-center corner-brackets"
       >
         <div className="text-5xl mb-2">🏆</div>
-        <h2 className="text-3xl font-bold text-purple-700">Certificado Oficial de Descubrimiento</h2>
-        <p className="mt-4 text-xl">
+        <h2 className="font-display text-3xl text-accent uppercase tracking-wide">
+          Certificado Oficial de Descubrimiento
+        </h2>
+        <p className="mt-4 text-xl text-cream">
           Descubridor/a Oficial: <strong>{discovererName}</strong>
         </p>
         <img
@@ -29,10 +31,10 @@ export const Certificate = forwardRef<HTMLDivElement, CertificateProps>(
           alt={result.commonName}
           className="w-48 h-48 object-contain mx-auto my-4"
         />
-        <p className="text-2xl font-bold text-purple-700">{result.commonName}</p>
-        <p className="italic text-gray-600">{result.scientificName}</p>
-        <p className="mt-4 text-gray-800">{result.description}</p>
-        <p className="mt-4 text-gray-700">Fecha de descubrimiento: {discoveryDate}</p>
+        <p className="font-display text-2xl text-cream uppercase tracking-wide">{result.commonName}</p>
+        <p className="italic text-moss">{result.scientificName}</p>
+        <p className="mt-4 text-sage">{result.description}</p>
+        <p className="mt-4 text-sage">Fecha de descubrimiento: {discoveryDate}</p>
       </div>
     );
   }
