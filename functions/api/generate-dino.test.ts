@@ -31,6 +31,7 @@ function createEnv() {
   return {
     RATE_LIMIT_KV: createFakeKV(),
     CACHE_KV: createFakeKV(),
+    RESULTS_KV: createFakeKV(),
     DINO_IMAGES: { put: vi.fn() },
     ANTHROPIC_API_KEY: 'fake-anthropic-key',
     OPENAI_API_KEY: 'fake-openai-key',
@@ -165,6 +166,34 @@ describe('onRequestPost /api/generate-dino', () => {
     expect(response.status).toBe(200);
     expect(generateDinoText).toHaveBeenCalledTimes(1);
     expect(generateDinoImage).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns a resultId and stores a result record on cache miss', async () => {
+    const env = createEnv();
+    const response = await onRequestPost({ request: createRequest(validBody, '6.6.6.1'), env } as any);
+    const json = (await response.json()) as any;
+    expect(typeof json.resultId).toBe('string');
+    expect(json.resultId.length).toBeGreaterThan(0);
+
+    const stored = JSON.parse((await env.RESULTS_KV.get(`result:${json.resultId}`))!);
+    expect(stored).toMatchObject({
+      scientificName: 'Volcanius ferox',
+      commonName: 'Volcanrex',
+      discovererName: 'Lucía',
+      email: null,
+      emailConfirmed: false,
+    });
+  });
+
+  it('returns a fresh resultId for each request even when served from cache', async () => {
+    const env = createEnv();
+    const first = (await (
+      await onRequestPost({ request: createRequest(validBody, '6.6.6.2'), env } as any)
+    ).json()) as any;
+    const second = (await (
+      await onRequestPost({ request: createRequest(validBody, '6.6.6.3'), env } as any)
+    ).json()) as any;
+    expect(first.resultId).not.toBe(second.resultId);
   });
 
   it('returns 502 with a generic message when an upstream API fails', async () => {

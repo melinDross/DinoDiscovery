@@ -59,16 +59,17 @@ Nuevo endpoint `functions/api/subscribe.ts`:
 - Actualiza el registro `result:{resultId}` en KV: `email = email`, `emailConfirmed = false` (no se sobrescribe si ya estaba confirmado, por si reenvía el formulario).
 - Responde `200 { ok: true }` o error si la llamada a Kit falla.
 
-Nuevo endpoint `functions/api/webhooks/kit.ts`:
-- `POST /api/webhooks/kit?secret=...` — la URL configurada en la automatización de Kit incluye `KIT_WEBHOOK_SECRET` como query param; el handler rechaza con 401 si no coincide.
-- Lee del payload el campo personalizado `dino_result_id` (estructura exacta del payload de "Send a webhook" de Kit se confirma durante implementación contra una llamada real/sandbox, pero Kit incluye los custom fields del suscriptor en el body).
-- Si `result:{resultId}` existe, marca `emailConfirmed = true` en KV.
-- Responde `200` siempre que el secreto sea válido (idempotente; si el resultId no existe, no-op).
+**Actualización**: las automatizaciones con webhook de Kit ("Visual Automations") son una función de plan de pago. Se sustituyen por un mecanismo igual de eficaz pero disponible en el plan gratuito: la redirección post-confirmación del propio formulario, usando Liquid tags.
+
+Nuevo endpoint `functions/api/confirm.ts`:
+- `GET /api/confirm?resultId=...&secret=...` — el handler rechaza con 401 si `secret` no coincide con `KIT_WEBHOOK_SECRET`, y con 400 si falta `resultId`.
+- Si `result:{resultId}` existe, marca `emailConfirmed = true` en KV (no-op si no existe, idempotente).
+- Responde `302` redirigiendo a `/r/{resultId}`, donde el frontend ya sabe reconstruir el estado y reflejar `emailConfirmed`.
 
 **Configuración manual en Kit (fuera de este repo, documentada como pasos de implementación)**:
-1. Crear un formulario dedicado (p.ej. "Dino Discovery — Certificado") con double opt-in activado (default).
-2. Crear el custom field `dino_result_id`.
-3. Crear una automatización con trigger **"Subscribes to Form"** sobre ese formulario → acción **"Send a webhook"** apuntando a `https://<dominio>/api/webhooks/kit?secret=<KIT_WEBHOOK_SECRET>`. Por el comportamiento documentado de Kit, este trigger solo se dispara tras la confirmación del double opt-in, lo cual es justo la señal que necesitamos.
+1. Usar un formulario con double opt-in activado (default) y el custom field `dino_result_id` creado a nivel de cuenta.
+2. En *Form Settings → General*, activar **"Send subscriber data to thank you page"** y configurar **"After confirming redirect to: URL"** como `https://<dominio>/api/confirm?resultId={{ subscriber.dino_result_id }}&secret=<KIT_WEBHOOK_SECRET>` (el nombre exacto del Liquid tag del custom field se confirma en el propio editor de Kit, que autocompleta los tags disponibles).
+3. **Trade-off de seguridad aceptado**: a diferencia de un webhook servidor-a-servidor, este secreto viaja en una URL visible en el navegador de cualquiera que confirme un email, por lo que queda expuesto a quien lo inspeccione. Alguien con ese secreto podría marcar como confirmado el resultado de otra persona sin verificación real. Dado que lo único que protege es la descarga de un certificado de una app infantil (sin datos sensibles en juego), se acepta este riesgo para evitar depender de un plan de pago de Kit.
 
 Frontend (`EmailGateModal.tsx` y `App.tsx`):
 - Al confirmar el email, en vez de `saveEmail` + descarga inmediata, se llama a `POST /api/subscribe`.

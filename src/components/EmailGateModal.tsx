@@ -1,12 +1,19 @@
 import { useState } from 'react';
-import { isValidEmail } from '../emailStore';
+import { isValidEmail } from '../../shared/validateEmail';
 
 interface EmailGateModalProps {
   onConfirm: (email: string) => void;
   onCancel: () => void;
+  isWaitingForConfirmation?: boolean;
+  errorMessage?: string;
 }
 
-export function EmailGateModal({ onConfirm, onCancel }: EmailGateModalProps) {
+export function EmailGateModal({
+  onConfirm,
+  onCancel,
+  isWaitingForConfirmation = false,
+  errorMessage = '',
+}: EmailGateModalProps) {
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
 
@@ -22,37 +29,61 @@ export function EmailGateModal({ onConfirm, onCancel }: EmailGateModalProps) {
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-bg border border-accent p-6 max-w-sm w-full my-auto max-h-[90vh] overflow-y-auto">
-        <h3 className="font-display text-xl text-cream mb-2 uppercase tracking-wide">¡Casi listo!</h3>
-        <p className="text-sage mb-4">
-          Escribe tu email para descargar el certificado de descubrimiento.
-        </p>
-        <label htmlFor="gate-email" className="block font-semibold mb-1 text-cream">
-          Email
-        </label>
-        <input
-          id="gate-email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full px-3 py-2 bg-surface2 border border-accent/20 text-cream focus:outline-none focus:border-accent"
-        />
-        {error && <p className="text-red-400 mt-1 text-sm">{error}</p>}
-        <div className="flex gap-2 mt-4">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="flex-1 px-4 py-3 border border-moss text-sage font-semibold"
-          >
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={handleConfirm}
-            className="flex-1 px-4 py-3 bg-accent text-bg font-display uppercase tracking-wide"
-          >
-            Confirmar
-          </button>
-        </div>
+        {isWaitingForConfirmation ? (
+          <>
+            <h3 className="font-display text-xl text-cream mb-2 uppercase tracking-wide">
+              ¡Revisa tu correo!
+            </h3>
+            <p className="text-sage mb-4">
+              Te hemos enviado un email para confirmar tu suscripción. En cuanto lo confirmes, el
+              certificado se descargará automáticamente.
+            </p>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="w-full px-4 py-3 border border-moss text-sage font-semibold"
+            >
+              Cancelar
+            </button>
+          </>
+        ) : (
+          <>
+            <h3 className="font-display text-xl text-cream mb-2 uppercase tracking-wide">
+              ¡Casi listo!
+            </h3>
+            <p className="text-sage mb-4">
+              Escribe tu email para descargar el certificado de descubrimiento.
+            </p>
+            <label htmlFor="gate-email" className="block font-semibold mb-1 text-cream">
+              Email
+            </label>
+            <input
+              id="gate-email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 bg-surface2 border border-accent/20 text-cream focus:outline-none focus:border-accent"
+            />
+            {error && <p className="text-red-400 mt-1 text-sm">{error}</p>}
+            {errorMessage && <p className="text-red-400 mt-1 text-sm">{errorMessage}</p>}
+            <div className="flex gap-2 mt-4">
+              <button
+                type="button"
+                onClick={onCancel}
+                className="flex-1 px-4 py-3 border border-moss text-sage font-semibold"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirm}
+                className="flex-1 px-4 py-3 bg-accent text-bg font-display uppercase tracking-wide"
+              >
+                Confirmar
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

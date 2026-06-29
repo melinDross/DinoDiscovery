@@ -6,7 +6,8 @@
   "compatibility_flags": ["nodejs_compat"],
   "kv_namespaces": [
     { "binding": "RATE_LIMIT_KV", "id": "7b7f3cf6205945ea8007f2ddd2111857" },
-    { "binding": "CACHE_KV", "id": "cc7b6df2b81c45f28ca9465c308981dc" }
+    { "binding": "CACHE_KV", "id": "cc7b6df2b81c45f28ca9465c308981dc" },
+    { "binding": "RESULTS_KV", "id": "1468c8a5db784d9bbdcbbafa2d084737" }
   ],
   "r2_buckets": [
     { "binding": "DINO_IMAGES", "bucket_name": "dino-discovery-images" }

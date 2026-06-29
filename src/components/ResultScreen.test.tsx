@@ -10,6 +10,7 @@ vi.mock('../certificate', () => ({ shareDinoImage: vi.fn().mockResolvedValue(und
 import { shareDinoImage } from '../certificate';
 
 const result: GenerateDinoResponse = {
+  resultId: 'result-1',
   scientificName: 'Volcanius ferox',
   commonName: 'Volcanrex',
   description: 'Un dinosaurio feroz que vive en volcanes.',

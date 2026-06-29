@@ -34,3 +34,34 @@ export async function generateDino(req: GenerateDinoRequest): Promise<GenerateDi
   }
   throw new DinoApiError(errorBody.message ?? 'Error desconocido');
 }
+
+export async function subscribeEmail(resultId: string, email: string): Promise<void> {
+  const response = await fetch('/api/subscribe', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ resultId, email }),
+  });
+
+  if (response.ok) return;
+
+  const errorBody = (await response.json()) as ApiErrorResponse;
+  if (errorBody.error === 'RATE_LIMITED') {
+    throw new RateLimitError(errorBody.retryAfterSeconds ?? 3600);
+  }
+  throw new DinoApiError(errorBody.message ?? 'Error desconocido');
+}
+
+export interface FetchedResult {
+  scientificName: string;
+  commonName: string;
+  description: string;
+  imageUrl: string;
+  discovererName: string;
+  emailConfirmed: boolean;
+}
+
+export async function fetchResult(resultId: string): Promise<FetchedResult | null> {
+  const response = await fetch(`/api/results/${resultId}`);
+  if (!response.ok) return null;
+  return (await response.json()) as FetchedResult;
+}

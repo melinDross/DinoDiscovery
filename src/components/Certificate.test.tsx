@@ -5,6 +5,7 @@ import { Certificate } from './Certificate';
 import type { GenerateDinoResponse } from '../../shared/types';
 
 const result: GenerateDinoResponse = {
+  resultId: 'result-1',
   scientificName: 'Volcanius ferox',
   commonName: 'Volcanrex',
   description: 'Un dinosaurio feroz que vive en volcanes.',

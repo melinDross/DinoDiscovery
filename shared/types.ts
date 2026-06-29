@@ -23,6 +23,7 @@ export interface GenerateDinoRequest extends DinoAttributes {
 }
 
 export interface GenerateDinoResponse {
+  resultId: string;
   scientificName: string;
   commonName: string;
   description: string;

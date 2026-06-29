@@ -6,10 +6,12 @@ import { generateDinoText } from '../lib/anthropic';
 import { generateDinoImage } from '../lib/openai';
 import { storeImageInR2, type R2BucketLike } from '../lib/r2';
 import { isValidAdminKey } from '../lib/adminAuth';
+import { saveResult } from '../lib/results';
 
 interface Env {
   RATE_LIMIT_KV: KVLike;
   CACHE_KV: KVLike;
+  RESULTS_KV: KVLike;
   DINO_IMAGES: R2BucketLike;
   ANTHROPIC_API_KEY: string;
   OPENAI_API_KEY: string;
@@ -73,7 +75,20 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
   const cacheKey = await computeCacheKey(attrs);
   const cached = await getCachedDino(env.CACHE_KV, cacheKey);
   if (cached) {
+    const resultId = crypto.randomUUID();
+    await saveResult(env.RESULTS_KV, resultId, {
+      scientificName: cached.scientificName,
+      commonName: cached.commonName,
+      description: cached.description,
+      imageKey: cached.imageKey,
+      discovererName: body.discovererName,
+      attrs,
+      createdAt: Date.now(),
+      email: null,
+      emailConfirmed: false,
+    });
     return Response.json({
+      resultId,
       scientificName: cached.scientificName,
       commonName: cached.commonName,
       description: cached.description,
@@ -100,7 +115,21 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       imageKey: cacheKey,
     });
 
+    const resultId = crypto.randomUUID();
+    await saveResult(env.RESULTS_KV, resultId, {
+      scientificName: text.scientificName,
+      commonName: text.commonName,
+      description: text.description,
+      imageKey: cacheKey,
+      discovererName: body.discovererName,
+      attrs,
+      createdAt: Date.now(),
+      email: null,
+      emailConfirmed: false,
+    });
+
     return Response.json({
+      resultId,
       scientificName: text.scientificName,
       commonName: text.commonName,
       description: text.description,

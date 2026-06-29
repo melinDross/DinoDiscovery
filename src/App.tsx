@@ -9,8 +9,7 @@ import { EmailGateModal } from './components/EmailGateModal';
 import { Certificate } from './components/Certificate';
 import { SIZES, HABITATS, DIETS, FEATURES, PERSONALITIES } from './data/attributes';
 import { isSelectionComplete } from './validation';
-import { generateDino, RateLimitError, DinoApiError } from './api';
-import { saveEmail } from './emailStore';
+import { generateDino, subscribeEmail, fetchResult, RateLimitError, DinoApiError } from './api';
 import { captureCertificateAsPng } from './certificate';
 import { captureAdminKeyFromUrl } from './adminAuth';
 import type {
@@ -27,6 +26,12 @@ type FlowState = 'landing' | 'wizard' | 'loading' | 'result' | 'error';
 
 const TOTAL_WIZARD_STEPS = 6;
 const AUTO_ADVANCE_DELAY_MS = 500;
+const CONFIRMATION_POLL_INTERVAL_MS = 3000;
+
+function getResultIdFromUrl(): string | null {
+  const match = window.location.pathname.match(/^\/r\/([^/]+)$/);
+  return match ? match[1] : null;
+}
 
 export default function App() {
   const [size, setSize] = useState<Size | null>(null);
@@ -42,18 +47,55 @@ export default function App() {
   const [errorMessage, setErrorMessage] = useState('');
   const [showEmailGate, setShowEmailGate] = useState(false);
   const [isDiscoveryDone, setIsDiscoveryDone] = useState(false);
+  const [emailConfirmed, setEmailConfirmed] = useState(false);
+  const [isWaitingForConfirmation, setIsWaitingForConfirmation] = useState(false);
+  const [subscribeError, setSubscribeError] = useState('');
 
   const certificateRef = useRef<HTMLDivElement>(null);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  function stopPolling() {
+    if (pollIntervalRef.current !== null) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
+    }
+  }
 
   useEffect(() => {
     captureAdminKeyFromUrl();
+
+    const resultId = getResultIdFromUrl();
+    if (resultId) {
+      void loadResultFromUrl(resultId);
+    }
+
     return () => {
       if (advanceTimerRef.current !== null) {
         clearTimeout(advanceTimerRef.current);
       }
+      stopPolling();
     };
   }, []);
+
+  async function loadResultFromUrl(resultId: string) {
+    const fetched = await fetchResult(resultId);
+    if (!fetched) {
+      setErrorMessage('Este descubrimiento ya no está disponible.');
+      setFlowState('error');
+      return;
+    }
+    setDiscovererName(fetched.discovererName);
+    setResult({
+      resultId,
+      scientificName: fetched.scientificName,
+      commonName: fetched.commonName,
+      description: fetched.description,
+      imageUrl: fetched.imageUrl,
+    });
+    setEmailConfirmed(fetched.emailConfirmed);
+    setFlowState('result');
+  }
 
   function clearPendingAdvance() {
     if (advanceTimerRef.current !== null) {
@@ -76,6 +118,8 @@ export default function App() {
     try {
       const response = await generateDino({ ...attrs, discovererName: name });
       setResult(response);
+      setEmailConfirmed(false);
+      window.history.pushState(null, '', `/r/${response.resultId}`);
     } catch (err) {
       if (err instanceof RateLimitError) {
         const minutes = Math.ceil(err.retryAfterSeconds / 60);
@@ -136,6 +180,7 @@ export default function App() {
 
   function handleRestart() {
     clearPendingAdvance();
+    stopPolling();
     setSize(null);
     setHabitat(null);
     setDiet(null);
@@ -145,19 +190,64 @@ export default function App() {
     setResult(null);
     setErrorMessage('');
     setIsDiscoveryDone(false);
+    setEmailConfirmed(false);
+    setIsWaitingForConfirmation(false);
+    setSubscribeError('');
     setWizardStep(0);
     setFlowState('landing');
+    window.history.pushState(null, '', '/');
   }
 
-  async function handleEmailConfirm(email: string) {
-    saveEmail(email);
-    setShowEmailGate(false);
+  async function downloadCertificate() {
     if (certificateRef.current && result) {
       await captureCertificateAsPng(
         certificateRef.current,
         `certificado-${result.commonName.toLowerCase().replace(/\s+/g, '-')}.png`
       );
     }
+  }
+
+  function handleDownloadClick() {
+    if (emailConfirmed) {
+      void downloadCertificate();
+      return;
+    }
+    setShowEmailGate(true);
+  }
+
+  function handleEmailGateCancel() {
+    stopPolling();
+    setIsWaitingForConfirmation(false);
+    setSubscribeError('');
+    setShowEmailGate(false);
+  }
+
+  async function handleEmailConfirm(email: string) {
+    if (!result) return;
+    setSubscribeError('');
+    try {
+      await subscribeEmail(result.resultId, email);
+      setIsWaitingForConfirmation(true);
+      startPollingForConfirmation(result.resultId);
+    } catch {
+      setSubscribeError('No se pudo enviar el email de confirmación. Inténtalo de nuevo.');
+    }
+  }
+
+  function startPollingForConfirmation(resultId: string) {
+    stopPolling();
+    pollIntervalRef.current = setInterval(() => {
+      void (async () => {
+        const fetched = await fetchResult(resultId);
+        if (fetched?.emailConfirmed) {
+          stopPolling();
+          setEmailConfirmed(true);
+          setIsWaitingForConfirmation(false);
+          setShowEmailGate(false);
+          await downloadCertificate();
+        }
+      })();
+    }, CONFIRMATION_POLL_INTERVAL_MS);
   }
 
   return (
@@ -244,7 +334,7 @@ export default function App() {
         <>
           <ResultScreen
             result={result}
-            onDownloadClick={() => setShowEmailGate(true)}
+            onDownloadClick={handleDownloadClick}
             onRestart={handleRestart}
           />
           <div className="fixed -left-[9999px] top-0" aria-hidden="true">
@@ -254,7 +344,12 @@ export default function App() {
       )}
 
       {showEmailGate && (
-        <EmailGateModal onConfirm={handleEmailConfirm} onCancel={() => setShowEmailGate(false)} />
+        <EmailGateModal
+          onConfirm={handleEmailConfirm}
+          onCancel={handleEmailGateCancel}
+          isWaitingForConfirmation={isWaitingForConfirmation}
+          errorMessage={subscribeError}
+        />
       )}
     </main>
   );
