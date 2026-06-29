@@ -3,6 +3,10 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { AttributeGroup } from './AttributeGroup';
 
+vi.mock('../sound', () => ({ playClickSound: vi.fn() }));
+
+import { playClickSound } from '../sound';
+
 describe('AttributeGroup', () => {
   it('renders the label and all options', () => {
     render(
@@ -32,5 +36,13 @@ describe('AttributeGroup', () => {
     );
     await userEvent.click(screen.getByRole('button', { name: 'Gigante' }));
     expect(onSelect).toHaveBeenCalledWith('Gigante');
+  });
+
+  it('plays a click sound when an option is selected', async () => {
+    render(
+      <AttributeGroup label="Tamaño" options={['Pequeño', 'Mediano', 'Gigante']} selected={null} onSelect={() => {}} />
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Gigante' }));
+    expect(playClickSound).toHaveBeenCalled();
   });
 });

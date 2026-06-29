@@ -127,6 +127,20 @@ export default function App() {
     setFlowState('landing');
   }
 
+  function handleRestart() {
+    clearPendingAdvance();
+    setSize(null);
+    setHabitat(null);
+    setDiet(null);
+    setFeature(null);
+    setPersonality(null);
+    setDiscovererName('');
+    setResult(null);
+    setErrorMessage('');
+    setWizardStep(0);
+    setFlowState('landing');
+  }
+
   async function handleEmailConfirm(email: string) {
     saveEmail(email);
     setShowEmailGate(false);
@@ -218,7 +232,11 @@ export default function App() {
 
       {flowState === 'result' && result && (
         <>
-          <ResultScreen result={result} onDownloadClick={() => setShowEmailGate(true)} />
+          <ResultScreen
+            result={result}
+            onDownloadClick={() => setShowEmailGate(true)}
+            onRestart={handleRestart}
+          />
           <div className="fixed -left-[9999px] top-0" aria-hidden="true">
             <Certificate ref={certificateRef} discovererName={discovererName} result={result} />
           </div>

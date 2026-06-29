@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { playClickSound } from '../sound';
 
 interface WizardShellProps {
   step: number;
@@ -15,7 +16,10 @@ export function WizardShell({ step, totalSteps, onBack, children }: WizardShellP
       <div className="p-4">
         <button
           type="button"
-          onClick={onBack}
+          onClick={() => {
+            playClickSound();
+            onBack();
+          }}
           aria-label="Atrás"
           className="min-w-[44px] min-h-[44px] flex items-center justify-center text-2xl text-accent hover:text-cream mb-3 -ml-2"
         >

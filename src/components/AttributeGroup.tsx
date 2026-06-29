@@ -1,3 +1,5 @@
+import { playClickSound } from '../sound';
+
 const OPTION_EMOJIS: Record<string, string> = {
   Pequeño: '🐭',
   Mediano: '🦎',
@@ -45,7 +47,10 @@ export function AttributeGroup<T extends string>({
           <button
             key={option}
             type="button"
-            onClick={() => onSelect(option)}
+            onClick={() => {
+              playClickSound();
+              onSelect(option);
+            }}
             aria-pressed={selected === option}
             aria-label={option}
             className={`flex flex-col items-center justify-center gap-1.5 sm:gap-2 px-3 py-3 sm:px-5 sm:py-4 w-[104px] sm:w-[130px] min-h-[44px] border transition-colors ${
