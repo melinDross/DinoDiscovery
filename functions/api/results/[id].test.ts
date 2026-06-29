@@ -53,6 +53,13 @@ describe('onRequestGet /api/results/:id', () => {
       description: 'Un dinosaurio feroz que vive en volcanes.',
       imageUrl: '/images/abc123.png',
       discovererName: 'Lucía',
+      attrs: {
+        size: 'Gigante',
+        habitat: 'Volcán',
+        diet: 'Carnívoro',
+        feature: 'Cuernos',
+        personality: 'Feroz',
+      },
     });
     expect(json.email).toBeUndefined();
   });

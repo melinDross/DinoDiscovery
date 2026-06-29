@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import confetti from 'canvas-confetti';
 import { ResultScreen } from './ResultScreen';
-import type { GenerateDinoResponse } from '../../shared/types';
+import type { GenerateDinoResponse, DinoAttributes } from '../../shared/types';
 
 vi.mock('../certificate', () => ({ shareDinoImage: vi.fn().mockResolvedValue(undefined) }));
 
@@ -17,9 +17,17 @@ const result: GenerateDinoResponse = {
   imageUrl: '/images/abc.png',
 };
 
+const attrs: DinoAttributes = {
+  size: 'Gigante',
+  habitat: 'Volcán',
+  diet: 'Carnívoro',
+  feature: 'Cuernos',
+  personality: 'Feroz',
+};
+
 describe('ResultScreen', () => {
   it('shows the dino name, description and image', () => {
-    render(<ResultScreen result={result} onDownloadClick={() => {}} onRestart={() => {}} />);
+    render(<ResultScreen result={result} attrs={attrs} onDownloadClick={() => {}} onRestart={() => {}} />);
     expect(screen.getByText('Volcanrex')).toBeInTheDocument();
     expect(screen.getByText('Volcanius ferox')).toBeInTheDocument();
     expect(screen.getByText(result.description)).toBeInTheDocument();
@@ -27,27 +35,33 @@ describe('ResultScreen', () => {
   });
 
   it('fires confetti when the dino is revealed', () => {
-    render(<ResultScreen result={result} onDownloadClick={() => {}} onRestart={() => {}} />);
+    render(<ResultScreen result={result} attrs={attrs} onDownloadClick={() => {}} onRestart={() => {}} />);
     expect(confetti).toHaveBeenCalled();
   });
 
   it('calls onDownloadClick when the download button is clicked', async () => {
     const onDownloadClick = vi.fn();
-    render(<ResultScreen result={result} onDownloadClick={onDownloadClick} onRestart={() => {}} />);
-    await userEvent.click(screen.getByRole('button', { name: /descargar certificado/i }));
+    render(<ResultScreen result={result} attrs={attrs} onDownloadClick={onDownloadClick} onRestart={() => {}} />);
+    await userEvent.click(screen.getByRole('button', { name: /descargar carta/i }));
     expect(onDownloadClick).toHaveBeenCalled();
   });
 
   it('shares the dino image when the share button is clicked', async () => {
-    render(<ResultScreen result={result} onDownloadClick={() => {}} onRestart={() => {}} />);
+    render(<ResultScreen result={result} attrs={attrs} onDownloadClick={() => {}} onRestart={() => {}} />);
     await userEvent.click(screen.getByRole('button', { name: /compartir dinosaurio/i }));
     expect(shareDinoImage).toHaveBeenCalledWith('/images/abc.png', 'dino-volcanrex.png', 'Volcanrex');
   });
 
   it('calls onRestart when "Detectar otra especie" is clicked', async () => {
     const onRestart = vi.fn();
-    render(<ResultScreen result={result} onDownloadClick={() => {}} onRestart={onRestart} />);
+    render(<ResultScreen result={result} attrs={attrs} onDownloadClick={() => {}} onRestart={onRestart} />);
     await userEvent.click(screen.getByRole('button', { name: /detectar otra especie/i }));
     expect(onRestart).toHaveBeenCalled();
+  });
+
+  it('shows the species ID and rarity', () => {
+    render(<ResultScreen result={result} attrs={attrs} onDownloadClick={() => {}} onRestart={() => {}} />);
+    expect(screen.getByText(/^DX-[0-9A-Z]{3}-[0-9A-Z]{3}$/)).toBeInTheDocument();
+    expect(screen.getByText('Raro')).toBeInTheDocument();
   });
 });

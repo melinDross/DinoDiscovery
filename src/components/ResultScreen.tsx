@@ -1,15 +1,18 @@
 import { useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { shareDinoImage } from '../certificate';
-import type { GenerateDinoResponse } from '../../shared/types';
+import type { GenerateDinoResponse, DinoAttributes } from '../../shared/types';
+import { generateSpeciesId, calculateRarity } from '../utils/speciesHash';
+import { RARITY_LABELS } from '../data/cardTheme';
 
 interface ResultScreenProps {
   result: GenerateDinoResponse;
+  attrs: DinoAttributes;
   onDownloadClick: () => void;
   onRestart: () => void;
 }
 
-export function ResultScreen({ result, onDownloadClick, onRestart }: ResultScreenProps) {
+export function ResultScreen({ result, attrs, onDownloadClick, onRestart }: ResultScreenProps) {
   useEffect(() => {
     confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
   }, []);
@@ -18,6 +21,9 @@ export function ResultScreen({ result, onDownloadClick, onRestart }: ResultScree
     const fileName = `dino-${result.commonName.toLowerCase().replace(/\s+/g, '-')}.png`;
     void shareDinoImage(result.imageUrl, fileName, result.commonName);
   }
+
+  const speciesId = generateSpeciesId({ ...attrs });
+  const rarity = calculateRarity(attrs);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
@@ -34,13 +40,18 @@ export function ResultScreen({ result, onDownloadClick, onRestart }: ResultScree
         </h2>
         <p className="italic text-moss">{result.scientificName}</p>
         <p className="mt-3 text-sage">{result.description}</p>
+        <div className="mt-3 text-xs text-sage uppercase tracking-wide">
+          Código de especie
+        </div>
+        <p className="font-mono text-cream text-lg">{speciesId}</p>
+        <p className="text-xs text-sage uppercase tracking-wide">{RARITY_LABELS[rarity]}</p>
         <div className="mt-6 flex flex-wrap gap-3 justify-center">
           <button
             type="button"
             onClick={onDownloadClick}
             className="px-6 py-3 min-h-[44px] text-bg font-display uppercase tracking-wide bg-accent hover:shadow-[6px_6px_0_0_#f5e6c8] transition-shadow"
           >
-            Descargar certificado
+            Descargar carta
           </button>
           <button
             type="button"

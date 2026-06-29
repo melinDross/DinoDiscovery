@@ -46,6 +46,7 @@ export default function App() {
   const [errorMessage, setErrorMessage] = useState('');
   const [showEmailGate, setShowEmailGate] = useState(false);
   const [isDiscoveryDone, setIsDiscoveryDone] = useState(false);
+  const [currentAttrs, setCurrentAttrs] = useState<DinoAttributes | null>(null);
 
   const certificateRef = useRef<HTMLDivElement>(null);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -80,6 +81,7 @@ export default function App() {
       description: fetched.description,
       imageUrl: fetched.imageUrl,
     });
+    setCurrentAttrs(fetched.attrs);
     setFlowState('result');
   }
 
@@ -104,6 +106,7 @@ export default function App() {
     try {
       const response = await generateDino({ ...attrs, discovererName: name });
       setResult(response);
+      setCurrentAttrs(attrs);
       window.history.pushState(null, '', `/r/${response.resultId}`);
     } catch (err) {
       if (err instanceof RateLimitError) {
@@ -172,6 +175,7 @@ export default function App() {
     setPersonality(null);
     setDiscovererName('');
     setResult(null);
+    setCurrentAttrs(null);
     setErrorMessage('');
     setIsDiscoveryDone(false);
     setWizardStep(0);
@@ -200,21 +204,6 @@ export default function App() {
     }
     await downloadCertificate();
   }
-
-  // TODO(Task 4): this inline construction with non-null assertions is a
-  // stopgap. It only works because by the time flowState === 'result' the
-  // wizard guarantees size/habitat/diet/feature/personality are non-null.
-  // It does NOT work for the /r/:id shared-link flow (loadResultFromUrl only
-  // sets `result`/`discovererName`, not the individual attribute state), so
-  // currentAttrs! assertions will be unsound there until Task 4 replaces
-  // this with properly-typed, non-null-assertion-free attrs state.
-  const currentAttrs: DinoAttributes = {
-    size: size!,
-    habitat: habitat!,
-    diet: diet!,
-    feature: feature!,
-    personality: personality!,
-  };
 
   return (
     <main className="min-h-screen grid-overlay text-cream font-body">
@@ -311,10 +300,11 @@ export default function App() {
         </div>
       )}
 
-      {flowState === 'result' && result && (
+      {flowState === 'result' && result && currentAttrs && (
         <>
           <ResultScreen
             result={result}
+            attrs={currentAttrs}
             onDownloadClick={() => setShowEmailGate(true)}
             onRestart={handleRestart}
           />

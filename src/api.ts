@@ -1,4 +1,9 @@
-import type { GenerateDinoRequest, GenerateDinoResponse, ApiErrorResponse } from '../shared/types';
+import type {
+  GenerateDinoRequest,
+  GenerateDinoResponse,
+  ApiErrorResponse,
+  DinoAttributes,
+} from '../shared/types';
 import { getAdminKey } from './adminAuth';
 
 export class RateLimitError extends Error {
@@ -57,6 +62,7 @@ export interface FetchedResult {
   description: string;
   imageUrl: string;
   discovererName: string;
+  attrs: DinoAttributes;
 }
 
 export async function fetchResult(resultId: string): Promise<FetchedResult | null> {

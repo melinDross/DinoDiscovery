@@ -169,6 +169,7 @@ describe('App wizard flow', () => {
       description: 'Un dinosaurio feroz que vive en volcanes.',
       imageUrl: '/images/abc.png',
       discovererName: 'Lucía',
+      attrs: { size: 'Gigante', habitat: 'Volcán', diet: 'Carnívoro', feature: 'Cuernos', personality: 'Feroz' },
     });
     window.history.pushState(null, '', '/r/result-1');
 
@@ -185,12 +186,13 @@ describe('App wizard flow', () => {
       description: 'Un dinosaurio feroz que vive en volcanes.',
       imageUrl: '/images/abc.png',
       discovererName: 'Lucía',
+      attrs: { size: 'Gigante', habitat: 'Volcán', diet: 'Carnívoro', feature: 'Cuernos', personality: 'Feroz' },
     });
     window.history.pushState(null, '', '/r/result-1');
 
     render(<App />);
     await screen.findByRole('heading', { name: 'Volcanrex' });
-    await userEvent.click(screen.getByRole('button', { name: /descargar certificado/i }));
+    await userEvent.click(screen.getByRole('button', { name: /descargar carta/i }));
 
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(captureCertificateAsPng).not.toHaveBeenCalled();
@@ -203,13 +205,14 @@ describe('App wizard flow', () => {
       description: 'Un dinosaurio feroz que vive en volcanes.',
       imageUrl: '/images/abc.png',
       discovererName: 'Lucía',
+      attrs: { size: 'Gigante', habitat: 'Volcán', diet: 'Carnívoro', feature: 'Cuernos', personality: 'Feroz' },
     });
     vi.mocked(subscribeEmail).mockResolvedValue(undefined);
     window.history.pushState(null, '', '/r/result-1');
 
     render(<App />);
     await screen.findByRole('heading', { name: 'Volcanrex' });
-    await userEvent.click(screen.getByRole('button', { name: /descargar certificado/i }));
+    await userEvent.click(screen.getByRole('button', { name: /descargar carta/i }));
     await userEvent.type(screen.getByLabelText(/email/i), 'nina@example.com');
     await userEvent.click(screen.getByRole('button', { name: /confirmar/i }));
 
@@ -225,13 +228,14 @@ describe('App wizard flow', () => {
       description: 'Un dinosaurio feroz que vive en volcanes.',
       imageUrl: '/images/abc.png',
       discovererName: 'Lucía',
+      attrs: { size: 'Gigante', habitat: 'Volcán', diet: 'Carnívoro', feature: 'Cuernos', personality: 'Feroz' },
     });
     vi.mocked(subscribeEmail).mockRejectedValue(new RateLimitError(120));
     window.history.pushState(null, '', '/r/result-1');
 
     render(<App />);
     await screen.findByRole('heading', { name: 'Volcanrex' });
-    await userEvent.click(screen.getByRole('button', { name: /descargar certificado/i }));
+    await userEvent.click(screen.getByRole('button', { name: /descargar carta/i }));
     await userEvent.type(screen.getByLabelText(/email/i), 'nina@example.com');
     await userEvent.click(screen.getByRole('button', { name: /confirmar/i }));
 

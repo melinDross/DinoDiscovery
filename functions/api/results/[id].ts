@@ -20,5 +20,6 @@ export async function onRequestGet(context: {
     description: record.description,
     imageUrl: `/images/${record.imageKey}.png`,
     discovererName: record.discovererName,
+    attrs: record.attrs,
   });
 }
