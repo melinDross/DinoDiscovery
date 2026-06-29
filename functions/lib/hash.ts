@@ -7,6 +7,7 @@ export async function computeCacheKey(attrs: DinoAttributes): Promise<string> {
     attrs.diet,
     attrs.feature,
     attrs.personality,
+    'v2',
   ].join('|');
   const data = new TextEncoder().encode(canonical);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
