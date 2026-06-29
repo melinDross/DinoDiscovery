@@ -27,6 +27,42 @@ export default {
         '3xl': '4px',
         full: '4px',
       },
+      keyframes: {
+        'egg-breathe': {
+          '0%, 100%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.03)' },
+        },
+        'egg-wobble': {
+          '0%, 100%': { transform: 'rotate(-6deg)' },
+          '50%': { transform: 'rotate(6deg)' },
+        },
+        'egg-glow': {
+          '0%, 100%': { filter: 'brightness(1)' },
+          '50%': { filter: 'brightness(1.4)' },
+        },
+        'egg-jitter': {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '25%': { transform: 'translateX(-3px)' },
+          '75%': { transform: 'translateX(3px)' },
+        },
+        'egg-tug': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-4px)' },
+        },
+        'egg-burst': {
+          '0%': { transform: 'scale(0.7)', opacity: '0' },
+          '40%': { transform: 'scale(1.3)', opacity: '1' },
+          '100%': { transform: 'scale(1.1)', opacity: '1' },
+        },
+      },
+      animation: {
+        'egg-breathe': 'egg-breathe 2.4s ease-in-out infinite',
+        'egg-wobble': 'egg-wobble 1.2s ease-in-out infinite',
+        'egg-glow': 'egg-glow 1.4s ease-in-out infinite',
+        'egg-jitter': 'egg-jitter 0.5s ease-in-out infinite',
+        'egg-tug': 'egg-tug 1s ease-in-out infinite',
+        'egg-burst': 'egg-burst 0.6s ease-out forwards',
+      },
     },
   },
   plugins: [],
