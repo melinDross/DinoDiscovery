@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { act, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from './App';
 
@@ -169,7 +169,6 @@ describe('App wizard flow', () => {
       description: 'Un dinosaurio feroz que vive en volcanes.',
       imageUrl: '/images/abc.png',
       discovererName: 'Lucía',
-      emailConfirmed: false,
     });
     window.history.pushState(null, '', '/r/result-1');
 
@@ -179,14 +178,13 @@ describe('App wizard flow', () => {
     expect(fetchResult).toHaveBeenCalledWith('result-1');
   });
 
-  it('shows the email gate form when clicking download on an unconfirmed result', async () => {
+  it('shows the email gate form when clicking download', async () => {
     vi.mocked(fetchResult).mockResolvedValue({
       scientificName: 'Volcanius ferox',
       commonName: 'Volcanrex',
       description: 'Un dinosaurio feroz que vive en volcanes.',
       imageUrl: '/images/abc.png',
       discovererName: 'Lucía',
-      emailConfirmed: false,
     });
     window.history.pushState(null, '', '/r/result-1');
 
@@ -198,44 +196,14 @@ describe('App wizard flow', () => {
     expect(captureCertificateAsPng).not.toHaveBeenCalled();
   });
 
-  it('downloads immediately when the loaded result is already emailConfirmed', async () => {
+  it('subscribes the email in Kit and downloads the certificate immediately, without waiting for confirmation', async () => {
     vi.mocked(fetchResult).mockResolvedValue({
       scientificName: 'Volcanius ferox',
       commonName: 'Volcanrex',
       description: 'Un dinosaurio feroz que vive en volcanes.',
       imageUrl: '/images/abc.png',
       discovererName: 'Lucía',
-      emailConfirmed: true,
     });
-    window.history.pushState(null, '', '/r/result-1');
-
-    render(<App />);
-    await screen.findByRole('heading', { name: 'Volcanrex' });
-    await userEvent.click(screen.getByRole('button', { name: /descargar certificado/i }));
-
-    expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
-    expect(captureCertificateAsPng).toHaveBeenCalledTimes(1);
-  });
-
-  it('submits the email, shows the waiting message, and downloads once polling detects confirmation', async () => {
-    vi.useFakeTimers({ shouldAdvanceTime: true });
-    vi.mocked(fetchResult)
-      .mockResolvedValueOnce({
-        scientificName: 'Volcanius ferox',
-        commonName: 'Volcanrex',
-        description: 'Un dinosaurio feroz que vive en volcanes.',
-        imageUrl: '/images/abc.png',
-        discovererName: 'Lucía',
-        emailConfirmed: false,
-      })
-      .mockResolvedValueOnce({
-        scientificName: 'Volcanius ferox',
-        commonName: 'Volcanrex',
-        description: 'Un dinosaurio feroz que vive en volcanes.',
-        imageUrl: '/images/abc.png',
-        discovererName: 'Lucía',
-        emailConfirmed: true,
-      });
     vi.mocked(subscribeEmail).mockResolvedValue(undefined);
     window.history.pushState(null, '', '/r/result-1');
 
@@ -246,28 +214,19 @@ describe('App wizard flow', () => {
     await userEvent.click(screen.getByRole('button', { name: /confirmar/i }));
 
     expect(subscribeEmail).toHaveBeenCalledWith('result-1', 'nina@example.com');
-    expect(await screen.findByText(/revisa tu correo/i)).toBeInTheDocument();
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(3500);
-    });
-
+    expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
     expect(captureCertificateAsPng).toHaveBeenCalledTimes(1);
-    expect(screen.queryByText(/revisa tu correo/i)).not.toBeInTheDocument();
-    vi.useRealTimers();
   });
 
-  it('shows a rate-limit-specific message when subscribing is throttled', async () => {
+  it('still downloads the certificate even if subscribing to Kit fails', async () => {
     vi.mocked(fetchResult).mockResolvedValue({
       scientificName: 'Volcanius ferox',
       commonName: 'Volcanrex',
       description: 'Un dinosaurio feroz que vive en volcanes.',
       imageUrl: '/images/abc.png',
       discovererName: 'Lucía',
-      emailConfirmed: false,
     });
-    const rateLimitError = new RateLimitError(120);
-    vi.mocked(subscribeEmail).mockRejectedValue(rateLimitError);
+    vi.mocked(subscribeEmail).mockRejectedValue(new RateLimitError(120));
     window.history.pushState(null, '', '/r/result-1');
 
     render(<App />);
@@ -276,6 +235,6 @@ describe('App wizard flow', () => {
     await userEvent.type(screen.getByLabelText(/email/i), 'nina@example.com');
     await userEvent.click(screen.getByRole('button', { name: /confirmar/i }));
 
-    expect(await screen.findByText(/demasiadas veces/i)).toBeInTheDocument();
+    expect(captureCertificateAsPng).toHaveBeenCalledTimes(1);
   });
 });

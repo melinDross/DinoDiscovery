@@ -57,7 +57,6 @@ export interface FetchedResult {
   description: string;
   imageUrl: string;
   discovererName: string;
-  emailConfirmed: boolean;
 }
 
 export async function fetchResult(resultId: string): Promise<FetchedResult | null> {

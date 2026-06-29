@@ -181,7 +181,6 @@ describe('onRequestPost /api/generate-dino', () => {
       commonName: 'Volcanrex',
       discovererName: 'Lucía',
       email: null,
-      emailConfirmed: false,
     });
   });
 

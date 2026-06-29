@@ -26,7 +26,6 @@ type FlowState = 'landing' | 'wizard' | 'loading' | 'result' | 'error';
 
 const TOTAL_WIZARD_STEPS = 6;
 const AUTO_ADVANCE_DELAY_MS = 500;
-const CONFIRMATION_POLL_INTERVAL_MS = 3000;
 
 function getResultIdFromUrl(): string | null {
   const match = window.location.pathname.match(/^\/r\/([^/]+)$/);
@@ -47,20 +46,9 @@ export default function App() {
   const [errorMessage, setErrorMessage] = useState('');
   const [showEmailGate, setShowEmailGate] = useState(false);
   const [isDiscoveryDone, setIsDiscoveryDone] = useState(false);
-  const [emailConfirmed, setEmailConfirmed] = useState(false);
-  const [isWaitingForConfirmation, setIsWaitingForConfirmation] = useState(false);
-  const [subscribeError, setSubscribeError] = useState('');
 
   const certificateRef = useRef<HTMLDivElement>(null);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  function stopPolling() {
-    if (pollIntervalRef.current !== null) {
-      clearInterval(pollIntervalRef.current);
-      pollIntervalRef.current = null;
-    }
-  }
 
   useEffect(() => {
     captureAdminKeyFromUrl();
@@ -74,7 +62,6 @@ export default function App() {
       if (advanceTimerRef.current !== null) {
         clearTimeout(advanceTimerRef.current);
       }
-      stopPolling();
     };
   }, []);
 
@@ -93,7 +80,6 @@ export default function App() {
       description: fetched.description,
       imageUrl: fetched.imageUrl,
     });
-    setEmailConfirmed(fetched.emailConfirmed);
     setFlowState('result');
   }
 
@@ -118,7 +104,6 @@ export default function App() {
     try {
       const response = await generateDino({ ...attrs, discovererName: name });
       setResult(response);
-      setEmailConfirmed(false);
       window.history.pushState(null, '', `/r/${response.resultId}`);
     } catch (err) {
       if (err instanceof RateLimitError) {
@@ -180,7 +165,6 @@ export default function App() {
 
   function handleRestart() {
     clearPendingAdvance();
-    stopPolling();
     setSize(null);
     setHabitat(null);
     setDiet(null);
@@ -190,9 +174,6 @@ export default function App() {
     setResult(null);
     setErrorMessage('');
     setIsDiscoveryDone(false);
-    setEmailConfirmed(false);
-    setIsWaitingForConfirmation(false);
-    setSubscribeError('');
     setWizardStep(0);
     setFlowState('landing');
     window.history.pushState(null, '', '/');
@@ -207,54 +188,17 @@ export default function App() {
     }
   }
 
-  function handleDownloadClick() {
-    if (emailConfirmed) {
-      void downloadCertificate();
-      return;
-    }
-    setShowEmailGate(true);
-  }
-
-  function handleEmailGateCancel() {
-    stopPolling();
-    setIsWaitingForConfirmation(false);
-    setSubscribeError('');
-    setShowEmailGate(false);
-  }
-
   async function handleEmailConfirm(email: string) {
-    if (!result) return;
-    setSubscribeError('');
-    try {
-      await subscribeEmail(result.resultId, email);
-      setIsWaitingForConfirmation(true);
-      startPollingForConfirmation(result.resultId);
-    } catch (err) {
-      if (err instanceof RateLimitError) {
-        const minutes = Math.ceil(err.retryAfterSeconds / 60);
-        setSubscribeError(
-          `Has intentado confirmar el email demasiadas veces. Espera unos ${minutes} minutos e inténtalo de nuevo.`
-        );
-      } else {
-        setSubscribeError('No se pudo enviar el email de confirmación. Inténtalo de nuevo.');
+    setShowEmailGate(false);
+    if (result) {
+      try {
+        await subscribeEmail(result.resultId, email);
+      } catch {
+        // Captura del lead en Kit es best-effort: nunca debe bloquear la
+        // descarga del certificado, que es el valor central para el niño.
       }
     }
-  }
-
-  function startPollingForConfirmation(resultId: string) {
-    stopPolling();
-    pollIntervalRef.current = setInterval(() => {
-      void (async () => {
-        const fetched = await fetchResult(resultId);
-        if (fetched?.emailConfirmed) {
-          stopPolling();
-          setEmailConfirmed(true);
-          setIsWaitingForConfirmation(false);
-          setShowEmailGate(false);
-          await downloadCertificate();
-        }
-      })();
-    }, CONFIRMATION_POLL_INTERVAL_MS);
+    await downloadCertificate();
   }
 
   return (
@@ -341,7 +285,7 @@ export default function App() {
         <>
           <ResultScreen
             result={result}
-            onDownloadClick={handleDownloadClick}
+            onDownloadClick={() => setShowEmailGate(true)}
             onRestart={handleRestart}
           />
           <div className="fixed -left-[9999px] top-0" aria-hidden="true">
@@ -351,12 +295,7 @@ export default function App() {
       )}
 
       {showEmailGate && (
-        <EmailGateModal
-          onConfirm={handleEmailConfirm}
-          onCancel={handleEmailGateCancel}
-          isWaitingForConfirmation={isWaitingForConfirmation}
-          errorMessage={subscribeError}
-        />
+        <EmailGateModal onConfirm={handleEmailConfirm} onCancel={() => setShowEmailGate(false)} />
       )}
     </main>
   );

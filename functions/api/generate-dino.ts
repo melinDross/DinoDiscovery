@@ -85,7 +85,6 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       attrs,
       createdAt: Date.now(),
       email: null,
-      emailConfirmed: false,
     });
     return Response.json({
       resultId,
@@ -125,7 +124,6 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       attrs,
       createdAt: Date.now(),
       email: null,
-      emailConfirmed: false,
     });
 
     return Response.json({

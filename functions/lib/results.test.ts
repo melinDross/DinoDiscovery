@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getResult, saveResult, setResultEmail, markEmailConfirmed } from './results';
+import { getResult, saveResult, setResultEmail } from './results';
 import type { ResultRecord } from './results';
 
 function createFakeKV() {
@@ -30,7 +30,6 @@ function createRecord(): ResultRecord {
     },
     createdAt: 1000,
     email: null,
-    emailConfirmed: false,
   };
 }
 
@@ -49,35 +48,17 @@ describe('saveResult / getResult', () => {
 });
 
 describe('setResultEmail', () => {
-  it('sets the email on an existing record without confirming it', async () => {
+  it('sets the email on an existing record', async () => {
     const kv = createFakeKV();
     await saveResult(kv, 'result-1', createRecord());
     await setResultEmail(kv, 'result-1', 'nina@example.com');
     const updated = await getResult(kv, 'result-1');
     expect(updated?.email).toBe('nina@example.com');
-    expect(updated?.emailConfirmed).toBe(false);
   });
 
   it('does nothing when the resultId does not exist', async () => {
     const kv = createFakeKV();
     await setResultEmail(kv, 'missing-id', 'nina@example.com');
-    expect(await getResult(kv, 'missing-id')).toBeNull();
-  });
-});
-
-describe('markEmailConfirmed', () => {
-  it('marks an existing record as confirmed', async () => {
-    const kv = createFakeKV();
-    await saveResult(kv, 'result-1', createRecord());
-    await setResultEmail(kv, 'result-1', 'nina@example.com');
-    await markEmailConfirmed(kv, 'result-1');
-    const updated = await getResult(kv, 'result-1');
-    expect(updated?.emailConfirmed).toBe(true);
-  });
-
-  it('does nothing when the resultId does not exist', async () => {
-    const kv = createFakeKV();
-    await markEmailConfirmed(kv, 'missing-id');
     expect(await getResult(kv, 'missing-id')).toBeNull();
   });
 });

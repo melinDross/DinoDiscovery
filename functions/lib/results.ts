@@ -10,7 +10,6 @@ export interface ResultRecord {
   attrs: DinoAttributes;
   createdAt: number;
   email: string | null;
-  emailConfirmed: boolean;
 }
 
 const RESULT_TTL_SECONDS = 90 * 24 * 60 * 60;
@@ -42,12 +41,5 @@ export async function setResultEmail(
   const record = await getResult(kv, resultId);
   if (!record) return;
   record.email = email;
-  await saveResult(kv, resultId, record);
-}
-
-export async function markEmailConfirmed(kv: KVLike, resultId: string): Promise<void> {
-  const record = await getResult(kv, resultId);
-  if (!record) return;
-  record.emailConfirmed = true;
   await saveResult(kv, resultId, record);
 }

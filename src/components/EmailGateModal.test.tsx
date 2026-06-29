@@ -20,28 +20,4 @@ describe('EmailGateModal', () => {
     await userEvent.click(screen.getByRole('button', { name: /confirmar/i }));
     expect(onConfirm).toHaveBeenCalledWith('nina@example.com');
   });
-
-  it('shows a waiting message instead of the form when isWaitingForConfirmation is true', () => {
-    render(
-      <EmailGateModal
-        onConfirm={() => {}}
-        onCancel={() => {}}
-        isWaitingForConfirmation
-      />
-    );
-    expect(screen.getByText(/revisa tu correo/i)).toBeInTheDocument();
-    expect(screen.getByText(/spam|correo no deseado/i)).toBeInTheDocument();
-    expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
-  });
-
-  it('shows the subscribe error message when provided', () => {
-    render(
-      <EmailGateModal
-        onConfirm={() => {}}
-        onCancel={() => {}}
-        errorMessage="No se pudo enviar el email de confirmación"
-      />
-    );
-    expect(screen.getByText(/no se pudo enviar el email/i)).toBeInTheDocument();
-  });
 });

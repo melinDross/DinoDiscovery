@@ -108,7 +108,6 @@ describe('fetchResult', () => {
           description: 'desc',
           imageUrl: '/images/abc.png',
           discovererName: 'Lucía',
-          emailConfirmed: false,
         }),
       })
     );

@@ -5,7 +5,7 @@ Recopilación de mejoras propuestas para iterar sobre el MVP del Dino Discovery.
 ## Críticas (bloquean fiabilidad/uso real)
 
 1. ✅ **Persistencia real de emails** — implementado: el email ya no se guarda en `localStorage`; Kit (vía `POST /api/subscribe`) es la única fuente de verdad de leads/suscriptores. Ver `docs/superpowers/specs/2026-06-29-email-verification-and-result-persistence-design.md`.
-2. ✅ **Verificación del email antes de entregar el certificado** — implementado: la descarga del certificado queda bloqueada hasta confirmar el email mediante el double opt-in de Kit; la confirmación se detecta vía la redirección post-confirmación del formulario (`GET /api/confirm`) en vez de automatizaciones de pago, y el frontend hace polling hasta detectarla.
+2. ❌ **Verificación del email antes de entregar el certificado** — descartado deliberadamente tras intentarlo: Kit no ofrece (en plan gratuito) ninguna forma fiable de notificarnos la confirmación sin mantener una pantalla de espera con polling, y la fricción de bloquear la descarga no compensaba frente al riesgo de perder leads. Se prioriza no bloquear nunca la descarga; el email se sigue capturando y enviando a Kit (punto 1), solo que sin gating. Ver "Decisiones descartadas" en `docs/superpowers/specs/2026-06-29-email-verification-and-result-persistence-design.md`.
 3. ✅ **Manejo de errores de generación visible al usuario** — implementado: pantalla de error dedicada (`flowState: 'error'` en `App.tsx`) con mensaje específico para rate limit vs. fallo de API, y botón "Volver a intentar".
 4. ✅ **Persistencia de resultados** — implementado: cada descubrimiento se guarda en `RESULTS_KV` con un `resultId` propio, accesible y recuperable vía `/r/:resultId` (`GET /api/results/:id`), sobreviviendo a refrescos y compartible por URL.
 5. ✅ **Adaptación mobile** — implementado (commit `41e27cb`): touch targets de 44px, layout y legibilidad ajustados a 320px en Landing, WizardShell, AttributeGroup, EmailGateModal, NameStep y ResultScreen.
@@ -36,7 +36,7 @@ Recopilación de mejoras propuestas para iterar sobre el MVP del Dino Discovery.
 
 ## Notas
 
-- Los puntos 1, 2 y 4 se implementaron juntos (estaban interdependientes) usando Kit como proveedor de email marketing/verificación; ver `docs/superpowers/specs/2026-06-29-email-verification-and-result-persistence-design.md`. La confirmación de email usa la redirección post-confirmación del formulario de Kit (gratis) en vez de automatizaciones con webhook (función de pago).
+- Los puntos 1 y 4 se implementaron juntos usando Kit como proveedor de email marketing; ver `docs/superpowers/specs/2026-06-29-email-verification-and-result-persistence-design.md`. El punto 2 se evaluó y se descartó deliberadamente (ver esa misma spec) en favor de no bloquear nunca la descarga del certificado.
 - El punto 8 ("Mi colección") ya tiene resuelta su dependencia de datos (punto 4); falta construir la vista de colección en sí.
 - El punto 17 sigue pendiente y ahora está desacoplado del 16: una escena contextual por hábitat necesita su propio fondo, incompatible con el fondo sólido fijo que implementa el punto 16.
 - Antes de implementar cualquiera de estos puntos, pasar por el proceso de brainstorming/diseño habitual.

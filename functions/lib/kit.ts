@@ -45,21 +45,3 @@ export async function subscribeToKitForm(
     throw new Error(`Kit API error: ${addToFormResponse.status}`);
   }
 }
-
-export async function isEmailConfirmed(
-  email: string,
-  config: KitConfig,
-  fetchFn: typeof fetch = fetch
-): Promise<boolean> {
-  const response = await fetchFn(
-    `https://api.kit.com/v4/subscribers?email_address=${encodeURIComponent(email)}`,
-    { headers: { 'X-Kit-Api-Key': config.apiKey } }
-  );
-
-  if (!response.ok) {
-    throw new Error(`Kit API error: ${response.status}`);
-  }
-
-  const data = (await response.json()) as { subscribers: { state: string }[] };
-  return data.subscribers.length > 0;
-}

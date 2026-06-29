@@ -36,7 +36,6 @@ function createRecord() {
     },
     createdAt: 1000,
     email: null,
-    emailConfirmed: false,
   };
 }
 
@@ -83,7 +82,7 @@ describe('onRequestPost /api/subscribe', () => {
     expect(subscribeToKitForm).not.toHaveBeenCalled();
   });
 
-  it('subscribes via Kit and stores the email pending confirmation', async () => {
+  it('subscribes via Kit and stores the email on the result record', async () => {
     const env = createEnv();
     await saveResult(env.RESULTS_KV, 'result-1', createRecord());
     const response = await onRequestPost({
@@ -99,7 +98,6 @@ describe('onRequestPost /api/subscribe', () => {
     );
     const stored = await getResult(env.RESULTS_KV, 'result-1');
     expect(stored?.email).toBe('nina@example.com');
-    expect(stored?.emailConfirmed).toBe(false);
   });
 
   it('returns 502 when the Kit API call fails', async () => {
