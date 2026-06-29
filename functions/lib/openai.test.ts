@@ -41,4 +41,18 @@ describe('generateDinoImage', () => {
       generateDinoImage(attrs, 'fake-key', fakeFetch as unknown as typeof fetch)
     ).rejects.toThrow('No image data in OpenAI response');
   });
+
+  it('requests a solid app-colored background instead of white', async () => {
+    const fakeFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: [{ b64_json: 'ZmFrZS1pbWFnZS1ieXRlcw==' }] }),
+    });
+
+    await generateDinoImage(attrs, 'fake-key', fakeFetch as unknown as typeof fetch);
+
+    const [, requestInit] = fakeFetch.mock.calls[0];
+    const body = JSON.parse(requestInit.body as string);
+    expect(body.prompt).toContain('solid background color #0d1a0f');
+    expect(body.prompt).not.toContain('white background');
+  });
 });

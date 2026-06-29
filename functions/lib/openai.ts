@@ -5,7 +5,7 @@ export async function generateDinoImage(
   apiKey: string,
   fetchFn: typeof fetch = fetch
 ): Promise<string> {
-  const prompt = `A friendly cartoon dinosaur for a children's app, ${attrs.size} size, living in ${attrs.habitat}, ${attrs.diet} diet, with ${attrs.feature}, ${attrs.personality} personality. Colorful, simple, no text, no watermark, white background.`;
+  const prompt = `A friendly cartoon dinosaur for a children's app, ${attrs.size} size, living in ${attrs.habitat}, ${attrs.diet} diet, with ${attrs.feature}, ${attrs.personality} personality. Colorful, simple, no text, no watermark, solid background color #0d1a0f.`;
 
   const response = await fetchFn('https://api.openai.com/v1/images/generations', {
     method: 'POST',
