@@ -4,15 +4,17 @@ import { shareDinoImage } from '../certificate';
 import type { GenerateDinoResponse, DinoAttributes } from '../../shared/types';
 import { generateSpeciesId, calculateRarity } from '../utils/speciesHash';
 import { RARITY_LABELS } from '../data/cardTheme';
+import { CardScene } from './CardScene';
 
 interface ResultScreenProps {
   result: GenerateDinoResponse;
   attrs: DinoAttributes;
+  discovererName: string;
   onDownloadClick: () => void;
   onRestart: () => void;
 }
 
-export function ResultScreen({ result, attrs, onDownloadClick, onRestart }: ResultScreenProps) {
+export function ResultScreen({ result, attrs, discovererName, onDownloadClick, onRestart }: ResultScreenProps) {
   useEffect(() => {
     confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
   }, []);
@@ -28,18 +30,7 @@ export function ResultScreen({ result, attrs, onDownloadClick, onRestart }: Resu
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-xl w-full text-center">
-        <div className="relative w-48 h-48 sm:w-64 sm:h-64 md:w-72 md:h-72 mx-auto corner-brackets">
-          <img
-            src={result.imageUrl}
-            alt={result.commonName}
-            className="w-full h-full object-contain bg-surface2"
-          />
-        </div>
-        <h2 className="mt-6 font-display text-2xl sm:text-3xl text-cream uppercase tracking-wide">
-          {result.commonName}
-        </h2>
-        <p className="italic text-moss">{result.scientificName}</p>
-        <p className="mt-3 text-sage">{result.description}</p>
+        <CardScene discovererName={discovererName} result={result} attrs={attrs} />
         <div className="mt-3 text-xs text-sage uppercase tracking-wide">
           Código de especie
         </div>

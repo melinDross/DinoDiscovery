@@ -305,6 +305,7 @@ export default function App() {
           <ResultScreen
             result={result}
             attrs={currentAttrs}
+            discovererName={discovererName}
             onDownloadClick={() => setShowEmailGate(true)}
             onRestart={handleRestart}
           />

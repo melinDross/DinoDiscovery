@@ -1,0 +1,107 @@
+import { useRef, useState } from 'react';
+import type { GenerateDinoResponse, DinoAttributes } from '../../shared/types';
+import { Card } from './Card';
+import { calculateRarity } from '../utils/speciesHash';
+
+interface CardSceneProps {
+  discovererName: string;
+  result: GenerateDinoResponse;
+  attrs: DinoAttributes;
+}
+
+export function clampTilt(
+  clientX: number,
+  clientY: number,
+  rect: DOMRect,
+  maxDeg: number
+): { rotateX: number; rotateY: number } {
+  const px = (clientX - rect.left) / rect.width - 0.5;
+  const py = (clientY - rect.top) / rect.height - 0.5;
+  const rotateY = Math.max(-maxDeg, Math.min(maxDeg, px * maxDeg * 2)) || 0;
+  const rotateX = Math.max(-maxDeg, Math.min(maxDeg, -py * maxDeg * 2)) || 0;
+  return { rotateX, rotateY };
+}
+
+const MAX_TILT_DEG = 15;
+const FLIP_DURATION_MS = 800;
+const SPIN_DURATION_MS = 1000;
+const TILT_ACTIVE_TRANSITION = '80ms linear';
+const TILT_RESET_TRANSITION = '400ms ease-out';
+const FLIP_TRANSITION = `transform ${FLIP_DURATION_MS}ms ease-out`;
+const SPIN_TRANSITION = `transform ${SPIN_DURATION_MS}ms ease-in-out`;
+
+export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
+  const [hasFlippedIn, setHasFlippedIn] = useState(false);
+  const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
+  const [transition, setTransition] = useState(FLIP_TRANSITION);
+  const [spinDeg, setSpinDeg] = useState(0);
+  const [isSpinning, setIsSpinning] = useState(false);
+  const flipperRef = useRef<HTMLDivElement>(null);
+
+  const rarity = calculateRarity(attrs);
+  const isLegendary = rarity === 'legendary';
+
+  if (!hasFlippedIn) {
+    // Triggers the flip-in transition on the first paint after mount.
+    requestAnimationFrame(() => setHasFlippedIn(true));
+  }
+
+  function handleMouseMove(event: React.MouseEvent<HTMLDivElement>) {
+    if (isSpinning) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const next = clampTilt(event.clientX, event.clientY, rect, MAX_TILT_DEG);
+    setTransition(TILT_ACTIVE_TRANSITION);
+    setTilt(next);
+  }
+
+  function handleMouseLeave() {
+    if (isSpinning) return;
+    setTransition(TILT_RESET_TRANSITION);
+    setTilt({ rotateX: 0, rotateY: 0 });
+  }
+
+  function handleSpinClick() {
+    setIsSpinning(true);
+    setHasFlippedIn(true);
+    setTransition(SPIN_TRANSITION);
+    setTilt({ rotateX: 0, rotateY: 0 });
+    setSpinDeg((current) => current + 360);
+    setTimeout(() => {
+      setIsSpinning(false);
+      setTransition(TILT_RESET_TRANSITION);
+      setSpinDeg(0);
+      setTilt({ rotateX: 0, rotateY: 0 });
+    }, SPIN_DURATION_MS);
+  }
+
+  const baseFlipDeg = hasFlippedIn ? 0 : 180;
+  const totalRotateY = baseFlipDeg + tilt.rotateY + spinDeg;
+
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <div
+        className="card-perspective"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+      >
+        <div
+          ref={flipperRef}
+          className={`card-flipper ${isLegendary ? 'card-glow-idle' : ''}`}
+          style={{
+            transform: `rotateX(${tilt.rotateX}deg) rotateY(${totalRotateY}deg)`,
+            transition,
+          }}
+        >
+          <Card discovererName={discovererName} result={result} attrs={attrs} />
+        </div>
+      </div>
+      <button
+        type="button"
+        onClick={handleSpinClick}
+        className="px-4 py-2 min-h-[44px] text-accent font-display uppercase tracking-wide border border-accent/40 hover:border-accent transition-colors"
+      >
+        Girar carta
+      </button>
+    </div>
+  );
+}

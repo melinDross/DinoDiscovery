@@ -50,4 +50,29 @@
     border-bottom: 2px solid #b2ff00;
     border-right: 2px solid #b2ff00;
   }
+
+  .card-perspective {
+    perspective: 1000px;
+  }
+
+  .card-flipper {
+    transform-style: preserve-3d;
+    transition: transform 80ms linear;
+    will-change: transform;
+  }
+
+  .card-glow-idle {
+    animation: card-glow-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes card-glow-pulse {
+    0%, 100% {
+      box-shadow: 0 0 30px 8px rgba(255, 200, 50, 0.6), 0 0 60px 16px rgba(255, 150, 0, 0.3);
+      opacity: 0.6;
+    }
+    50% {
+      box-shadow: 0 0 30px 8px rgba(255, 200, 50, 0.6), 0 0 60px 16px rgba(255, 150, 0, 0.3);
+      opacity: 1;
+    }
+  }
 }
