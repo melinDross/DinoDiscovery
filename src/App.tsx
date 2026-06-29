@@ -6,7 +6,7 @@ import { AttributeGroup } from './components/AttributeGroup';
 import { LoadingDino } from './components/LoadingDino';
 import { ResultScreen } from './components/ResultScreen';
 import { EmailGateModal } from './components/EmailGateModal';
-import { Certificate } from './components/Certificate';
+import { Card } from './components/Card';
 import { SIZES, HABITATS, DIETS, FEATURES, PERSONALITIES } from './data/attributes';
 import { isSelectionComplete } from './validation';
 import { generateDino, subscribeEmail, fetchResult, RateLimitError, DinoApiError } from './api';
@@ -183,7 +183,7 @@ export default function App() {
     if (certificateRef.current && result) {
       await captureCertificateAsPng(
         certificateRef.current,
-        `certificado-${result.commonName.toLowerCase().replace(/\s+/g, '-')}.png`
+        `carta-${result.commonName.toLowerCase().replace(/\s+/g, '-')}.png`
       );
     }
   }
@@ -200,6 +200,21 @@ export default function App() {
     }
     await downloadCertificate();
   }
+
+  // TODO(Task 4): this inline construction with non-null assertions is a
+  // stopgap. It only works because by the time flowState === 'result' the
+  // wizard guarantees size/habitat/diet/feature/personality are non-null.
+  // It does NOT work for the /r/:id shared-link flow (loadResultFromUrl only
+  // sets `result`/`discovererName`, not the individual attribute state), so
+  // currentAttrs! assertions will be unsound there until Task 4 replaces
+  // this with properly-typed, non-null-assertion-free attrs state.
+  const currentAttrs: DinoAttributes = {
+    size: size!,
+    habitat: habitat!,
+    diet: diet!,
+    feature: feature!,
+    personality: personality!,
+  };
 
   return (
     <main className="min-h-screen grid-overlay text-cream font-body">
@@ -304,7 +319,7 @@ export default function App() {
             onRestart={handleRestart}
           />
           <div className="fixed -left-[9999px] top-0" aria-hidden="true">
-            <Certificate ref={certificateRef} discovererName={discovererName} result={result} />
+            <Card ref={certificateRef} discovererName={discovererName} result={result} attrs={currentAttrs} />
           </div>
         </>
       )}
