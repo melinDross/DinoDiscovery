@@ -25,7 +25,7 @@ Recopilación de mejoras propuestas para iterar sobre el MVP del Dino Discovery.
 13. ✅ **Navegación tras ver el resultado** — implementado: botón "Crear otro dinosaurio" en `ResultScreen` que reinicia el wizard sin recargar la página.
 14. **Elección de color del dino** — añadir un paso/atributo donde el niño elija un color y el dinosaurio generado lo refleje mayoritariamente (requiere ajustar el prompt de generación de imagen para respetar el color elegido).
 15. **Nuevo atributo de dieta: comedor de huevos** — añadir una opción de dieta para dinosaurios que se alimentan de huevos de otras especies. Nota de terminología: el término correcto sería "ovívoro" (se alimenta de huevos); conviene revisar el nombre exacto antes de implementarlo.
-16. **Quitar el fondo blanco de las imágenes generadas** — actualmente todos los dinosaurios se generan sobre un fondo blanco liso. Probar fondo transparente, o un fondo que se mimetice con la paleta oscura/lima de la app, para que el resultado se sienta más integrado visualmente con el resto de la experiencia (requiere ajustar el prompt de generación de imagen).
+16. ✅ **Quitar el fondo blanco de las imágenes generadas** — implementado: el prompt de `gpt-image-2` ahora pide un fondo sólido `#0d1a0f` (verde oscuro de la app) en vez de blanco. No es transparencia real (gpt-image-2 no la soporta) ni una escena contextual (eso queda como punto 17, sin implementar).
 17. **Contextualizar visualmente a cada dinosaurio en su hábitat** — de momento solo el hábitat "Volcán" muestra al dinosaurio dentro de su entorno (con un volcán de fondo); el resto de hábitats se genera sin ambientación. Por ejemplo, "Océano" debería mostrar al dinosaurio bajo el agua, "Desierto" entre dunas, etc. Requiere reforzar el prompt de generación de imagen para que el hábitat seleccionado forme parte de la escena, no solo se mencione como atributo del dinosaurio.
 
 ## Deseables (pulido y crecimiento)
@@ -38,6 +38,6 @@ Recopilación de mejoras propuestas para iterar sobre el MVP del Dino Discovery.
 
 - El punto 8 ("Mi colección") depende de resolver primero el punto 4 (persistencia de resultados) y posiblemente el 1 (persistencia de emails), ya que ambos requieren guardar datos más allá de la sesión actual.
 - El punto 2 (verificación de email) depende del punto 1 (persistencia real de emails): verificar un email que solo vive en `localStorage` tiene un valor limitado, conviene abordarlos juntos.
-- Los puntos 16 y 17 son ambos ajustes del prompt de generación de imagen — tiene sentido abordarlos juntos en la misma iteración.
+- El punto 17 sigue pendiente y ahora está desacoplado del 16: una escena contextual por hábitat necesita su propio fondo, incompatible con el fondo sólido fijo que implementa el punto 16.
 - Antes de implementar cualquiera de estos puntos, pasar por el proceso de brainstorming/diseño habitual.
 - Puntos 3, 5, 9, 11 y 13 (y parcialmente el 6) entregados en la release v0.2.3.
