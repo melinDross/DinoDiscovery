@@ -92,7 +92,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     return (
       <div
         ref={ref}
-        className="relative w-[420px] rounded-[28px] border-[6px] border-[#0a0a0a] bg-bg text-cream overflow-hidden shadow-2xl"
+        className="relative w-[420px] rounded-[28px] border-[14px] border-[#0a0a0a] bg-bg text-cream overflow-hidden shadow-2xl"
       >
         {/* Full-bleed art: habitat background + dino composited on top, title and
             tags floating directly over the art instead of in a boxed header. */}

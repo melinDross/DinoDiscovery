@@ -111,7 +111,7 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
             <img
               src={CARD_BACK_PATH}
               alt="Dino Discovery"
-              className="w-full h-full object-cover rounded-[28px] border-[6px] border-[#0a0a0a]"
+              className="w-full h-full object-cover rounded-[28px] border-[14px] border-[#0a0a0a]"
             />
           </div>
         </div>
