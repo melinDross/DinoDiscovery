@@ -1,5 +1,5 @@
 import type { KVLike } from '../lib/rateLimit';
-import { markEmailConfirmed } from '../lib/results';
+import { confirmResultsForEmail } from '../lib/results';
 
 interface Env {
   RESULTS_KV: KVLike;
@@ -14,12 +14,16 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
     return Response.json({ error: 'UNAUTHORIZED' }, { status: 401 });
   }
 
-  const resultId = url.searchParams.get('resultId');
-  if (!resultId) {
-    return Response.json({ error: 'API_ERROR', message: 'Falta resultId' }, { status: 400 });
+  const email = url.searchParams.get('email');
+  if (!email) {
+    return Response.json({ error: 'API_ERROR', message: 'Falta email' }, { status: 400 });
   }
 
-  await markEmailConfirmed(env.RESULTS_KV, resultId);
+  const confirmedResultIds = await confirmResultsForEmail(env.RESULTS_KV, email);
+  const lastResultId = confirmedResultIds[confirmedResultIds.length - 1];
 
-  return new Response(null, { status: 302, headers: { Location: `/r/${resultId}` } });
+  return new Response(null, {
+    status: 302,
+    headers: { Location: lastResultId ? `/r/${lastResultId}` : '/' },
+  });
 }

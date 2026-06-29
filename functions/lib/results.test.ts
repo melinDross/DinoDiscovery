@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { getResult, saveResult, setResultEmail, markEmailConfirmed } from './results';
+import {
+  getResult,
+  saveResult,
+  setResultEmail,
+  markEmailConfirmed,
+  confirmResultsForEmail,
+} from './results';
 import type { ResultRecord } from './results';
 
 function createFakeKV() {
@@ -79,5 +85,37 @@ describe('markEmailConfirmed', () => {
     const kv = createFakeKV();
     await markEmailConfirmed(kv, 'missing-id');
     expect(await getResult(kv, 'missing-id')).toBeNull();
+  });
+});
+
+describe('confirmResultsForEmail', () => {
+  it('confirms the result that was subscribed with that email and returns its resultId', async () => {
+    const kv = createFakeKV();
+    await saveResult(kv, 'result-1', createRecord());
+    await setResultEmail(kv, 'result-1', 'nina@example.com');
+
+    const confirmed = await confirmResultsForEmail(kv, 'nina@example.com');
+
+    expect(confirmed).toEqual(['result-1']);
+    expect((await getResult(kv, 'result-1'))?.emailConfirmed).toBe(true);
+  });
+
+  it('confirms every pending result for an email used on multiple discoveries', async () => {
+    const kv = createFakeKV();
+    await saveResult(kv, 'result-1', createRecord());
+    await saveResult(kv, 'result-2', createRecord());
+    await setResultEmail(kv, 'result-1', 'nina@example.com');
+    await setResultEmail(kv, 'result-2', 'nina@example.com');
+
+    const confirmed = await confirmResultsForEmail(kv, 'nina@example.com');
+
+    expect(confirmed).toEqual(['result-1', 'result-2']);
+    expect((await getResult(kv, 'result-1'))?.emailConfirmed).toBe(true);
+    expect((await getResult(kv, 'result-2'))?.emailConfirmed).toBe(true);
+  });
+
+  it('returns an empty array when no result was ever subscribed with that email', async () => {
+    const kv = createFakeKV();
+    expect(await confirmResultsForEmail(kv, 'unknown@example.com')).toEqual([]);
   });
 });

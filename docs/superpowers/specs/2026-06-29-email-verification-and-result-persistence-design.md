@@ -61,15 +61,20 @@ Nuevo endpoint `functions/api/subscribe.ts`:
 
 **Actualización**: las automatizaciones con webhook de Kit ("Visual Automations") son una función de plan de pago. Se sustituyen por un mecanismo igual de eficaz pero disponible en el plan gratuito: la redirección post-confirmación del propio formulario, usando Liquid tags.
 
+**Segunda corrección**: los Liquid tags de custom fields no se renderizan en el campo "Redirect to URL" de un formulario — Kit solo soporta ahí un conjunto fijo de parámetros vía el checkbox "Send subscriber data to thank you page" (`email`, `first_name`, `id` del subscriber), sin custom fields. El diseño se ajusta para identificar el resultado pendiente por **email** en vez de por `resultId`.
+
+`functions/lib/results.ts` añade un índice inverso `pending-email:{email}` (lista de `resultId`s pendientes de confirmar con ese email), actualizado en cada `setResultEmail`.
+
 Nuevo endpoint `functions/api/confirm.ts`:
-- `GET /api/confirm?resultId=...&secret=...` — el handler rechaza con 401 si `secret` no coincide con `KIT_WEBHOOK_SECRET`, y con 400 si falta `resultId`.
-- Si `result:{resultId}` existe, marca `emailConfirmed = true` en KV (no-op si no existe, idempotente).
-- Responde `302` redirigiendo a `/r/{resultId}`, donde el frontend ya sabe reconstruir el estado y reflejar `emailConfirmed`.
+- `GET /api/confirm?secret=...&email=...` (los parámetros `first_name` e `id` que añade Kit se ignoran) — el handler rechaza con 401 si `secret` no coincide con `KIT_WEBHOOK_SECRET`, y con 400 si falta `email`.
+- Llama a `confirmResultsForEmail`, que marca `emailConfirmed = true` en todos los `ResultRecord` pendientes para ese email (puede haber varios si el mismo email se usó en más de un descubrimiento) y devuelve la lista de `resultId`s confirmados.
+- Responde `302` redirigiendo al más reciente de esos `resultId`s (`/r/{resultId}`), o a `/` si no había ningún resultado pendiente para ese email (enlace de confirmación caducado o reutilizado).
 
 **Configuración manual en Kit (fuera de este repo, documentada como pasos de implementación)**:
-1. Usar un formulario con double opt-in activado (default) y el custom field `dino_result_id` creado a nivel de cuenta.
-2. En *Form Settings → General*, activar **"Send subscriber data to thank you page"** y configurar **"After confirming redirect to: URL"** como `https://<dominio>/api/confirm?resultId={{ subscriber.dino_result_id }}&secret=<KIT_WEBHOOK_SECRET>` (el nombre exacto del Liquid tag del custom field se confirma en el propio editor de Kit, que autocompleta los tags disponibles).
-3. **Trade-off de seguridad aceptado**: a diferencia de un webhook servidor-a-servidor, este secreto viaja en una URL visible en el navegador de cualquiera que confirme un email, por lo que queda expuesto a quien lo inspeccione. Alguien con ese secreto podría marcar como confirmado el resultado de otra persona sin verificación real. Dado que lo único que protege es la descarga de un certificado de una app infantil (sin datos sensibles en juego), se acepta este riesgo para evitar depender de un plan de pago de Kit.
+1. Usar un formulario con double opt-in activado (default).
+2. En *Form Settings → General*, activar **"Send subscriber data to thank you page"** y configurar **"After confirming redirect to: URL"** como `https://<dominio>/api/confirm?secret=<KIT_WEBHOOK_SECRET>` — Kit añade automáticamente `&email=...&first_name=...&id=...`.
+3. **Trade-off de seguridad aceptado**: a diferencia de un webhook servidor-a-servidor, este secreto viaja en una URL visible en el navegador de cualquiera que confirme un email, por lo que queda expuesto a quien lo inspeccione. Alguien con ese secreto podría marcar como confirmado el resultado pendiente de otra persona conociendo solo su email (no su contenido). Dado que lo único que protege es la descarga de un certificado de una app infantil (sin datos sensibles en juego), se acepta este riesgo para evitar depender de un plan de pago de Kit.
+4. La suscripción en sí (`functions/lib/kit.ts`) es un proceso de dos llamadas a la API v4: `POST /v4/subscribers` (crea/actualiza el subscriber con el custom field `dino_result_id`, que queda como metadato en Kit aunque ya no se use para el redirect) y `POST /v4/forms/{form_id}/subscribers/{subscriber_id}` (lo añade a ese formulario, lo que dispara su email de doble confirmación).
 
 Frontend (`EmailGateModal.tsx` y `App.tsx`):
 - Al confirmar el email, en vez de `saveEmail` + descarga inmediata, se llama a `POST /api/subscribe`.
