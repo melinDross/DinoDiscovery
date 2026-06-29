@@ -96,7 +96,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       >
         {/* Full-bleed art: habitat background + dino composited on top, title and
             tags floating directly over the art instead of in a boxed header. */}
-        <div className="relative h-[540px] bg-surface2 overflow-hidden">
+        <div className="relative h-[440px] bg-surface2 overflow-hidden">
           <img
             src={habitatBackground.path}
             alt={`Entorno: ${attrs.habitat}`}
@@ -129,7 +129,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             {habitatBackground.name}
           </span>
 
-          <div className="absolute bottom-0 left-0 right-0 px-4 pt-16 pb-7 bg-gradient-to-t from-bg via-bg/90 to-transparent">
+          <div className="absolute bottom-0 left-0 right-0 px-4 pt-16 pb-10 bg-gradient-to-t from-bg via-bg/90 to-transparent">
             <h2 className="font-display text-xl text-white uppercase tracking-wide text-center">
               {result.commonName}
             </h2>
@@ -143,7 +143,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         {/* Continuous stone tablet: attribute medallions, divider, then the
             score/rarity/tier row, all inside a single panel (no separate
             boxed sections) so it reads as one piece like the reference card. */}
-        <div className="relative z-[2] -mt-[28px] mx-4 rounded-[24px] bg-[#1c1c1c] border border-accent/20 px-2 pt-4 pb-3 overflow-visible">
+        <div className="relative z-[2] -mt-[10px] mx-4 rounded-[24px] bg-[#1c1c1c] border border-accent/20 px-2 pt-4 pb-3 overflow-visible">
           <div className="grid grid-cols-5 gap-1 text-center">
             {cells.map((cell, index) => (
               <div
