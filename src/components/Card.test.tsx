@@ -31,9 +31,15 @@ describe('Card', () => {
     expect(screen.getByText('Lucía')).toBeInTheDocument();
   });
 
-  it('composites the habitat background behind the dino image', () => {
+  it('composites a deterministically-picked habitat sub-biome behind the dino image', () => {
     render(<Card discovererName="Lucía" result={result} attrs={attrs} />);
-    expect(screen.getByAltText('Entorno: Volcán')).toHaveAttribute('src', '/habitats/volcan.png');
+    // pickHabitatBackground hashes all 5 attribute values; for this fixture
+    // it lands on variant 0 of Volcán: '/habitats/volcan-1.png' / 'Caldera Mágica'.
+    expect(screen.getByAltText('Entorno: Volcán')).toHaveAttribute(
+      'src',
+      '/habitats/volcan-1.png'
+    );
+    expect(screen.getByText('Caldera Mágica')).toBeInTheDocument();
     expect(screen.getByAltText('Volcanrex')).toHaveAttribute('src', '/images/abc.png');
   });
 

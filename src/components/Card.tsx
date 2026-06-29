@@ -7,7 +7,7 @@ import {
   RARITY_BADGE_COLORS,
   RARITY_STAR_COUNT,
   ATTRIBUTE_MEDALLION_PATHS,
-  HABITAT_BACKGROUND_PATHS,
+  pickHabitatBackground,
   getExpeditionLabel,
 } from '../data/cardTheme';
 
@@ -54,6 +54,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     const stars = '★'.repeat(RARITY_STAR_COUNT[rarity]);
     const expeditionLabel = getExpeditionLabel(result.resultId);
     const cutoutImageUrl = useDinoCutout(result.imageUrl);
+    const habitatBackground = pickHabitatBackground(attrs);
 
     const cells: Array<{ icon: string; alt: string; label: string; value: string }> = [
       {
@@ -97,7 +98,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             tags floating directly over the art instead of in a boxed header. */}
         <div className="relative h-[540px] bg-surface2 overflow-hidden">
           <img
-            src={HABITAT_BACKGROUND_PATHS[attrs.habitat]}
+            src={habitatBackground.path}
             alt={`Entorno: ${attrs.habitat}`}
             className="absolute inset-0 w-full h-full object-cover"
           />
@@ -122,6 +123,10 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             style={{ backgroundColor: RARITY_BADGE_COLORS[rarity] }}
           >
             {RARITY_LABELS[rarity]}
+          </span>
+
+          <span className="absolute bottom-[27%] left-3 px-2 py-1 bg-bg/90 border border-accent/30 shadow-lg text-[10px] uppercase tracking-wide rounded-[40px]">
+            {habitatBackground.name}
           </span>
 
           <div className="absolute bottom-0 left-0 right-0 px-4 pt-16 pb-7 bg-gradient-to-t from-bg via-bg/90 to-transparent">
