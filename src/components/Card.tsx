@@ -1,8 +1,15 @@
 import { forwardRef } from 'react';
 import type { GenerateDinoResponse, DinoAttributes } from '../../shared/types';
-import { ATTRIBUTE_EMOJIS } from '../data/attributes';
-import { generateSpeciesId, calculateRarity } from '../utils/speciesHash';
-import { HABITAT_COLORS, HABITAT_REGIONS, RARITY_LABELS, RARITY_BADGE_COLORS, getExpeditionLabel } from '../data/cardTheme';
+import { generateSpeciesId, calculateRarity, calculateRarityScore } from '../utils/speciesHash';
+import {
+  RARITY_LABELS,
+  RARITY_BADGE_COLORS,
+  RARITY_STAR_COUNT,
+  ATTRIBUTE_MEDALLION_PATHS,
+  BRAND_EMBLEM_PATH,
+  HABITAT_BACKGROUND_PATHS,
+  getExpeditionLabel,
+} from '../data/cardTheme';
 
 export interface CardProps {
   discovererName: string;
@@ -19,65 +26,121 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     });
     const speciesId = generateSpeciesId({ ...attrs });
     const rarity = calculateRarity(attrs);
-    const headerColor = HABITAT_COLORS[attrs.habitat];
-    const region = HABITAT_REGIONS[attrs.habitat];
+    const score = calculateRarityScore(attrs);
+    const stars = '★'.repeat(RARITY_STAR_COUNT[rarity]);
     const expeditionLabel = getExpeditionLabel(result.resultId);
 
-    const cells: Array<{ emoji: string; label: string; value: string }> = [
-      { emoji: ATTRIBUTE_EMOJIS[attrs.size] ?? '', label: 'Tamaño', value: attrs.size },
-      { emoji: ATTRIBUTE_EMOJIS[attrs.diet] ?? '', label: 'Dieta', value: attrs.diet },
-      { emoji: ATTRIBUTE_EMOJIS[attrs.habitat] ?? '', label: 'Hábitat', value: attrs.habitat },
-      { emoji: ATTRIBUTE_EMOJIS[attrs.feature] ?? '', label: 'Poder', value: attrs.feature },
+    const cells: Array<{ icon: string; alt: string; label: string; value: string }> = [
+      {
+        icon: ATTRIBUTE_MEDALLION_PATHS[attrs.size] ?? '',
+        alt: `Tamaño: ${attrs.size}`,
+        label: 'Tamaño',
+        value: attrs.size,
+      },
+      {
+        icon: ATTRIBUTE_MEDALLION_PATHS[attrs.diet] ?? '',
+        alt: `Dieta: ${attrs.diet}`,
+        label: 'Dieta',
+        value: attrs.diet,
+      },
+      {
+        icon: ATTRIBUTE_MEDALLION_PATHS[attrs.feature] ?? '',
+        alt: `Característica: ${attrs.feature}`,
+        label: 'Poder',
+        value: attrs.feature,
+      },
+      {
+        icon: ATTRIBUTE_MEDALLION_PATHS[attrs.personality] ?? '',
+        alt: `Personalidad: ${attrs.personality}`,
+        label: 'Personalidad',
+        value: attrs.personality,
+      },
+      {
+        icon: ATTRIBUTE_MEDALLION_PATHS[attrs.habitat] ?? '',
+        alt: `Hábitat: ${attrs.habitat}`,
+        label: 'Hábitat',
+        value: attrs.habitat,
+      },
     ];
 
     return (
-      <div ref={ref} className="relative w-[360px] bg-bg text-cream corner-brackets overflow-hidden">
-        <div
-          className="relative px-5 pt-5 pb-8 text-center"
-          style={{ backgroundColor: headerColor }}
-        >
+      <div ref={ref} className="relative w-[380px] bg-bg text-cream corner-brackets overflow-hidden">
+        <div className="flex items-center justify-center gap-2 px-4 py-3 bg-bg border-b border-accent/20">
+          <img src={BRAND_EMBLEM_PATH} alt="Dino Discovery" className="w-6 h-6 object-contain" />
+          <h1 className="font-display text-lg text-accent uppercase tracking-wide">
+            Dino Discovery
+          </h1>
+        </div>
+
+        <div className="relative h-[340px] bg-surface2 overflow-hidden">
+          <img
+            src={HABITAT_BACKGROUND_PATHS[attrs.habitat]}
+            alt={`Entorno: ${attrs.habitat}`}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <img
+            src={result.imageUrl}
+            alt={result.commonName}
+            className="relative w-full h-full object-contain"
+          />
+          <span className="absolute top-3 left-3 px-2 py-1 bg-bg/80 text-xs font-mono rounded-[40px]">
+            {speciesId}
+          </span>
           <span
             className="absolute top-3 right-3 px-3 py-1 rounded-[40px] text-xs font-display uppercase tracking-wide text-bg"
             style={{ backgroundColor: RARITY_BADGE_COLORS[rarity] }}
           >
             {RARITY_LABELS[rarity]}
           </span>
-          <p className="italic text-sm text-cream/80">{result.scientificName}</p>
-          <h2 className="font-display text-2xl uppercase tracking-wide text-white">
-            {result.commonName}
-          </h2>
+          <div className="absolute bottom-0 left-0 right-0 px-4 py-3 bg-gradient-to-t from-bg/95 via-bg/80 to-transparent">
+            <h2 className="font-display text-lg text-white uppercase tracking-wide text-center">
+              {result.commonName}
+            </h2>
+            <p className="italic text-xs text-cream/80 text-center">{result.scientificName}</p>
+            <p className="italic text-center text-cream text-xs mt-1 line-clamp-2">
+              {result.description}
+            </p>
+          </div>
         </div>
 
-        <div className="relative bg-surface2">
-          <img
-            src={result.imageUrl}
-            alt={result.commonName}
-            className="w-full h-56 object-contain bg-surface2"
-          />
-          <span className="absolute bottom-2 left-2 px-2 py-1 bg-bg/80 text-xs rounded-[40px]">
-            {region.emoji} {region.name}
-          </span>
-          <span className="absolute bottom-2 right-2 px-2 py-1 bg-bg/80 text-xs font-mono rounded-[40px]">
-            {speciesId}
-          </span>
-        </div>
-
-        <div
-          className="relative z-[2] -mt-[18px] mx-4 rounded-[40px] px-2 py-2 grid grid-cols-4 gap-1 text-center"
-          style={{ backgroundColor: headerColor }}
-        >
-          {cells.map((cell) => (
-            <div key={cell.label} className="flex flex-col items-center">
-              <span className="text-lg" aria-hidden="true">{cell.emoji}</span>
-              <span className="text-[10px] uppercase tracking-wide text-cream/70">{cell.label}</span>
-              <span className="text-xs font-semibold">{cell.value}</span>
+        <div className="relative z-[2] -mt-[20px] mx-4 rounded-[24px] bg-[#1c1c1c] border border-accent/20 px-1 py-3 grid grid-cols-5 gap-0.5 text-center overflow-visible">
+          {cells.map((cell, index) => (
+            <div
+              key={cell.label}
+              className={`flex flex-col items-center min-w-0 px-0.5 ${index === 2 ? '-mt-4' : ''}`}
+            >
+              <img
+                src={cell.icon}
+                alt={cell.alt}
+                className={`object-contain rounded-[40px] ${index === 2 ? 'w-12 h-12' : 'w-9 h-9'}`}
+              />
+              <span className="mt-1 text-[8px] uppercase tracking-wide text-cream/70 leading-tight">
+                {cell.label}
+              </span>
+              <span className="text-[9px] font-semibold leading-tight break-words text-center">
+                {cell.value}
+              </span>
             </div>
           ))}
         </div>
 
-        <p className="italic text-center text-sage text-sm px-6 pt-4">{result.description}</p>
+        <div className="flex items-center justify-between px-5 py-4 mt-2 text-xs">
+          <div className="text-center">
+            <p className="text-[10px] uppercase tracking-wide text-sage">Puntuación</p>
+            <p className="font-display text-lg text-cream">{score}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-[10px] uppercase tracking-wide text-sage">Rareza</p>
+            <p className="font-display text-sm text-cream">{RARITY_LABELS[rarity]}</p>
+            <p className="text-accent">{stars}</p>
+          </div>
+          <div className="text-center">
+            <p className="text-[10px] uppercase tracking-wide text-sage">Tier</p>
+            <p className="font-display text-lg text-cream">{RARITY_STAR_COUNT[rarity]}</p>
+          </div>
+        </div>
 
-        <div className="flex items-center justify-between px-5 py-4 mt-2 text-xs text-sage">
+        <div className="flex items-center justify-between px-5 pb-4 text-xs text-sage">
           <span>
             Descubridor/a: <strong className="text-cream">{discovererName}</strong>
           </span>
@@ -87,6 +150,8 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             {discoveryDate}
           </span>
         </div>
+
+        <p className="text-center text-[10px] text-moss pb-2">Arte generado con IA</p>
       </div>
     );
   }

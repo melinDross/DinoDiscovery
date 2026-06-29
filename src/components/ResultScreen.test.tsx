@@ -31,7 +31,7 @@ describe('ResultScreen', () => {
     expect(screen.getByText('Volcanrex')).toBeInTheDocument();
     expect(screen.getByText('Volcanius ferox')).toBeInTheDocument();
     expect(screen.getByText(result.description)).toBeInTheDocument();
-    expect(screen.getByRole('img')).toHaveAttribute('src', '/images/abc.png');
+    expect(screen.getByAltText('Volcanrex')).toHaveAttribute('src', '/images/abc.png');
   });
 
   it('fires confetti when the dino is revealed', () => {

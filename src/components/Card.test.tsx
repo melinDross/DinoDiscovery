@@ -31,12 +31,43 @@ describe('Card', () => {
     expect(screen.getByText('Lucía')).toBeInTheDocument();
   });
 
-  it('shows the 4 attribute cells with emoji and value', () => {
+  it('shows the brand title bar with the emblem image', () => {
     render(<Card discovererName="Lucía" result={result} attrs={attrs} />);
-    expect(screen.getByText('Gigante')).toBeInTheDocument();
-    expect(screen.getByText('Carnívoro')).toBeInTheDocument();
-    expect(screen.getByText('Volcán')).toBeInTheDocument();
-    expect(screen.getByText('Cuernos')).toBeInTheDocument();
+    expect(screen.getByText('Dino Discovery')).toBeInTheDocument();
+    expect(screen.getByAltText('Dino Discovery')).toHaveAttribute(
+      'src',
+      '/icons/medallions/emblem.png'
+    );
+  });
+
+  it('composites the habitat background behind the dino image', () => {
+    render(<Card discovererName="Lucía" result={result} attrs={attrs} />);
+    expect(screen.getByAltText('Entorno: Volcán')).toHaveAttribute('src', '/habitats/volcan.png');
+    expect(screen.getByAltText('Volcanrex')).toHaveAttribute('src', '/images/abc.png');
+  });
+
+  it('shows all 5 attribute medallions with their icon, label and value', () => {
+    render(<Card discovererName="Lucía" result={result} attrs={attrs} />);
+    expect(screen.getByAltText('Tamaño: Gigante')).toHaveAttribute(
+      'src',
+      '/icons/medallions/gigante.png'
+    );
+    expect(screen.getByAltText('Dieta: Carnívoro')).toHaveAttribute(
+      'src',
+      '/icons/medallions/carnivoro.png'
+    );
+    expect(screen.getByAltText('Característica: Cuernos')).toHaveAttribute(
+      'src',
+      '/icons/medallions/cuernos.png'
+    );
+    expect(screen.getByAltText('Personalidad: Feroz')).toHaveAttribute(
+      'src',
+      '/icons/medallions/feroz.png'
+    );
+    expect(screen.getByAltText('Hábitat: Volcán')).toHaveAttribute(
+      'src',
+      '/icons/medallions/volcan.png'
+    );
   });
 
   it('shows the deterministic species ID in DX-XXX-XXX format', () => {
@@ -44,29 +75,14 @@ describe('Card', () => {
     expect(screen.getByText(/^DX-[0-9A-Z]{3}-[0-9A-Z]{3}$/)).toBeInTheDocument();
   });
 
-  it('shows the rarity badge label', () => {
+  it('shows the numeric score, rarity label with star count, and tier number', () => {
     render(<Card discovererName="Lucía" result={result} attrs={attrs} />);
-    // NOTE: the task brief's fixture expected 'Épico', but Task 1's actual
-    // calculateRarity point table (src/utils/speciesHash.ts) scores this
-    // exact attrs combination (Gigante+Carnívoro+Cuernos+Volcán+Feroz) at 12
-    // points, which is 'Raro' per the table's thresholds (rare: >=12, epic:
-    // >=15). Since size/diet/feature/habitat are all pinned by the other
-    // tests in this file, the max achievable total is 13 (rare), so 'Épico'
-    // is unreachable without contradicting the other assertions. Asserting
-    // the actually-computed label here instead of silently changing the
-    // rarity table or the fixed display attrs.
-    expect(screen.getByText('Raro')).toBeInTheDocument();
-  });
-
-  it('shows the habitat region tag and expedition footer', () => {
-    render(<Card discovererName="Lucía" result={result} attrs={attrs} />);
-    // Card.tsx renders `{region.emoji} {region.name}` as sibling text nodes
-    // (emoji, space, name), so testing-library's default exact-match
-    // getByText('Sector Forja') won't match any single node. Using a
-    // function matcher against the element's full textContent instead.
-    expect(
-      screen.getByText((_, element) => element?.textContent === '🌋 Sector Forja')
-    ).toBeInTheDocument();
-    expect(screen.getByText(/Expedición Pangea #/)).toBeInTheDocument();
+    // Gigante(3) + Carnívoro(2) + Cuernos(2) + Feroz(2) + Volcán(3) = 12 -> rare, tier 3
+    expect(screen.getByText('12')).toBeInTheDocument();
+    // "Raro" appears twice (the rarity badge over the art, and the footer's
+    // Rareza label) — assert there's at least one rather than picking a node.
+    expect(screen.getAllByText('Raro').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText('★★★')).toBeInTheDocument();
+    expect(screen.getByText('3')).toBeInTheDocument();
   });
 });
