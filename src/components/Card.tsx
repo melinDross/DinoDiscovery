@@ -41,6 +41,16 @@ export interface CardProps {
   attrs: DinoAttributes;
 }
 
+// Must match the frame's border-[20px] and the art area's h-[ART_HEIGHT_PX]
+// below. Stacking, from back to front: the framed box (background art,
+// stone panel, footer) → the dino, rendered as a sibling *outside* the
+// frame's overflow-hidden box so a big creature can pop a claw/tail past
+// the card's border → the text/tag overlay, a further sibling on top of the
+// dino so the name/description/pills stay legible no matter how the dino
+// is posed.
+const CARD_BORDER_PX = 20;
+const ART_HEIGHT_PX = 440;
+
 export const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ discovererName, result, attrs }, ref) => {
     const discoveryDate = new Date().toLocaleDateString('es-ES', {
@@ -89,32 +99,102 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       },
     ];
 
-    return (
-      <div
-        ref={ref}
-        className="relative w-[420px] rounded-[28px] border-[14px] border-[#0a0a0a] bg-bg text-cream overflow-hidden shadow-2xl"
-      >
-        {/* Full-bleed art: habitat background + dino composited on top, title and
-            tags floating directly over the art instead of in a boxed header. */}
-        <div className="relative h-[440px] bg-surface2 overflow-hidden">
-          <img
-            src={habitatBackground.path}
-            alt={`Entorno: ${attrs.habitat}`}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
-          {/* Grounding contact shadow so the cutout dino reads as standing on
-              the scene rather than floating in front of it. */}
-          <div className="absolute left-1/2 bottom-[22%] -translate-x-1/2 w-56 h-10 bg-black/55 rounded-[40px] blur-xl" />
-          <img
-            src={cutoutImageUrl}
-            alt={result.commonName}
-            className="absolute inset-0 w-full h-full object-contain scale-110"
-            style={{
-              filter:
-                'drop-shadow(0 22px 16px rgba(0,0,0,0.55)) drop-shadow(0 6px 8px rgba(0,0,0,0.45)) drop-shadow(0 0 24px rgba(0,0,0,0.3))',
-            }}
-          />
+    const artLayerStyle = {
+      top: CARD_BORDER_PX,
+      left: CARD_BORDER_PX,
+      width: `calc(100% - ${CARD_BORDER_PX * 2}px)`,
+      height: ART_HEIGHT_PX,
+    };
 
+    return (
+      <div ref={ref} className="relative w-[420px]">
+        {/* Everything that must stay clipped to the rounded frame lives in
+            here. The dino and the text/tag overlay are rendered as later
+            siblings below, on top of this, so they're never clipped by it. */}
+        <div className="rounded-[28px] border-[20px] border-[#0a0a0a] bg-bg text-cream overflow-hidden shadow-2xl">
+          <div className="relative h-[440px] bg-surface2 overflow-hidden">
+            <img
+              src={habitatBackground.path}
+              alt={`Entorno: ${attrs.habitat}`}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            {/* Grounding contact shadow so the dino reads as standing on the
+                scene rather than floating in front of it. */}
+            <div className="absolute left-1/2 bottom-[22%] -translate-x-1/2 w-56 h-10 bg-black/55 rounded-[40px] blur-xl" />
+          </div>
+
+          {/* Continuous stone tablet: attribute medallions, divider, then the
+              score/rarity/tier row, all inside a single panel (no separate
+              boxed sections) so it reads as one piece like the reference card. */}
+          <div className="relative z-[2] -mt-[10px] mx-4 rounded-[24px] bg-[#1c1c1c] border border-accent/20 px-2 pt-4 pb-3 overflow-visible">
+            <div className="grid grid-cols-5 gap-1 text-center">
+              {cells.map((cell, index) => (
+                <div
+                  key={cell.label}
+                  className={`flex flex-col items-center min-w-0 px-0.5 ${index === 2 ? '-mt-7' : ''}`}
+                >
+                  <img
+                    src={cell.icon}
+                    alt={cell.alt}
+                    className={`object-contain rounded-[40px] ${index === 2 ? 'w-16 h-16' : 'w-12 h-12'}`}
+                  />
+                  <span className="mt-1 text-[9px] uppercase tracking-wide text-cream/70 leading-tight">
+                    {cell.label}
+                  </span>
+                  <span className="text-[10px] font-semibold leading-tight break-words text-center">
+                    {cell.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-accent/20 my-3" />
+
+            <div className="flex items-center justify-between px-2 text-xs">
+              <div className="text-center">
+                <p className="text-[10px] uppercase tracking-wide text-sage">Puntuación</p>
+                <p className="font-display text-lg text-cream">{score}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-[10px] uppercase tracking-wide text-sage">Rareza</p>
+                <p className="font-display text-sm text-cream">{RARITY_LABELS[rarity]}</p>
+                <p className="text-accent">{stars}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-[10px] uppercase tracking-wide text-sage">Tier</p>
+                <p className="font-display text-lg text-cream">{RARITY_STAR_COUNT[rarity]}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between px-5 py-3 text-[10px] text-moss">
+            <span>
+              Descubridor/a: <strong className="text-sage">{discovererName}</strong> · Arte generado con IA
+            </span>
+            <span className="text-right">
+              {expeditionLabel} · {discoveryDate}
+            </span>
+          </div>
+        </div>
+
+        {/* The dino: above the framed box and not clipped by it, so a large
+            enough creature can visually pop a claw/tail/horn past the card's
+            border for a 3D effect. */}
+        <img
+          src={cutoutImageUrl}
+          alt={result.commonName}
+          className="absolute object-contain scale-110 pointer-events-none z-20"
+          style={{
+            ...artLayerStyle,
+            filter:
+              'drop-shadow(0 22px 16px rgba(0,0,0,0.55)) drop-shadow(0 6px 8px rgba(0,0,0,0.45)) drop-shadow(0 0 24px rgba(0,0,0,0.3))',
+          }}
+        />
+
+        {/* Text/tag overlay: above the dino, so the species ID, rarity
+            badge, sub-biome name and the name/description gradient stay
+            legible regardless of how far the dino pose reaches. */}
+        <div className="absolute z-30 pointer-events-none" style={artLayerStyle}>
           <span className="absolute top-3 left-3 px-2 py-1 bg-bg/90 border border-accent/30 shadow-lg text-xs font-mono rounded-[40px]">
             {speciesId}
           </span>
@@ -124,11 +204,9 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
           >
             {RARITY_LABELS[rarity]}
           </span>
-
           <span className="absolute bottom-[27%] left-3 px-2 py-1 bg-bg/90 border border-accent/30 shadow-lg text-[10px] uppercase tracking-wide rounded-[40px]">
             {habitatBackground.name}
           </span>
-
           <div className="absolute bottom-0 left-0 right-0 px-4 pt-16 pb-10 bg-gradient-to-t from-bg via-bg/90 to-transparent">
             <h2 className="font-display text-xl text-white uppercase tracking-wide text-center">
               {result.commonName}
@@ -138,59 +216,6 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
               {result.description}
             </p>
           </div>
-        </div>
-
-        {/* Continuous stone tablet: attribute medallions, divider, then the
-            score/rarity/tier row, all inside a single panel (no separate
-            boxed sections) so it reads as one piece like the reference card. */}
-        <div className="relative z-[2] -mt-[10px] mx-4 rounded-[24px] bg-[#1c1c1c] border border-accent/20 px-2 pt-4 pb-3 overflow-visible">
-          <div className="grid grid-cols-5 gap-1 text-center">
-            {cells.map((cell, index) => (
-              <div
-                key={cell.label}
-                className={`flex flex-col items-center min-w-0 px-0.5 ${index === 2 ? '-mt-7' : ''}`}
-              >
-                <img
-                  src={cell.icon}
-                  alt={cell.alt}
-                  className={`object-contain rounded-[40px] ${index === 2 ? 'w-16 h-16' : 'w-12 h-12'}`}
-                />
-                <span className="mt-1 text-[9px] uppercase tracking-wide text-cream/70 leading-tight">
-                  {cell.label}
-                </span>
-                <span className="text-[10px] font-semibold leading-tight break-words text-center">
-                  {cell.value}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <div className="border-t border-accent/20 my-3" />
-
-          <div className="flex items-center justify-between px-2 text-xs">
-            <div className="text-center">
-              <p className="text-[10px] uppercase tracking-wide text-sage">Puntuación</p>
-              <p className="font-display text-lg text-cream">{score}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-[10px] uppercase tracking-wide text-sage">Rareza</p>
-              <p className="font-display text-sm text-cream">{RARITY_LABELS[rarity]}</p>
-              <p className="text-accent">{stars}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-[10px] uppercase tracking-wide text-sage">Tier</p>
-              <p className="font-display text-lg text-cream">{RARITY_STAR_COUNT[rarity]}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between px-5 py-3 text-[10px] text-moss">
-          <span>
-            Descubridor/a: <strong className="text-sage">{discovererName}</strong> · Arte generado con IA
-          </span>
-          <span className="text-right">
-            {expeditionLabel} · {discoveryDate}
-          </span>
         </div>
       </div>
     );
