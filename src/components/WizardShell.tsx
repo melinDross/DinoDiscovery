@@ -17,21 +17,18 @@ export function WizardShell({ step, totalSteps, onBack, children }: WizardShellP
           type="button"
           onClick={onBack}
           aria-label="Atrás"
-          className="text-2xl text-purple-700 mb-3"
+          className="text-2xl text-accent hover:text-cream mb-3"
         >
           ←
         </button>
         <div
-          className="w-full h-3 bg-gray-200 rounded-full overflow-hidden"
+          className="w-full h-[2px] bg-[#1a1a1a] overflow-hidden"
           role="progressbar"
           aria-valuenow={progressPercent}
           aria-valuemin={0}
           aria-valuemax={100}
         >
-          <div
-            className="h-full bg-green-500 transition-all"
-            style={{ width: `${progressPercent}%` }}
-          />
+          <div className="h-full bg-accent transition-all" style={{ width: `${progressPercent}%` }} />
         </div>
       </div>
       <div className="flex-1 flex items-center justify-center p-4">{children}</div>
