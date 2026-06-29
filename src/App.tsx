@@ -139,7 +139,7 @@ export default function App() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-green-100 to-blue-100">
+    <main className="min-h-screen grid-overlay text-cream font-body">
       {flowState === 'landing' && <Landing onStart={() => setFlowState('wizard')} />}
 
       {flowState === 'wizard' && wizardStep === 0 && (
@@ -201,7 +201,7 @@ export default function App() {
 
       {flowState === 'error' && (
         <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
-          <p className="text-red-700 font-semibold mb-4">{errorMessage}</p>
+          <p className="text-cream font-semibold mb-4">{errorMessage}</p>
           <button
             type="button"
             onClick={() => {
@@ -209,7 +209,7 @@ export default function App() {
               setWizardStep(0);
               setFlowState('wizard');
             }}
-            className="px-6 py-3 rounded-full bg-purple-600 text-white font-bold"
+            className="px-6 py-3 bg-accent text-bg font-display uppercase tracking-wide"
           >
             Volver a intentar
           </button>

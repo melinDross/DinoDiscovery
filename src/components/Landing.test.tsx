@@ -6,7 +6,8 @@ import { Landing } from './Landing';
 describe('Landing', () => {
   it('shows the title, subtitle and start button', () => {
     render(<Landing onStart={() => {}} />);
-    expect(screen.getByText('Dino Discovery Generator')).toBeInTheDocument();
+    expect(screen.getByText('Dino')).toBeInTheDocument();
+    expect(screen.getByText('Discovery')).toBeInTheDocument();
     expect(screen.getByText('¡Crea tu propio dinosaurio único!')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '¡Empezar!' })).toBeInTheDocument();
   });

@@ -1,3 +1,53 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+  .grid-overlay {
+    background-color: #0d1a0f;
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(26, 61, 26, 0.6), transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(15, 42, 15, 0.6), transparent 50%),
+      repeating-linear-gradient(
+        0deg,
+        rgba(178, 255, 0, 0.04) 0px,
+        rgba(178, 255, 0, 0.04) 1px,
+        transparent 1px,
+        transparent 40px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        rgba(178, 255, 0, 0.04) 0px,
+        rgba(178, 255, 0, 0.04) 1px,
+        transparent 1px,
+        transparent 40px
+      );
+  }
+
+  .corner-brackets {
+    position: relative;
+  }
+
+  .corner-brackets::before,
+  .corner-brackets::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    pointer-events: none;
+  }
+
+  .corner-brackets::before {
+    top: -2px;
+    left: -2px;
+    border-top: 2px solid #b2ff00;
+    border-left: 2px solid #b2ff00;
+  }
+
+  .corner-brackets::after {
+    bottom: -2px;
+    right: -2px;
+    border-bottom: 2px solid #b2ff00;
+    border-right: 2px solid #b2ff00;
+  }
+}

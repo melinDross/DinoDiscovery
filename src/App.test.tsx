@@ -22,7 +22,7 @@ describe('App wizard flow', () => {
 
   it('shows the landing page first, then the name step after clicking ¡Empezar!', async () => {
     render(<App />);
-    expect(screen.getByText('Dino Discovery Generator')).toBeInTheDocument();
+    expect(screen.getByText('Dino')).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: '¡Empezar!' }));
     expect(screen.getByLabelText('Tu nombre')).toBeInTheDocument();

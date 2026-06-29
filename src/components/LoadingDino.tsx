@@ -22,9 +22,11 @@ export function LoadingDino() {
   const stage = STAGES[stageIndex];
 
   return (
-    <div className="flex flex-col items-center justify-center py-12" role="status">
-      <div className="text-6xl animate-bounce">{stage.emoji}</div>
-      <p className="mt-4 text-lg font-bold text-purple-700">{stage.message}</p>
+    <div className="min-h-screen flex flex-col items-center justify-center py-12" role="status">
+      <div className="w-28 h-28 flex items-center justify-center border-2 border-accent/30 [box-shadow:0_0_30px_rgba(178,255,0,0.25)]">
+        <div className="text-6xl animate-bounce">{stage.emoji}</div>
+      </div>
+      <p className="mt-6 font-display text-lg text-accent uppercase tracking-wide">{stage.message}</p>
     </div>
   );
 }
