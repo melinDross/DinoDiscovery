@@ -31,15 +31,6 @@ describe('Card', () => {
     expect(screen.getByText('Lucía')).toBeInTheDocument();
   });
 
-  it('shows the brand title bar with the emblem image', () => {
-    render(<Card discovererName="Lucía" result={result} attrs={attrs} />);
-    expect(screen.getByText('Dino Discovery')).toBeInTheDocument();
-    expect(screen.getByAltText('Dino Discovery')).toHaveAttribute(
-      'src',
-      '/icons/medallions/emblem.png'
-    );
-  });
-
   it('composites the habitat background behind the dino image', () => {
     render(<Card discovererName="Lucía" result={result} attrs={attrs} />);
     expect(screen.getByAltText('Entorno: Volcán')).toHaveAttribute('src', '/habitats/volcan.png');

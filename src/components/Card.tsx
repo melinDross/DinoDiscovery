@@ -1,15 +1,39 @@
-import { forwardRef } from 'react';
+import { forwardRef, useEffect, useState } from 'react';
 import type { GenerateDinoResponse, DinoAttributes } from '../../shared/types';
 import { generateSpeciesId, calculateRarity, calculateRarityScore } from '../utils/speciesHash';
+import { cutoutDinoImage } from '../utils/dinoCutout';
 import {
   RARITY_LABELS,
   RARITY_BADGE_COLORS,
   RARITY_STAR_COUNT,
   ATTRIBUTE_MEDALLION_PATHS,
-  BRAND_EMBLEM_PATH,
   HABITAT_BACKGROUND_PATHS,
   getExpeditionLabel,
 } from '../data/cardTheme';
+
+// Strips the dino image's known solid background (see src/utils/dinoCutout.ts)
+// so it composites as a true cutout over the habitat art, with its own
+// drop-shadow, instead of showing as a flat rectangle on top of the scene.
+function useDinoCutout(imageUrl: string): string {
+  const [src, setSrc] = useState(imageUrl);
+
+  useEffect(() => {
+    setSrc(imageUrl);
+    let cancelled = false;
+    cutoutDinoImage(imageUrl)
+      .then((result) => {
+        if (!cancelled) setSrc(result);
+      })
+      .catch(() => {
+        // CORS/decoding failure — keep showing the original image untouched.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [imageUrl]);
+
+  return src;
+}
 
 export interface CardProps {
   discovererName: string;
@@ -29,6 +53,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     const score = calculateRarityScore(attrs);
     const stars = '★'.repeat(RARITY_STAR_COUNT[rarity]);
     const expeditionLabel = getExpeditionLabel(result.resultId);
+    const cutoutImageUrl = useDinoCutout(result.imageUrl);
 
     const cells: Array<{ icon: string; alt: string; label: string; value: string }> = [
       {
@@ -76,24 +101,24 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             alt={`Entorno: ${attrs.habitat}`}
             className="absolute inset-0 w-full h-full object-cover"
           />
+          {/* Grounding contact shadow so the cutout dino reads as standing on
+              the scene rather than floating in front of it. */}
+          <div className="absolute left-1/2 bottom-[22%] -translate-x-1/2 w-56 h-10 bg-black/55 rounded-[40px] blur-xl" />
           <img
-            src={result.imageUrl}
+            src={cutoutImageUrl}
             alt={result.commonName}
             className="absolute inset-0 w-full h-full object-contain scale-110"
+            style={{
+              filter:
+                'drop-shadow(0 22px 16px rgba(0,0,0,0.55)) drop-shadow(0 6px 8px rgba(0,0,0,0.45)) drop-shadow(0 0 24px rgba(0,0,0,0.3))',
+            }}
           />
 
-          <div className="absolute top-0 inset-x-0 flex items-center justify-center gap-2 pt-4 pb-10 px-4 bg-gradient-to-b from-bg/80 to-transparent">
-            <img src={BRAND_EMBLEM_PATH} alt="Dino Discovery" className="w-7 h-7 object-contain drop-shadow" />
-            <h1 className="font-display text-xl text-accent uppercase tracking-wide drop-shadow">
-              Dino Discovery
-            </h1>
-          </div>
-
-          <span className="absolute top-16 left-3 px-2 py-1 bg-bg/80 text-xs font-mono rounded-[40px]">
+          <span className="absolute top-3 left-3 px-2 py-1 bg-bg/90 border border-accent/30 shadow-lg text-xs font-mono rounded-[40px]">
             {speciesId}
           </span>
           <span
-            className="absolute top-16 right-3 px-3 py-1 rounded-[40px] text-xs font-display uppercase tracking-wide text-bg"
+            className="absolute top-3 right-3 px-3 py-1 rounded-[40px] text-xs font-display uppercase tracking-wide text-bg border border-white/20 shadow-lg"
             style={{ backgroundColor: RARITY_BADGE_COLORS[rarity] }}
           >
             {RARITY_LABELS[rarity]}

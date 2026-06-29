@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { GenerateDinoResponse, DinoAttributes } from '../../shared/types';
 import { Card } from './Card';
 import { calculateRarity } from '../utils/speciesHash';
+import { CARD_BACK_PATH } from '../data/cardTheme';
 
 interface CardSceneProps {
   discovererName: string;
@@ -103,7 +104,16 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
             transition,
           }}
         >
-          <Card discovererName={discovererName} result={result} attrs={attrs} />
+          <div className="card-face">
+            <Card discovererName={discovererName} result={result} attrs={attrs} />
+          </div>
+          <div className="card-face card-face-back">
+            <img
+              src={CARD_BACK_PATH}
+              alt="Dino Discovery"
+              className="w-full h-full object-cover rounded-[28px] border-[6px] border-[#0a0a0a]"
+            />
+          </div>
         </div>
       </div>
       <button

@@ -102,3 +102,5 @@ export const HABITAT_BACKGROUND_PATHS: Record<Habitat, string> = {
 };
 
 export const RARITY_STAR_COUNT: Record<Rarity, number> = RARITY_TIER_NUMBERS;
+
+export const CARD_BACK_PATH = '/card-back.png';
