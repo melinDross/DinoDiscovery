@@ -1,6 +1,6 @@
-export type Size = 'Pequeño' | 'Mediano' | 'Gigante';
-export type Habitat = 'Selva' | 'Desierto' | 'Océano' | 'Montaña' | 'Volcán';
-export type Diet = 'Carnívoro' | 'Herbívoro' | 'Omnívoro';
+export type Size = 'Diminuto' | 'Pequeño' | 'Mediano' | 'Grande' | 'Gigante' | 'Coloso';
+export type Habitat = 'Selva' | 'Desierto' | 'Océano' | 'Montaña' | 'Volcán' | 'Ártico';
+export type Diet = 'Carnívoro' | 'Herbívoro' | 'Omnívoro' | 'Oófago';
 export type Feature =
   | 'Cuernos'
   | 'Alas'

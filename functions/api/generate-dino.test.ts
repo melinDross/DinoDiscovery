@@ -133,6 +133,22 @@ describe('onRequestPost /api/generate-dino', () => {
     expect(storeImageInR2).toHaveBeenCalledTimes(1);
   });
 
+  it('accepts the expanded attribute options (Coloso, Oófago, Ártico)', async () => {
+    vi.mocked(generateDinoText).mockResolvedValue({
+      scientificName: 'Glacius vorax',
+      commonName: 'Glaciodonte',
+      description: 'Un gigante helado.',
+    });
+    vi.mocked(generateDinoImage).mockResolvedValue('base64image');
+    vi.mocked(storeImageInR2).mockResolvedValue(undefined);
+
+    const env = createEnv();
+    const body = { ...validBody, size: 'Coloso', diet: 'Oófago', habitat: 'Ártico' };
+    const response = await onRequestPost({ request: createRequest(body), env } as any);
+
+    expect(response.status).toBe(200);
+  });
+
   it('calls generateDinoText and generateDinoImage in parallel, not sequentially', async () => {
     const env = createEnv();
     const callOrder: string[] = [];

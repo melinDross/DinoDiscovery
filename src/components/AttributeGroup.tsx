@@ -1,31 +1,9 @@
 import { playClickSound } from '../sound';
-
-const OPTION_EMOJIS: Record<string, string> = {
-  Pequeño: '🐭',
-  Mediano: '🦎',
-  Gigante: '🦕',
-  Selva: '🌴',
-  Desierto: '🏜️',
-  Océano: '🌊',
-  Montaña: '🏔️',
-  Volcán: '🌋',
-  Carnívoro: '🥩',
-  Herbívoro: '🌿',
-  Omnívoro: '🍖',
-  Cuernos: '🦄',
-  Alas: '🦅',
-  'Escamas coloridas': '✨',
-  'Cola poderosa': '💥',
-  Armadura: '🛡️',
-  'Súper garras': '⚡',
-  Feroz: '😤',
-  Amigable: '😊',
-  Veloz: '⚡',
-  Sigiloso: '🥷',
-};
+import { ATTRIBUTE_EMOJIS } from '../data/attributes';
 
 interface AttributeGroupProps<T extends string> {
   label: string;
+  description?: string;
   options: T[];
   selected: T | null;
   onSelect: (value: T) => void;
@@ -33,6 +11,7 @@ interface AttributeGroupProps<T extends string> {
 
 export function AttributeGroup<T extends string>({
   label,
+  description,
   options,
   selected,
   onSelect,
@@ -42,6 +21,9 @@ export function AttributeGroup<T extends string>({
       <h3 className="font-display text-2xl sm:text-3xl text-cream mb-3 sm:mb-4 uppercase tracking-wide text-center">
         {label}
       </h3>
+      {description && (
+        <p className="text-sage text-sm text-center mb-3 sm:mb-4 italic">{description}</p>
+      )}
       <div className="flex flex-wrap gap-2 sm:gap-3 justify-center">
         {options.map((option) => (
           <button
@@ -60,7 +42,7 @@ export function AttributeGroup<T extends string>({
             }`}
           >
             <span className="text-2xl sm:text-3xl" aria-hidden="true">
-              {OPTION_EMOJIS[option] ?? ''}
+              {ATTRIBUTE_EMOJIS[option] ?? ''}
             </span>
             <span className="font-display text-cream uppercase tracking-wide text-sm sm:text-base">
               {option}

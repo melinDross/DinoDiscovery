@@ -18,9 +18,9 @@ interface Env {
   ADMIN_KEY?: string;
 }
 
-const VALID_SIZES = ['Pequeño', 'Mediano', 'Gigante'];
-const VALID_HABITATS = ['Selva', 'Desierto', 'Océano', 'Montaña', 'Volcán'];
-const VALID_DIETS = ['Carnívoro', 'Herbívoro', 'Omnívoro'];
+const VALID_SIZES = ['Diminuto', 'Pequeño', 'Mediano', 'Grande', 'Gigante', 'Coloso'];
+const VALID_HABITATS = ['Selva', 'Desierto', 'Océano', 'Montaña', 'Volcán', 'Ártico'];
+const VALID_DIETS = ['Carnívoro', 'Herbívoro', 'Omnívoro', 'Oófago'];
 const VALID_FEATURES = ['Cuernos', 'Alas', 'Escamas coloridas', 'Cola poderosa', 'Armadura', 'Súper garras'];
 const VALID_PERSONALITIES = ['Feroz', 'Amigable', 'Veloz', 'Sigiloso'];
 
