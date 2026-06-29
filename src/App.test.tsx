@@ -14,7 +14,7 @@ vi.mock('./certificate', () => ({
   captureCertificateAsPng: vi.fn().mockResolvedValue(undefined),
 }));
 
-import { generateDino, subscribeEmail, fetchResult } from './api';
+import { generateDino, subscribeEmail, fetchResult, RateLimitError } from './api';
 import { captureCertificateAsPng } from './certificate';
 
 function wait(ms: number) {
@@ -255,5 +255,27 @@ describe('App wizard flow', () => {
     expect(captureCertificateAsPng).toHaveBeenCalledTimes(1);
     expect(screen.queryByText(/revisa tu correo/i)).not.toBeInTheDocument();
     vi.useRealTimers();
+  });
+
+  it('shows a rate-limit-specific message when subscribing is throttled', async () => {
+    vi.mocked(fetchResult).mockResolvedValue({
+      scientificName: 'Volcanius ferox',
+      commonName: 'Volcanrex',
+      description: 'Un dinosaurio feroz que vive en volcanes.',
+      imageUrl: '/images/abc.png',
+      discovererName: 'Lucía',
+      emailConfirmed: false,
+    });
+    const rateLimitError = new RateLimitError(120);
+    vi.mocked(subscribeEmail).mockRejectedValue(rateLimitError);
+    window.history.pushState(null, '', '/r/result-1');
+
+    render(<App />);
+    await screen.findByRole('heading', { name: 'Volcanrex' });
+    await userEvent.click(screen.getByRole('button', { name: /descargar certificado/i }));
+    await userEvent.type(screen.getByLabelText(/email/i), 'nina@example.com');
+    await userEvent.click(screen.getByRole('button', { name: /confirmar/i }));
+
+    expect(await screen.findByText(/demasiadas veces/i)).toBeInTheDocument();
   });
 });

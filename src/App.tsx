@@ -229,8 +229,15 @@ export default function App() {
       await subscribeEmail(result.resultId, email);
       setIsWaitingForConfirmation(true);
       startPollingForConfirmation(result.resultId);
-    } catch {
-      setSubscribeError('No se pudo enviar el email de confirmación. Inténtalo de nuevo.');
+    } catch (err) {
+      if (err instanceof RateLimitError) {
+        const minutes = Math.ceil(err.retryAfterSeconds / 60);
+        setSubscribeError(
+          `Has intentado confirmar el email demasiadas veces. Espera unos ${minutes} minutos e inténtalo de nuevo.`
+        );
+      } else {
+        setSubscribeError('No se pudo enviar el email de confirmación. Inténtalo de nuevo.');
+      }
     }
   }
 
