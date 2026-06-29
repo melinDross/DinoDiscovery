@@ -217,7 +217,13 @@ export default function App() {
 
       {flowState === 'wizard' && wizardStep === 1 && (
         <WizardShell step={2} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => handleWizardBack(0)}>
-          <AttributeGroup label="Tamaño" options={SIZES} selected={size} onSelect={handleSizeSelect} />
+          <AttributeGroup
+            label="Tamaño"
+            description="El escáner necesita más datos para identificar la especie..."
+            options={SIZES}
+            selected={size}
+            onSelect={handleSizeSelect}
+          />
         </WizardShell>
       )}
 
@@ -225,6 +231,7 @@ export default function App() {
         <WizardShell step={3} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => handleWizardBack(1)}>
           <AttributeGroup
             label="Hábitat"
+            description="El escáner necesita más datos para identificar la especie..."
             options={HABITATS}
             selected={habitat}
             onSelect={handleHabitatSelect}
@@ -234,7 +241,13 @@ export default function App() {
 
       {flowState === 'wizard' && wizardStep === 3 && (
         <WizardShell step={4} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => handleWizardBack(2)}>
-          <AttributeGroup label="Dieta" options={DIETS} selected={diet} onSelect={handleDietSelect} />
+          <AttributeGroup
+            label="Dieta"
+            description="El escáner necesita más datos para identificar la especie..."
+            options={DIETS}
+            selected={diet}
+            onSelect={handleDietSelect}
+          />
         </WizardShell>
       )}
 
@@ -242,6 +255,7 @@ export default function App() {
         <WizardShell step={5} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => handleWizardBack(3)}>
           <AttributeGroup
             label="Característica especial"
+            description="El escáner necesita más datos para identificar la especie..."
             options={FEATURES}
             selected={feature}
             onSelect={handleFeatureSelect}
@@ -253,6 +267,7 @@ export default function App() {
         <WizardShell step={6} totalSteps={TOTAL_WIZARD_STEPS} onBack={() => handleWizardBack(4)}>
           <AttributeGroup
             label="Personalidad"
+            description="El escáner necesita más datos para identificar la especie..."
             options={PERSONALITIES}
             selected={personality}
             onSelect={handlePersonalitySelect}

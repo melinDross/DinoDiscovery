@@ -55,7 +55,7 @@ export function ResultScreen({ result, onDownloadClick, onRestart }: ResultScree
           onClick={onRestart}
           className="mt-4 px-4 py-2 min-h-[44px] text-sage font-display uppercase tracking-wide text-sm hover:text-cream transition-colors"
         >
-          Crear otro dinosaurio
+          Detectar otra especie
         </button>
       </div>
     </div>

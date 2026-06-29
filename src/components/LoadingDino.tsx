@@ -12,16 +12,16 @@ interface Phase {
 }
 
 const PHASES: Phase[] = [
-  { image: '/loading/egg-1-intact.png', caption: 'Incubando el huevo...', animationClass: 'animate-egg-breathe' },
-  { image: '/loading/egg-2-wobble.png', caption: 'Algo se mueve dentro...', animationClass: 'animate-egg-wobble' },
-  { image: '/loading/egg-3-crack.png', caption: '¡Está agrietándose!', animationClass: 'animate-egg-glow' },
-  { image: '/loading/egg-4-broken-top.png', caption: 'Está rompiendo el cascarón...', animationClass: 'animate-egg-jitter' },
-  { image: '/loading/egg-5-claws.png', caption: '¡Está saliendo!', animationClass: 'animate-egg-tug' },
+  { image: '/loading/egg-1-intact.png', caption: 'Señal detectada en el sector...', animationClass: 'animate-egg-breathe' },
+  { image: '/loading/egg-2-wobble.png', caption: 'Analizando secuencia de ADN fósil...', animationClass: 'animate-egg-wobble' },
+  { image: '/loading/egg-3-crack.png', caption: 'Especie no catalogada. Registrando...', animationClass: 'animate-egg-glow' },
+  { image: '/loading/egg-4-broken-top.png', caption: 'Preparando carta de descubrimiento...', animationClass: 'animate-egg-jitter' },
+  { image: '/loading/egg-5-claws.png', caption: 'Preparando carta de descubrimiento...', animationClass: 'animate-egg-tug' },
 ];
 
 const BURST_PHASE: Phase = {
   image: '/loading/egg-6-burst.png',
-  caption: '¡Ha nacido tu dinosaurio!',
+  caption: '¡Has descubierto una nueva especie!',
   animationClass: 'animate-egg-burst',
 };
 

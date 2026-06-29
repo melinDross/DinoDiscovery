@@ -20,7 +20,7 @@ export function Landing({ onStart }: LandingProps) {
         </span>
       </h1>
       <p className="mt-3 sm:mt-4 text-sm sm:text-base uppercase tracking-[2px] text-sage">
-        ¡Crea tu propio dinosaurio único!
+        Detecta tu propia especie única
       </p>
       <button
         type="button"

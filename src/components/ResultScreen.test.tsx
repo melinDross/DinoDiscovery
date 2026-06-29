@@ -44,10 +44,10 @@ describe('ResultScreen', () => {
     expect(shareDinoImage).toHaveBeenCalledWith('/images/abc.png', 'dino-volcanrex.png', 'Volcanrex');
   });
 
-  it('calls onRestart when "Crear otro dinosaurio" is clicked', async () => {
+  it('calls onRestart when "Detectar otra especie" is clicked', async () => {
     const onRestart = vi.fn();
     render(<ResultScreen result={result} onDownloadClick={() => {}} onRestart={onRestart} />);
-    await userEvent.click(screen.getByRole('button', { name: /crear otro dinosaurio/i }));
+    await userEvent.click(screen.getByRole('button', { name: /detectar otra especie/i }));
     expect(onRestart).toHaveBeenCalled();
   });
 });

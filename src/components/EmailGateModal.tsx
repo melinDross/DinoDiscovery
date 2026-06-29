@@ -24,7 +24,7 @@ export function EmailGateModal({ onConfirm, onCancel }: EmailGateModalProps) {
       <div className="bg-bg border border-accent p-6 max-w-sm w-full my-auto max-h-[90vh] overflow-y-auto">
         <h3 className="font-display text-xl text-cream mb-2 uppercase tracking-wide">¡Casi listo!</h3>
         <p className="text-sage mb-4">
-          Escribe tu email para descargar el certificado de descubrimiento.
+          Escribe tu email para descargar la carta de descubrimiento.
         </p>
         <label htmlFor="gate-email" className="block font-semibold mb-1 text-cream">
           Email

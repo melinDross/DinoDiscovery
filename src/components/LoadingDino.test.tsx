@@ -21,7 +21,7 @@ describe('LoadingDino', () => {
 
   it('starts on the intact-egg phase', () => {
     render(<LoadingDino isDone={false} onTransitionEnd={() => {}} />);
-    expect(screen.getByText('Incubando el huevo...')).toBeInTheDocument();
+    expect(screen.getByText('Señal detectada en el sector...')).toBeInTheDocument();
     expect(screen.getByRole('img')).toHaveAttribute('src', '/loading/egg-1-intact.png');
   });
 
@@ -32,18 +32,18 @@ describe('LoadingDino', () => {
     act(() => {
       vi.advanceTimersByTime(4000);
     });
-    expect(screen.getByText('Algo se mueve dentro...')).toBeInTheDocument();
+    expect(screen.getByText('Analizando secuencia de ADN fósil...')).toBeInTheDocument();
     expect(screen.getByRole('img')).toHaveAttribute('src', '/loading/egg-2-wobble.png');
 
     act(() => {
       vi.advanceTimersByTime(4000);
     });
-    expect(screen.getByText('¡Está agrietándose!')).toBeInTheDocument();
+    expect(screen.getByText('Especie no catalogada. Registrando...')).toBeInTheDocument();
 
     act(() => {
       vi.advanceTimersByTime(4000);
     });
-    expect(screen.getByText('Está rompiendo el cascarón...')).toBeInTheDocument();
+    expect(screen.getByText('Preparando carta de descubrimiento...')).toBeInTheDocument();
   });
 
   it('holds on the claws phase past 16s without isDone, then shows reassurance messages', () => {
@@ -81,7 +81,7 @@ describe('LoadingDino', () => {
     });
     rerender(<LoadingDino isDone={true} onTransitionEnd={onTransitionEnd} />);
 
-    expect(screen.getByText('¡Ha nacido tu dinosaurio!')).toBeInTheDocument();
+    expect(screen.getByText('¡Has descubierto una nueva especie!')).toBeInTheDocument();
     expect(screen.getByRole('img')).toHaveAttribute('src', '/loading/egg-6-burst.png');
     expect(onTransitionEnd).not.toHaveBeenCalled();
 
