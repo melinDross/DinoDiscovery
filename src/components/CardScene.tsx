@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { GenerateDinoResponse, DinoAttributes } from '../../shared/types';
 import { Card } from './Card';
 import { calculateRarity } from '../utils/speciesHash';
@@ -36,7 +36,7 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   const [transition, setTransition] = useState(FLIP_TRANSITION);
   const [spinDeg, setSpinDeg] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
-  const flipperRef = useRef<HTMLDivElement>(null);
+  const spinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const rarity = calculateRarity(attrs);
   const isLegendary = rarity === 'legendary';
@@ -45,6 +45,14 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
     // Triggers the flip-in transition on the first paint after mount.
     requestAnimationFrame(() => setHasFlippedIn(true));
   }
+
+  useEffect(() => {
+    return () => {
+      if (spinTimeoutRef.current !== null) {
+        clearTimeout(spinTimeoutRef.current);
+      }
+    };
+  }, []);
 
   function handleMouseMove(event: React.MouseEvent<HTMLDivElement>) {
     if (isSpinning) return;
@@ -61,12 +69,16 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   }
 
   function handleSpinClick() {
+    if (spinTimeoutRef.current !== null) {
+      clearTimeout(spinTimeoutRef.current);
+    }
     setIsSpinning(true);
     setHasFlippedIn(true);
     setTransition(SPIN_TRANSITION);
     setTilt({ rotateX: 0, rotateY: 0 });
     setSpinDeg((current) => current + 360);
-    setTimeout(() => {
+    spinTimeoutRef.current = setTimeout(() => {
+      spinTimeoutRef.current = null;
       setIsSpinning(false);
       setTransition(TILT_RESET_TRANSITION);
       setSpinDeg(0);
@@ -85,7 +97,6 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
         onMouseLeave={handleMouseLeave}
       >
         <div
-          ref={flipperRef}
           className={`card-flipper ${isLegendary ? 'card-glow-idle' : ''}`}
           style={{
             transform: `rotateX(${tilt.rotateX}deg) rotateY(${totalRotateY}deg)`,
