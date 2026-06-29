@@ -4,20 +4,20 @@ Recopilación de mejoras propuestas para iterar sobre el MVP del Dino Discovery.
 
 ## Críticas (bloquean fiabilidad/uso real)
 
-1. **Persistencia real de emails** — hoy se guardan solo en `localStorage`; se pierden al cambiar de dispositivo/navegador o borrar datos. Sin esto no hay captura de leads real.
-2. **Verificación del email antes de entregar el certificado** — hoy cualquier email, incluso uno inventado/dummy, desbloquea la descarga inmediatamente; no hay verificación real (confirmación por link, código OTP, etc.). Sin esto, la captura de leads del punto 1 recoge en buena parte direcciones no contactables/falsas, lo que invalida gran parte del valor de pedir el email.
+1. ✅ **Persistencia real de emails** — implementado: el email ya no se guarda en `localStorage`; Kit (vía `POST /api/subscribe`) es la única fuente de verdad de leads/suscriptores. Ver `docs/superpowers/specs/2026-06-29-email-verification-and-result-persistence-design.md`.
+2. ✅ **Verificación del email antes de entregar el certificado** — implementado: la descarga del certificado queda bloqueada hasta confirmar el email mediante el double opt-in de Kit; la confirmación se detecta vía la redirección post-confirmación del formulario (`GET /api/confirm`) en vez de automatizaciones de pago, y el frontend hace polling hasta detectarla.
 3. ✅ **Manejo de errores de generación visible al usuario** — implementado: pantalla de error dedicada (`flowState: 'error'` en `App.tsx`) con mensaje específico para rate limit vs. fallo de API, y botón "Volver a intentar".
-4. **Persistencia de resultados** — si se refresca la página tras generar, se pierde el dinosaurio. Debería poder recuperarse o compartirse por URL.
+4. ✅ **Persistencia de resultados** — implementado: cada descubrimiento se guarda en `RESULTS_KV` con un `resultId` propio, accesible y recuperable vía `/r/:resultId` (`GET /api/results/:id`), sobreviviendo a refrescos y compartible por URL.
 5. ✅ **Adaptación mobile** — implementado (commit `41e27cb`): touch targets de 44px, layout y legibilidad ajustados a 320px en Landing, WizardShell, AttributeGroup, EmailGateModal, NameStep y ResultScreen.
 
 ## Importantes (mejoran la experiencia central)
 
-6. 🟡 **Compartir el dinosaurio** (link o imagen para redes/WhatsApp) — parcialmente implementado: botón "Compartir dinosaurio" en `ResultScreen` que comparte la imagen generada vía Web Share API (fallback a descarga). Sigue faltando el link compartible persistente (bloqueado por el punto 4).
+6. 🟡 **Compartir el dinosaurio** (link o imagen para redes/WhatsApp) — parcialmente implementado: botón "Compartir dinosaurio" en `ResultScreen` que comparte la imagen generada vía Web Share API (fallback a descarga). El punto 4 (bloqueante) ya está resuelto — existe un link persistente `/r/:resultId` — pero el botón de compartir todavía no lo usa; sigue compartiendo solo la imagen suelta.
 7. **Mejorar la pantalla de carga (`LoadingDino`)**:
    - Animación del huevo rompiéndose por fases (sin emojis, ilustración/SVG propia).
    - Barra de progreso en la parte inferior.
    - Mensajes progresivos si la generación tarda (DALL-E puede tardar 10-20s) para que no parezca colgado.
-8. **"Mi colección"** — que el niño pueda acceder a sus dinosaurios descubiertos anteriormente (requiere resolver primero la persistencia de resultados, punto 4).
+8. **"Mi colección"** — que el niño pueda acceder a sus dinosaurios descubiertos anteriormente (la persistencia de resultados del punto 4 ya está resuelta; falta construir la propia vista de colección).
 9. ✅ **Sonidos** al hacer click en las opciones del wizard (atributos, botones) — implementado con un click sintetizado vía Web Audio API (sin assets de audio).
 10. **Transiciones y animaciones** entre pantallas del wizard (más allá del auto-advance actual).
 11. ✅ **Confeti al descubrir el dinosaurio** — implementado: animación de confeti en `ResultScreen` al revelar el dino generado.
@@ -36,8 +36,8 @@ Recopilación de mejoras propuestas para iterar sobre el MVP del Dino Discovery.
 
 ## Notas
 
-- El punto 8 ("Mi colección") depende de resolver primero el punto 4 (persistencia de resultados) y posiblemente el 1 (persistencia de emails), ya que ambos requieren guardar datos más allá de la sesión actual.
-- El punto 2 (verificación de email) depende del punto 1 (persistencia real de emails): verificar un email que solo vive en `localStorage` tiene un valor limitado, conviene abordarlos juntos.
+- Los puntos 1, 2 y 4 se implementaron juntos (estaban interdependientes) usando Kit como proveedor de email marketing/verificación; ver `docs/superpowers/specs/2026-06-29-email-verification-and-result-persistence-design.md`. La confirmación de email usa la redirección post-confirmación del formulario de Kit (gratis) en vez de automatizaciones con webhook (función de pago).
+- El punto 8 ("Mi colección") ya tiene resuelta su dependencia de datos (punto 4); falta construir la vista de colección en sí.
 - El punto 17 sigue pendiente y ahora está desacoplado del 16: una escena contextual por hábitat necesita su propio fondo, incompatible con el fondo sólido fijo que implementa el punto 16.
 - Antes de implementar cualquiera de estos puntos, pasar por el proceso de brainstorming/diseño habitual.
-- Puntos 3, 5, 9, 11 y 13 (y parcialmente el 6) entregados en la release v0.2.3.
+- Puntos 3, 5, 9, 11 y 13 (y parcialmente el 6) entregados en la release v0.2.3. Puntos 1, 2 y 4 entregados posteriormente (ver commit "Add real result persistence and email verification via Kit").
