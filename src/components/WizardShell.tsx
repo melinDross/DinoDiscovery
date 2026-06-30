@@ -21,7 +21,7 @@ export function WizardShell({ step, totalSteps, onBack, children }: WizardShellP
             onBack();
           }}
           aria-label="Atrás"
-          className="min-w-[44px] min-h-[44px] flex items-center justify-center text-2xl text-accent hover:text-cream mb-3 -ml-2"
+          className="min-w-[44px] min-h-[44px] flex items-center justify-center text-2xl text-accent hover:text-cream mb-3"
         >
           ←
         </button>

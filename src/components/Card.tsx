@@ -125,8 +125,25 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
 
           {/* Continuous stone tablet: attribute medallions, divider, then the
               score/rarity/tier row, all inside a single panel (no separate
-              boxed sections) so it reads as one piece like the reference card. */}
-          <div className="relative z-[2] -mt-[10px] mx-4 rounded-[24px] bg-[#1c1c1c] border border-accent/20 px-2 pt-4 pb-3 overflow-visible">
+              boxed sections) so it reads as one piece like the reference card.
+              No negative top margin here (an earlier version had -mt-[10px]
+              to visually fuse this panel with the art above it) — the
+              text/tag overlay's gradient block (z-30, see below) is anchored
+              to the *bottom* of the same 440px art area and is fully opaque
+              at its own bottom edge, which sits right where that overlap
+              would land. Pulling the panel up into that zone hid the top of
+              every medallion behind the opaque gradient — looked exactly
+              like the icons were clipped, but nothing was actually clipping
+              them, they were just painted over by a higher z-index element. */}
+          <div
+            className="relative z-[2] mx-4 rounded-[24px] border border-accent/20 px-2 pt-4 pb-3 overflow-visible"
+            style={{
+              background:
+                'radial-gradient(circle at 18% 0%, rgba(178,255,0,0.10), transparent 55%),' +
+                'radial-gradient(circle at 85% 100%, rgba(123,77,255,0.16), transparent 55%),' +
+                'linear-gradient(165deg, #232a1f 0%, #15181c 55%, #1d1626 100%)',
+            }}
+          >
             <div className="grid grid-cols-5 gap-1 text-center">
               {cells.map((cell, index) => (
                 <div

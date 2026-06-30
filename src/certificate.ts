@@ -25,7 +25,13 @@ async function shareOrDownload(
 }
 
 export async function captureCertificateAsPng(element: HTMLElement, fileName: string): Promise<void> {
-  const canvas = await html2canvas(element, { scale: 2 });
+  // useCORS/allowTaint: defensive against the canvas silently "tainting"
+  // (which makes toBlob() resolve null / throw with no visible error) if
+  // any image this captures is ever served from a different origin than the
+  // page — currently true (images load same-origin via /images/[key].ts),
+  // but that's an easy invariant to break later without anything here
+  // flagging it.
+  const canvas = await html2canvas(element, { scale: 2, useCORS: true, allowTaint: false });
   const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
   if (!blob) {
     throw new Error('No se pudo generar la imagen del certificado');

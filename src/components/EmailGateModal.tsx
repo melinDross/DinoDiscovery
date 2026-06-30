@@ -32,6 +32,8 @@ export function EmailGateModal({ onConfirm, onCancel }: EmailGateModalProps) {
         <input
           id="gate-email"
           type="email"
+          inputMode="email"
+          autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="w-full px-3 py-2 bg-surface2 border border-accent/20 text-cream focus:outline-none focus:border-accent"
