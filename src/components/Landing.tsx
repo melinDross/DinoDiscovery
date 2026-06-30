@@ -1,12 +1,29 @@
+import { useRef } from 'react';
+
 interface LandingProps {
   onStart: () => void;
 }
 
 export function Landing({ onStart }: LandingProps) {
+  // React doesn't reliably serialize the `muted` prop to the real DOM
+  // attribute, and iOS Safari won't autoplay a video that isn't muted at
+  // the DOM level — so we set it imperatively via a ref callback.
+  const videoRef = useRef<HTMLVideoElement>(null);
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
       <div className="relative mb-3 sm:mb-4 w-52 sm:w-72 md:w-80 rounded-3xl overflow-hidden shadow-[0_0_40px_rgba(178,255,0,0.20),0_8px_32px_rgba(0,0,0,0.6)] ring-2 ring-accent/30">
         <video
+          ref={(el) => {
+            (videoRef as React.MutableRefObject<HTMLVideoElement | null>).current = el;
+            if (el) {
+              el.muted = true;
+              // play() exists but may return undefined in test environments
+              // (jsdom) rather than a Promise — guard before calling .catch().
+              const p = typeof el.play === 'function' ? el.play() : undefined;
+              if (p && typeof p.catch === 'function') p.catch(() => {});
+            }
+          }}
           src="/dino-landing.mp4"
           autoPlay
           loop
@@ -15,14 +32,14 @@ export function Landing({ onStart }: LandingProps) {
           className="w-full h-auto block"
         />
       </div>
-<h1 className="font-display text-4xl sm:text-5xl md:text-6xl leading-tight tracking-[5px] uppercase">
+      <h1 className="font-display text-4xl sm:text-5xl md:text-6xl leading-tight tracking-[5px] uppercase">
         <span className="block text-cream">Dino</span>
         <span className="block text-accent [text-shadow:0_0_40px_rgba(178,255,0,0.4)]">
           Discovery
         </span>
       </h1>
       <p className="mt-3 sm:mt-4 text-sm sm:text-base uppercase tracking-[2px] text-sage">
-        Detecta tu propia especie única
+        Descubre tu propia especie única
       </p>
       <button
         type="button"

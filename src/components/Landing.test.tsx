@@ -8,7 +8,7 @@ describe('Landing', () => {
     render(<Landing onStart={() => {}} />);
     expect(screen.getByText('Dino')).toBeInTheDocument();
     expect(screen.getByText('Discovery')).toBeInTheDocument();
-    expect(screen.getByText('Detecta tu propia especie única')).toBeInTheDocument();
+    expect(screen.getByText('Descubre tu propia especie única')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '¡Empezar!' })).toBeInTheDocument();
   });
 
