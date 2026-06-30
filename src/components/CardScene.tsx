@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { GenerateDinoResponse, DinoAttributes } from '../../shared/types';
 import { Card } from './Card';
-import { calculateRarity } from '../utils/speciesHash';
+import { calculateRarity, type Rarity } from '../utils/speciesHash';
 import { CARD_BACK_PATH } from '../data/cardTheme';
 
 interface CardSceneProps {
@@ -54,6 +54,16 @@ const FLIP_TRANSITION = `transform ${FLIP_DURATION_MS}ms ease-out`;
 const SPIN_TRANSITION = `transform ${SPIN_DURATION_MS}ms ease-in-out`;
 const NO_TRANSITION = 'none';
 
+// "Shiny card" idle glow, keyed by rarity tier — common/uncommon don't glow
+// (undefined), rare/epic/legendary do, each in a color that roughly matches
+// its RARITY_BADGE_COLORS hue (blue/purple/gold) so the glow reads as
+// "this rarity" rather than just "expensive-looking".
+const GLOW_RGB_BY_RARITY: Partial<Record<Rarity, string>> = {
+  rare: '64, 140, 255',
+  epic: '190, 90, 255',
+  legendary: '255, 150, 0',
+};
+
 export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   const [hasFlippedIn, setHasFlippedIn] = useState(false);
   const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
@@ -78,7 +88,7 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   const [naturalHeight, setNaturalHeight] = useState(0);
 
   const rarity = calculateRarity(attrs);
-  const isLegendary = rarity === 'legendary';
+  const glowColor = GLOW_RGB_BY_RARITY[rarity];
 
   if (!hasFlippedIn) {
     // Triggers the flip-in transition on the first paint after mount.
@@ -276,10 +286,11 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
             onTouchCancel={handleTouchEnd}
           >
             <div
-              className={`card-flipper ${isLegendary ? 'card-glow-idle' : ''}`}
+              className={`card-flipper ${glowColor ? 'card-glow-idle' : ''}`}
               style={{
                 transform: `rotateX(${tilt.rotateX}deg) rotateY(${totalRotateY}deg)`,
                 transition,
+                ...(glowColor ? { ['--glow-color' as string]: glowColor } : {}),
               }}
             >
               <div className="card-face" style={{ visibility: facing === 'front' ? 'visible' : 'hidden' }}>

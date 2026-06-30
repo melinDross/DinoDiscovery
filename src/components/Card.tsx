@@ -8,7 +8,6 @@ import {
   RARITY_STAR_COUNT,
   ATTRIBUTE_MEDALLION_PATHS,
   pickHabitatBackground,
-  getExpeditionLabel,
 } from '../data/cardTheme';
 
 // Strips the dino image's known solid background (see src/utils/dinoCutout.ts)
@@ -62,7 +61,6 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     const rarity = calculateRarity(attrs);
     const score = calculateRarityScore(attrs);
     const stars = '★'.repeat(RARITY_STAR_COUNT[rarity]);
-    const expeditionLabel = getExpeditionLabel(result.resultId);
     const cutoutImageUrl = useDinoCutout(result.imageUrl);
     const habitatBackground = pickHabitatBackground(attrs);
 
@@ -187,11 +185,9 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
 
           <div className="flex items-center justify-between px-5 py-3 text-[11px] text-moss">
             <span>
-              Descubridor/a: <strong className="text-sage">{discovererName}</strong> · Arte generado con IA
+              Descubridor/a: <strong className="text-sage">{discovererName}</strong>
             </span>
-            <span className="text-right">
-              {expeditionLabel} · {discoveryDate}
-            </span>
+            <span className="text-right">{discoveryDate}</span>
           </div>
         </div>
 
