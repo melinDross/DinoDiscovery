@@ -79,12 +79,17 @@ body {
   .card-perspective {
     -webkit-perspective: 1000px;
     perspective: 1000px;
-    /* Static lift off the page background — dark contact shadow + subtle
-       green accent bloom. Static (not animated) so it never pulses, and
-       filter:drop-shadow (not box-shadow) so it follows the card's actual
-       rounded silhouette. The opacity animation on .card-glow-idle is gone
-       (replaced by box-shadow size breathing) so this parent filter is never
-       affected by a child opacity change making it flicker. */
+    /* NOTE: no filter here — filter on the perspective container itself
+       creates a new stacking context in Safari that flattens the 3D
+       rendering, causing the card to show its habitat background on touch
+       instead of the dino/overlay. The drop-shadow is applied on the
+       .card-scene-wrapper div outside this element in CardScene.tsx. */
+  }
+
+  /* Wrapper that sits outside .card-perspective so its filter doesn't
+     interfere with the 3D transform context inside the perspective
+     container. Applied via className in CardScene.tsx. */
+  .card-scene-wrapper {
     filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.55))
       drop-shadow(0 0 30px rgba(178, 255, 0, 0.10));
   }

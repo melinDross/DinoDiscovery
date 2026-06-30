@@ -228,12 +228,12 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
           <span className="absolute bottom-[27%] left-3 px-2 py-1 bg-bg/90 border border-accent/30 shadow-lg text-[11px] uppercase tracking-wide rounded-[40px]">
             {habitatBackground.name}
           </span>
-          <div className="absolute bottom-0 left-0 right-0 px-4 pt-16 pb-10 bg-gradient-to-t from-bg via-bg/90 to-transparent">
+          <div className="absolute bottom-0 left-0 right-0 px-4 pt-20 pb-3 bg-gradient-to-t from-bg via-bg/90 to-transparent">
             <h2 className="font-display text-xl text-white uppercase tracking-wide text-center">
               {result.commonName}
             </h2>
             <p className="italic text-xs text-cream/80 text-center">{result.scientificName}</p>
-            <p className="italic text-center text-cream text-xs mt-2 line-clamp-2">
+            <p className="italic text-center text-cream text-xs mt-2 line-clamp-3">
               {result.description}
             </p>
           </div>

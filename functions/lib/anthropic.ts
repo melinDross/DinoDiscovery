@@ -20,7 +20,13 @@ Personalidad: ${attrs.personality}
 
 Responde SOLO con un objeto JSON con esta forma exacta, sin texto adicional:
 {"scientificName": "...", "commonName": "...", "description": "..."}
-La descripción debe tener 2-3 líneas, ser divertida y apta para niños de 5 a 10 años, en español.`;
+
+Reglas para la descripción:
+- Exactamente 3 frases cortas, en español, divertidas y aptas para niños de 5 a 10 años.
+- La primera frase describe su ASPECTO VISUAL: cómo luce el dinosaurio (color, tamaño, su característica especial visible).
+- La segunda frase describe dónde vive y qué come.
+- La tercera frase describe su personalidad o algo especial que hace.
+La descripción debe coincidir con cómo se vería el dinosaurio en una ilustración: ${attrs.size}, con ${attrs.feature} visibles, en un entorno de ${attrs.habitat}.`;
 
   const response = await fetchFn('https://api.anthropic.com/v1/messages', {
     method: 'POST',

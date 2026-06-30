@@ -264,7 +264,7 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
       >
         <div
           ref={innerRef}
-          className="absolute left-1/2 top-0"
+          className="absolute left-1/2 top-0 card-scene-wrapper"
           style={{
             width: CARD_NATURAL_WIDTH,
             // translateX(-50%) centers using the element's own (unscaled)
