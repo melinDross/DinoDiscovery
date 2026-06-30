@@ -109,12 +109,15 @@ body {
   .card-face {
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-    /* Fill the transparent corner triangles (between the card's rectangular
-       bounding box and its rounded-[28px] visual border) with the page's
-       base background colour so they're invisible against the page. clip-path
-       was tried here but created a new stacking context on iOS that hid the
-       absolutely-positioned dino and text overlay layers inside the face. */
+    /* background-color + border-radius fills the transparent corner triangles
+       (between the card's rectangular bounding box and its rounded-[28px]
+       visual border) with the page's base colour, rounded to match the card's
+       outer visual radius (48px = 28px inner + 20px border). Without
+       border-radius the background would paint as a full square, making the
+       card look like it has square corners. clip-path was tried earlier but
+       it created a stacking context that hid the dino/text overlay layers. */
     background-color: #07091a;
+    border-radius: 48px;
   }
 
   .card-face-back {
@@ -123,6 +126,7 @@ body {
     -webkit-transform: rotateY(180deg);
     transform: rotateY(180deg);
     background-color: #07091a;
+    border-radius: 48px;
   }
 
   /* Shiny-card glow lives on the OUTER wrapper (.card-glow-wrapper, applied
