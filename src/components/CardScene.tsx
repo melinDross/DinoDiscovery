@@ -36,6 +36,19 @@ export function computeFitScale(availableWidth: number, naturalWidth: number): n
 
 const CARD_NATURAL_WIDTH = 420;
 
+// The dino's cutout layer pops past the framed box's top/bottom edges
+// (scale-110 + drop-shadow), but Card.tsx's own box height doesn't grow to
+// account for it (it's an absolutely-positioned sibling). Reserve extra
+// space below the scaled card so that overflow never visually collides with
+// the buttons rendered after CardScene in ResultScreen.
+const DINO_OVERFLOW_BUFFER_PX = 56;
+
+// On short mobile viewports, fitting only to width still leaves a card
+// taller than the visible screen, pushing the share/restart buttons off
+// past the fold. Reserve this much vertical space for the title text and
+// button row that render below CardScene, and fit the remainder to height too.
+const VERTICAL_CHROME_RESERVE_PX = 420;
+
 const MAX_TILT_DEG = 15;
 const FLIP_DURATION_MS = 800;
 const SPIN_DURATION_MS = 1000;
@@ -80,15 +93,25 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
 
     function update() {
       if (!outer || !inner) return;
-      setScale(computeFitScale(outer.offsetWidth, CARD_NATURAL_WIDTH));
-      setNaturalHeight(inner.offsetHeight);
+      const height = inner.offsetHeight;
+      const widthScale = computeFitScale(outer.offsetWidth, CARD_NATURAL_WIDTH);
+      const heightBudget = Math.max(200, window.innerHeight - VERTICAL_CHROME_RESERVE_PX);
+      const heightScale = computeFitScale(heightBudget, height);
+      setScale(Math.min(widthScale, heightScale));
+      setNaturalHeight(height);
     }
 
     update();
     const resizeObserver = new ResizeObserver(update);
     resizeObserver.observe(outer);
     resizeObserver.observe(inner);
-    return () => resizeObserver.disconnect();
+    window.addEventListener('resize', update);
+    window.addEventListener('orientationchange', update);
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', update);
+      window.removeEventListener('orientationchange', update);
+    };
   }, []);
 
   function handleMouseMove(event: React.MouseEvent<HTMLDivElement>) {
@@ -146,11 +169,14 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
     <div className="flex flex-col items-center gap-4 w-full">
       <div
         ref={outerRef}
-        className="w-full flex justify-center"
-        style={{ height: naturalHeight ? naturalHeight * scale : undefined }}
+        className="relative w-full overflow-visible"
+        style={{
+          height: naturalHeight ? (naturalHeight + DINO_OVERFLOW_BUFFER_PX) * scale : undefined,
+        }}
       >
         <div
           ref={innerRef}
+          className="mx-auto"
           style={{
             width: CARD_NATURAL_WIDTH,
             transform: `scale(${scale})`,

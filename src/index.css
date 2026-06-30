@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Kids' app: block pinch-zoom / double-tap-zoom gestures everywhere except
+   the card's own tilt interaction (handled by JS touchmove on .card-perspective,
+   which still receives single-finger touches under touch-action: manipulation). */
+html,
+body {
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+}
+
 @layer utilities {
   .grid-overlay {
     background-color: #0d1a0f;
@@ -52,23 +61,27 @@
   }
 
   .card-perspective {
+    -webkit-perspective: 1000px;
     perspective: 1000px;
   }
 
   .card-flipper {
     position: relative;
+    -webkit-transform-style: preserve-3d;
     transform-style: preserve-3d;
     transition: transform 80ms linear;
     will-change: transform;
   }
 
   .card-face {
+    -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
   }
 
   .card-face-back {
     position: absolute;
     inset: 0;
+    -webkit-transform: rotateY(180deg);
     transform: rotateY(180deg);
   }
 
