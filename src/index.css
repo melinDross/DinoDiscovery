@@ -135,30 +135,12 @@ body {
                card-glow-reveal 0.8s ease-out 0.3s both;
   }
 
-  /* Holographic sheen that shifts with the card's tilt. --tilt-x-pct and
-     --tilt-y-pct are set inline in CardScene.tsx from the live tilt state,
-     so the highlight moves as you drag/hover the card. mix-blend-mode:screen
-     brightens the card art underneath without masking it. The reveal
-     animation plays once on entrance; after that the sheen stays visible at
-     whatever position the tilt dictates. */
-  .card-glow-idle .card-face::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 40;
-    pointer-events: none;
-    border-radius: 8px;
-    background: radial-gradient(
-      circle at
-        calc(50% + var(--tilt-y-pct, 0%))
-        calc(50% - var(--tilt-x-pct, 0%)),
-      rgba(255, 255, 255, 0.28) 0%,
-      rgba(var(--glow-color, 255, 150, 0), 0.18) 35%,
-      transparent 65%
-    );
-    mix-blend-mode: screen;
-    animation: card-sheen-reveal 1.5s ease-out 0.2s both;
-  }
+  /* Holographic sheen removed — mix-blend-mode:screen on a ::before
+     pseudo-element inside a 3D-transformed face forces a new compositing
+     layer in iOS Safari that prevents the dino and text overlay siblings
+     (z-20 / z-30) from rendering into it, showing only the raw habitat
+     background. The entrance burst + idle glow pulse already give plenty
+     of "shiny card" feeling on their own. */
 
   @keyframes card-glow-pulse {
     0%, 100% {
@@ -179,9 +161,4 @@ body {
                        0 0 70px 24px rgba(var(--glow-color, 255, 150, 0), 0.35); }
   }
 
-  @keyframes card-sheen-reveal {
-    0%   { opacity: 0; }
-    50%  { opacity: 1; }
-    100% { opacity: 1; }
-  }
 }
