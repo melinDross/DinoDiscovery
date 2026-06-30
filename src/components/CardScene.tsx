@@ -98,6 +98,60 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   const rarity = calculateRarity(attrs);
   const glowColor = GLOW_RGB_BY_RARITY[rarity];
 
+  // JS-driven glow loop — imperative rAF writes box-shadow directly on the
+  // wrapper div every frame instead of using a CSS animation. CSS animation
+  // would promote .card-glow-wrapper to its own GPU compositing layer, which
+  // on iOS Safari makes the dino/text layers fail to composite into the 3D
+  // scene and causes the raw habitat background to show on drag. rAF-driven
+  // inline style updates don't trigger layer promotion.
+  useEffect(() => {
+    const el = innerRef.current;
+    if (!glowColor || !el) return;
+
+    const startTime = performance.now();
+    const BURST_MS = 600;      // entrance flash duration
+    const PULSE_MS = 2400;     // breathing cycle
+
+    let rafId: number;
+
+    function frame(now: number) {
+      const elapsed = now - startTime;
+
+      let innerPx: number, outerPx: number, innerA: number, outerA: number;
+
+      if (elapsed < BURST_MS) {
+        // Entrance burst: ramp up to peak at 40%, settle back to idle by 100%
+        const t = elapsed / BURST_MS;
+        const burst = t < 0.4 ? t / 0.4 : 1 - (t - 0.4) / 0.6;
+        innerPx = 18 + burst * 52;
+        innerA  = 0.45 + burst * 0.5;
+        outerPx = 40 + burst * 90;
+        outerA  = 0.20 + burst * 0.35;
+      } else {
+        // Smooth breathing sine wave
+        const phase = ((elapsed - BURST_MS) / PULSE_MS) * Math.PI * 2;
+        const breath = Math.sin(phase) * 0.5 + 0.5; // 0→1→0
+        innerPx = 18 + breath * 17;
+        innerA  = 0.45 + breath * 0.30;
+        outerPx = 40 + breath * 30;
+        outerA  = 0.20 + breath * 0.15;
+      }
+
+      if (!el) return;
+      el.style.boxShadow =
+        `0 0 ${innerPx}px ${innerPx / 4}px rgba(${glowColor},${innerA}),` +
+        `0 0 ${outerPx}px ${outerPx / 4}px rgba(${glowColor},${outerA})`;
+
+      rafId = requestAnimationFrame(frame);
+    }
+
+    rafId = requestAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(rafId);
+      if (innerRef.current) innerRef.current.style.boxShadow = '';
+    };
+  }, [glowColor]);
+
   if (!hasFlippedIn) {
     // Triggers the flip-in transition on the first paint after mount.
     requestAnimationFrame(() => setHasFlippedIn(true));
