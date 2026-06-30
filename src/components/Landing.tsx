@@ -15,10 +15,18 @@ export function Landing({ onStart }: LandingProps) {
 
   function handleVideoTap() {
     const audio = roarRef.current;
-    if (!audio) return;
-    audio.currentTime = ROAR_START_SECONDS;
-    const p = typeof audio.play === 'function' ? audio.play() : undefined;
-    if (p && typeof p.catch === 'function') p.catch(() => {});
+    if (audio) {
+      audio.currentTime = ROAR_START_SECONDS;
+      const audioPlay = typeof audio.play === 'function' ? audio.play() : undefined;
+      if (audioPlay && typeof audioPlay.catch === 'function') audioPlay.catch(() => {});
+    }
+
+    const video = videoRef.current;
+    if (video) {
+      video.currentTime = 0;
+      const videoPlay = typeof video.play === 'function' ? video.play() : undefined;
+      if (videoPlay && typeof videoPlay.catch === 'function') videoPlay.catch(() => {});
+    }
   }
 
   return (
@@ -42,16 +50,17 @@ export function Landing({ onStart }: LandingProps) {
           }}
           src="/dino-landing.mp4"
           autoPlay
-          loop
           muted
           playsInline
           className="w-full h-auto block pointer-events-none"
         />
       </button>
-      {/* Tapping the video plays this from 8s in (the roar itself, skipping
-          the file's lead-in) to the end. Browsers block audio autoplay
-          without a direct user gesture, so this can't fire on page load or
-          alongside the (muted, autoplaying) video — it has to be a tap. */}
+      {/* The video plays once on load (no loop) and stops on its last frame.
+          Tapping it replays the video from the start and plays this roar
+          audio from 8s in (skipping the file's lead-in) to the end, together
+          — so the dino "reacts" to being tapped, as many times as tapped.
+          Browsers block audio autoplay without a direct user gesture, so the
+          roar can't fire on page load alongside the (muted) video. */}
       <audio ref={roarRef} src="/t-rex-sound.mp3" preload="auto" />
       <h1 className="font-display text-4xl sm:text-5xl md:text-6xl leading-tight tracking-[5px] uppercase">
         <span className="block text-cream">Dino</span>
