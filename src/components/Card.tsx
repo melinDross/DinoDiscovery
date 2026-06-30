@@ -105,7 +105,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     };
 
     return (
-      <div ref={ref} className="relative w-[420px]">
+      <div ref={ref} className="relative w-[420px] select-none" style={{ WebkitTouchCallout: 'none' } as React.CSSProperties}>
         {/* Everything that must stay clipped to the rounded frame lives in
             here. The dino and the text/tag overlay are rendered as later
             siblings below, on top of this, so they're never clipped by it. */}
@@ -114,7 +114,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             <img
               src={habitatBackground.path}
               alt={`Entorno: ${attrs.habitat}`}
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover pointer-events-none"
             />
             {/* Grounding contact shadow so the dino reads as standing on the
                 scene rather than floating in front of it. */}
