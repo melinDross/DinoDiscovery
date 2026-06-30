@@ -109,6 +109,13 @@ body {
   .card-face {
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
+    /* clip-path removes the transparent corner triangles (between the card's
+       rectangular bounding box and its rounded-[28px] visual border) that
+       appear as dark fill in 3D-composite renders on iOS Safari — pixels
+       outside the rounded clip simply aren't rendered, so they can't pick up
+       any background color from the compositing context. 48px = inner border
+       radius (28) + border width (20), matching the card's outer visual edge. */
+    clip-path: inset(0 round 48px);
   }
 
   .card-face-back {
@@ -116,6 +123,7 @@ body {
     inset: 0;
     -webkit-transform: rotateY(180deg);
     transform: rotateY(180deg);
+    clip-path: inset(0 round 48px);
   }
 
   /* Shiny-card glow for rare/epic/legendary. The glow breathes by
