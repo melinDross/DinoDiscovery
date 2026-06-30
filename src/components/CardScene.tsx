@@ -23,6 +23,19 @@ export function clampTilt(
   return { rotateX, rotateY };
 }
 
+// Card.tsx is built at a fixed 420px design width (its internal 3-layer
+// stacking — frame / dino / text overlay — is positioned with literal px
+// math that isn't worth making fluid). Rather than touch that, this scales
+// the whole thing down uniformly to fit narrower viewports: a CSS
+// transform:scale() applies identically to all three absolutely-positioned
+// sibling layers, so they never drift out of alignment with each other.
+export function computeFitScale(availableWidth: number, naturalWidth: number): number {
+  if (naturalWidth <= 0 || availableWidth <= 0) return 1;
+  return Math.min(1, availableWidth / naturalWidth);
+}
+
+const CARD_NATURAL_WIDTH = 420;
+
 const MAX_TILT_DEG = 15;
 const FLIP_DURATION_MS = 800;
 const SPIN_DURATION_MS = 1000;
@@ -38,6 +51,11 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   const [spinDeg, setSpinDeg] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const spinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const outerRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  const [naturalHeight, setNaturalHeight] = useState(0);
 
   const rarity = calculateRarity(attrs);
   const isLegendary = rarity === 'legendary';
@@ -55,6 +73,24 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
     };
   }, []);
 
+  useEffect(() => {
+    const outer = outerRef.current;
+    const inner = innerRef.current;
+    if (!outer || !inner) return;
+
+    function update() {
+      if (!outer || !inner) return;
+      setScale(computeFitScale(outer.offsetWidth, CARD_NATURAL_WIDTH));
+      setNaturalHeight(inner.offsetHeight);
+    }
+
+    update();
+    const resizeObserver = new ResizeObserver(update);
+    resizeObserver.observe(outer);
+    resizeObserver.observe(inner);
+    return () => resizeObserver.disconnect();
+  }, []);
+
   function handleMouseMove(event: React.MouseEvent<HTMLDivElement>) {
     if (isSpinning) return;
     const rect = event.currentTarget.getBoundingClientRect();
@@ -64,6 +100,22 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   }
 
   function handleMouseLeave() {
+    if (isSpinning) return;
+    setTransition(TILT_RESET_TRANSITION);
+    setTilt({ rotateX: 0, rotateY: 0 });
+  }
+
+  function handleTouchMove(event: React.TouchEvent<HTMLDivElement>) {
+    if (isSpinning) return;
+    const touch = event.touches[0];
+    if (!touch) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const next = clampTilt(touch.clientX, touch.clientY, rect, MAX_TILT_DEG);
+    setTransition(TILT_ACTIVE_TRANSITION);
+    setTilt(next);
+  }
+
+  function handleTouchEnd() {
     if (isSpinning) return;
     setTransition(TILT_RESET_TRANSITION);
     setTilt({ rotateX: 0, rotateY: 0 });
@@ -91,28 +143,46 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   const totalRotateY = baseFlipDeg + tilt.rotateY + spinDeg;
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex flex-col items-center gap-4 w-full">
       <div
-        className="card-perspective"
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
+        ref={outerRef}
+        className="w-full flex justify-center"
+        style={{ height: naturalHeight ? naturalHeight * scale : undefined }}
       >
         <div
-          className={`card-flipper ${isLegendary ? 'card-glow-idle' : ''}`}
+          ref={innerRef}
           style={{
-            transform: `rotateX(${tilt.rotateX}deg) rotateY(${totalRotateY}deg)`,
-            transition,
+            width: CARD_NATURAL_WIDTH,
+            transform: `scale(${scale})`,
+            transformOrigin: 'top center',
           }}
         >
-          <div className="card-face">
-            <Card discovererName={discovererName} result={result} attrs={attrs} />
-          </div>
-          <div className="card-face card-face-back">
-            <img
-              src={CARD_BACK_PATH}
-              alt="Dino Discovery"
-              className="w-full h-full object-cover rounded-[28px] border-[20px] border-[#0a0a0a]"
-            />
+          <div
+            className="card-perspective"
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onTouchCancel={handleTouchEnd}
+          >
+            <div
+              className={`card-flipper ${isLegendary ? 'card-glow-idle' : ''}`}
+              style={{
+                transform: `rotateX(${tilt.rotateX}deg) rotateY(${totalRotateY}deg)`,
+                transition,
+              }}
+            >
+              <div className="card-face">
+                <Card discovererName={discovererName} result={result} attrs={attrs} />
+              </div>
+              <div className="card-face card-face-back">
+                <img
+                  src={CARD_BACK_PATH}
+                  alt="Dino Discovery"
+                  className="w-full h-full object-cover rounded-[28px] border-[20px] border-[#0a0a0a]"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

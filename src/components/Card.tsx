@@ -138,10 +138,10 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
                     alt={cell.alt}
                     className={`object-contain rounded-[40px] ${index === 2 ? 'w-16 h-16' : 'w-12 h-12'}`}
                   />
-                  <span className="mt-1 text-[9px] uppercase tracking-wide text-cream/70 leading-tight">
+                  <span className="mt-1 text-[10px] uppercase tracking-wide text-cream/70 leading-tight">
                     {cell.label}
                   </span>
-                  <span className="text-[10px] font-semibold leading-tight break-words text-center">
+                  <span className="text-[11px] font-semibold leading-tight break-words text-center">
                     {cell.value}
                   </span>
                 </div>
@@ -152,22 +152,22 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
 
             <div className="flex items-center justify-between px-2 text-xs">
               <div className="text-center">
-                <p className="text-[10px] uppercase tracking-wide text-sage">Puntuación</p>
+                <p className="text-[11px] uppercase tracking-wide text-sage">Puntuación</p>
                 <p className="font-display text-lg text-cream">{score}</p>
               </div>
               <div className="text-center">
-                <p className="text-[10px] uppercase tracking-wide text-sage">Rareza</p>
+                <p className="text-[11px] uppercase tracking-wide text-sage">Rareza</p>
                 <p className="font-display text-sm text-cream">{RARITY_LABELS[rarity]}</p>
                 <p className="text-accent">{stars}</p>
               </div>
               <div className="text-center">
-                <p className="text-[10px] uppercase tracking-wide text-sage">Tier</p>
+                <p className="text-[11px] uppercase tracking-wide text-sage">Tier</p>
                 <p className="font-display text-lg text-cream">{RARITY_STAR_COUNT[rarity]}</p>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between px-5 py-3 text-[10px] text-moss">
+          <div className="flex items-center justify-between px-5 py-3 text-[11px] text-moss">
             <span>
               Descubridor/a: <strong className="text-sage">{discovererName}</strong> · Arte generado con IA
             </span>
@@ -187,7 +187,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
           style={{
             ...artLayerStyle,
             filter:
-              'drop-shadow(0 22px 16px rgba(0,0,0,0.55)) drop-shadow(0 6px 8px rgba(0,0,0,0.45)) drop-shadow(0 0 24px rgba(0,0,0,0.3))',
+              'drop-shadow(0 18px 14px rgba(0,0,0,0.5)) drop-shadow(0 5px 6px rgba(0,0,0,0.4))',
           }}
         />
 
@@ -204,7 +204,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
           >
             {RARITY_LABELS[rarity]}
           </span>
-          <span className="absolute bottom-[27%] left-3 px-2 py-1 bg-bg/90 border border-accent/30 shadow-lg text-[10px] uppercase tracking-wide rounded-[40px]">
+          <span className="absolute bottom-[27%] left-3 px-2 py-1 bg-bg/90 border border-accent/30 shadow-lg text-[11px] uppercase tracking-wide rounded-[40px]">
             {habitatBackground.name}
           </span>
           <div className="absolute bottom-0 left-0 right-0 px-4 pt-16 pb-10 bg-gradient-to-t from-bg via-bg/90 to-transparent">
