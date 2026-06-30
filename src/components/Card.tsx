@@ -152,7 +152,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
                   <img
                     src={cell.icon}
                     alt={cell.alt}
-                    className={`max-w-none object-contain rounded-[40px] ${index === 2 ? 'w-16 h-16' : 'w-12 h-12'}`}
+                    className={`max-w-none object-contain rounded-[40px] pointer-events-none ${index === 2 ? 'w-16 h-16' : 'w-12 h-12'}`}
                   />
                   <span className="mt-1 text-[10px] uppercase tracking-wide text-cream/70 leading-tight">
                     {cell.label}
