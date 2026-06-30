@@ -41,7 +41,7 @@ const CARD_NATURAL_WIDTH = 420;
 // account for it (it's an absolutely-positioned sibling). Reserve extra
 // space below the scaled card so that overflow never visually collides with
 // the buttons rendered after CardScene in ResultScreen.
-const DINO_OVERFLOW_BUFFER_PX = 56;
+const DINO_OVERFLOW_BUFFER_PX = 16;
 
 const MAX_TILT_DEG = 15;
 const FLIP_DURATION_MS = 800;

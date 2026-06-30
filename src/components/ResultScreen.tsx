@@ -2,8 +2,6 @@ import { useEffect } from 'react';
 import confetti from 'canvas-confetti';
 import { shareDinoImage } from '../certificate';
 import type { GenerateDinoResponse, DinoAttributes } from '../../shared/types';
-import { generateSpeciesId, calculateRarity } from '../utils/speciesHash';
-import { RARITY_LABELS } from '../data/cardTheme';
 import { CardScene } from './CardScene';
 
 interface ResultScreenProps {
@@ -24,19 +22,11 @@ export function ResultScreen({ result, attrs, discovererName, onDownloadClick, o
     void shareDinoImage(result.imageUrl, fileName, result.commonName);
   }
 
-  const speciesId = generateSpeciesId({ ...attrs });
-  const rarity = calculateRarity(attrs);
-
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="max-w-xl w-full text-center">
         <CardScene discovererName={discovererName} result={result} attrs={attrs} />
-        <div className="mt-3 text-xs text-sage uppercase tracking-wide">
-          Código de especie
-        </div>
-        <p className="font-mono text-cream text-lg">{speciesId}</p>
-        <p className="text-xs text-sage uppercase tracking-wide">{RARITY_LABELS[rarity]}</p>
-        <div className="mt-6 flex flex-wrap gap-3 justify-center">
+        <div className="mt-3 flex flex-wrap gap-3 justify-center">
           <button
             type="button"
             onClick={onDownloadClick}
@@ -55,7 +45,7 @@ export function ResultScreen({ result, attrs, discovererName, onDownloadClick, o
         <button
           type="button"
           onClick={onRestart}
-          className="mt-4 px-4 py-2 min-h-[44px] text-sage font-display uppercase tracking-wide text-sm hover:text-cream transition-colors"
+          className="mt-2 px-4 py-2 min-h-[44px] text-sage font-display uppercase tracking-wide text-sm hover:text-cream transition-colors"
         >
           Detectar otra especie
         </button>
