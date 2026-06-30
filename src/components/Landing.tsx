@@ -5,11 +5,16 @@ interface LandingProps {
 export function Landing({ onStart }: LandingProps) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center">
-      <img
-        src="/landing-logo.png"
-        alt="Dino Discovery Generator"
-        className="w-36 h-36 sm:w-52 sm:h-52 md:w-64 md:h-64 object-contain mb-3 sm:mb-4"
-      />
+      <div className="relative mb-3 sm:mb-4 w-52 sm:w-72 md:w-80 rounded-3xl overflow-hidden shadow-[0_0_40px_rgba(178,255,0,0.20),0_8px_32px_rgba(0,0,0,0.6)] ring-2 ring-accent/30">
+        <video
+          src="/dino-landing.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-auto block"
+        />
+      </div>
       <span className="px-3 py-1 mb-4 sm:mb-6 border border-accent text-accent text-xs uppercase tracking-[3px]">
         Laboratorio de paleontología
       </span>
