@@ -109,7 +109,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         {/* Everything that must stay clipped to the rounded frame lives in
             here. The dino and the text/tag overlay are rendered as later
             siblings below, on top of this, so they're never clipped by it. */}
-        <div className="rounded-[28px] border-[20px] border-[#0a0a0a] bg-bg text-cream overflow-hidden shadow-2xl">
+        <div className="rounded-[28px] border-[20px] border-[#0a0a0a] bg-bg text-cream overflow-hidden">
           <div className="relative h-[440px] bg-surface2 overflow-hidden">
             <img
               src={habitatBackground.path}
@@ -147,12 +147,12 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
               {cells.map((cell, index) => (
                 <div
                   key={cell.label}
-                  className={`flex flex-col items-center min-w-0 px-0.5 ${index === 2 ? '-mt-7' : ''}`}
+                  className="flex flex-col items-center min-w-0 px-0.5"
                 >
                   <img
                     src={cell.icon}
                     alt={cell.alt}
-                    className={`max-w-none object-contain rounded-[40px] ${index === 2 ? 'w-16 h-16' : 'w-12 h-12'}`}
+                    className={`max-w-none object-contain rounded-[40px] ${index === 2 ? 'w-[72px] h-[72px]' : 'w-12 h-12'}`}
                   />
                   <span className="mt-1 text-[10px] uppercase tracking-wide text-cream/70 leading-tight">
                     {cell.label}

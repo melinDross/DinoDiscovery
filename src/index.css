@@ -79,13 +79,14 @@ body {
   .card-perspective {
     -webkit-perspective: 1000px;
     perspective: 1000px;
-    /* Lifts the card off the page background — a dark contact shadow for
-       depth plus a soft bright accent bloom so the card reads as floating
-       above the (now much busier/coloured) fantasy backdrop rather than
-       blending into it. filter:drop-shadow (not box-shadow) so it follows
-       the card's actual rounded silhouette through the 3D transform. */
-    filter: drop-shadow(0 30px 45px rgba(0, 0, 0, 0.65))
-      drop-shadow(0 0 50px rgba(178, 255, 0, 0.18));
+    /* Static lift off the page background — dark contact shadow + subtle
+       green accent bloom. Static (not animated) so it never pulses, and
+       filter:drop-shadow (not box-shadow) so it follows the card's actual
+       rounded silhouette. The opacity animation on .card-glow-idle is gone
+       (replaced by box-shadow size breathing) so this parent filter is never
+       affected by a child opacity change making it flicker. */
+    filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.55))
+      drop-shadow(0 0 30px rgba(178, 255, 0, 0.10));
   }
 
   .card-flipper {
@@ -94,6 +95,10 @@ body {
     transform-style: preserve-3d;
     transition: transform 80ms linear;
     will-change: transform;
+    /* Match the card's outer visual radius (inner radius 28px + border 20px)
+       so the rarity glow box-shadow clips to the rounded card shape instead
+       of filling the rectangular flipper corners with colour. */
+    border-radius: 48px;
   }
 
   .card-face {
@@ -108,22 +113,63 @@ body {
     transform: rotateY(180deg);
   }
 
-  /* Shiny-card glow for rare/epic/legendary pulls. Color comes from the
-     --glow-color custom property set inline per rarity (CardScene.tsx) so
-     one keyframe serves all three tiers instead of duplicating it per color. */
+  /* Shiny-card glow for rare/epic/legendary. The glow breathes by
+     animating box-shadow SIZE (not opacity) so the parent
+     filter:drop-shadow isn't affected and never flickers. --glow-color is
+     set inline in CardScene.tsx per rarity tier. */
   .card-glow-idle {
     --glow-color: 255, 150, 0;
-    animation: card-glow-pulse 2s ease-in-out infinite;
+    animation: card-glow-pulse 2.4s ease-in-out infinite,
+               card-glow-reveal 0.8s ease-out 0.3s both;
+  }
+
+  /* Holographic sheen that shifts with the card's tilt. --tilt-x-pct and
+     --tilt-y-pct are set inline in CardScene.tsx from the live tilt state,
+     so the highlight moves as you drag/hover the card. mix-blend-mode:screen
+     brightens the card art underneath without masking it. The reveal
+     animation plays once on entrance; after that the sheen stays visible at
+     whatever position the tilt dictates. */
+  .card-glow-idle .card-face::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    pointer-events: none;
+    border-radius: 8px;
+    background: radial-gradient(
+      circle at
+        calc(50% + var(--tilt-y-pct, 0%))
+        calc(50% - var(--tilt-x-pct, 0%)),
+      rgba(255, 255, 255, 0.28) 0%,
+      rgba(var(--glow-color, 255, 150, 0), 0.18) 35%,
+      transparent 65%
+    );
+    mix-blend-mode: screen;
+    animation: card-sheen-reveal 1.5s ease-out 0.2s both;
   }
 
   @keyframes card-glow-pulse {
     0%, 100% {
-      box-shadow: 0 0 30px 8px rgba(var(--glow-color), 0.6), 0 0 60px 16px rgba(var(--glow-color), 0.3);
-      opacity: 0.6;
+      box-shadow: 0 0 18px 4px rgba(var(--glow-color), 0.45),
+                  0 0 40px 10px rgba(var(--glow-color), 0.2);
     }
     50% {
-      box-shadow: 0 0 30px 8px rgba(var(--glow-color), 0.6), 0 0 60px 16px rgba(var(--glow-color), 0.3);
-      opacity: 1;
+      box-shadow: 0 0 35px 12px rgba(var(--glow-color), 0.75),
+                  0 0 70px 24px rgba(var(--glow-color), 0.35);
     }
+  }
+
+  @keyframes card-glow-reveal {
+    0%   { box-shadow: 0 0 0 0 rgba(var(--glow-color, 255, 150, 0), 0); }
+    40%  { box-shadow: 0 0 60px 20px rgba(var(--glow-color, 255, 150, 0), 0.9),
+                       0 0 120px 40px rgba(var(--glow-color, 255, 150, 0), 0.5); }
+    100% { box-shadow: 0 0 35px 12px rgba(var(--glow-color, 255, 150, 0), 0.75),
+                       0 0 70px 24px rgba(var(--glow-color, 255, 150, 0), 0.35); }
+  }
+
+  @keyframes card-sheen-reveal {
+    0%   { opacity: 0; }
+    50%  { opacity: 1; }
+    100% { opacity: 1; }
   }
 }

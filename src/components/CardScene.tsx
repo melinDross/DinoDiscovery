@@ -290,7 +290,14 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
               style={{
                 transform: `rotateX(${tilt.rotateX}deg) rotateY(${totalRotateY}deg)`,
                 transition,
-                ...(glowColor ? { ['--glow-color' as string]: glowColor } : {}),
+                ...(glowColor ? {
+                  ['--glow-color' as string]: glowColor,
+                  // Sheen spotlight position: moves opposite to tilt so it
+                  // reads as a fixed light source the card is rotating under.
+                  // MAX_TILT_DEG = 15 → max offset ±45% of card width/height.
+                  ['--tilt-y-pct' as string]: `${tilt.rotateY * 3}%`,
+                  ['--tilt-x-pct' as string]: `${tilt.rotateX * 3}%`,
+                } : {}),
               }}
             >
               <div className="card-face" style={{ visibility: facing === 'front' ? 'visible' : 'hidden' }}>
