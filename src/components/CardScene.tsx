@@ -285,16 +285,12 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
       >
         <div
           ref={innerRef}
-          className="absolute left-1/2 top-0 card-scene-wrapper"
+          className={`absolute left-1/2 top-0 card-scene-wrapper${glowColor ? ' card-glow-wrapper' : ''}`}
           style={{
             width: CARD_NATURAL_WIDTH,
-            // translateX(-50%) centers using the element's own (unscaled)
-            // width, so this stays centered even when that width is wider
-            // than the parent — `margin: auto` can't do that (it resolves
-            // to 0 once the child's intrinsic width exceeds the container,
-            // which silently left-aligned the card on narrow phones).
             transform: `translateX(-50%) scale(${scale})`,
             transformOrigin: 'top center',
+            ...(glowColor ? { ['--glow-color' as string]: glowColor } : {}),
           }}
         >
           <div
@@ -307,11 +303,10 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
             onTouchCancel={handleTouchEnd}
           >
             <div
-              className={`card-flipper ${glowColor ? 'card-glow-idle' : ''}`}
+              className="card-flipper"
               style={{
                 transform: `rotateX(${tilt.rotateX}deg) rotateY(${totalRotateY}deg)`,
                 transition,
-                ...(glowColor ? { ['--glow-color' as string]: glowColor } : {}),
               }}
             >
               <div className="card-face" style={{ visibility: facing === 'front' ? 'visible' : 'hidden' }}>

@@ -87,10 +87,10 @@ describe('CardScene', () => {
     const { rerender } = render(
       <CardScene discovererName="Lucía" result={result} attrs={commonAttrs} />
     );
-    expect(document.querySelector('.card-glow-idle')).not.toBeInTheDocument();
+    expect(document.querySelector('.card-glow-wrapper')).not.toBeInTheDocument();
 
     rerender(<CardScene discovererName="Lucía" result={result} attrs={legendaryAttrs} />);
-    expect(document.querySelector('.card-glow-idle')).toBeInTheDocument();
+    expect(document.querySelector('.card-glow-wrapper')).toBeInTheDocument();
   });
 
   it('spins the card 360 degrees when the rotate button is clicked', async () => {

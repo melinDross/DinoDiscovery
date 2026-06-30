@@ -125,22 +125,20 @@ body {
     background-color: #07091a;
   }
 
-  /* Shiny-card glow for rare/epic/legendary. The glow breathes by
-     animating box-shadow SIZE (not opacity) so the parent
-     filter:drop-shadow isn't affected and never flickers. --glow-color is
-     set inline in CardScene.tsx per rarity tier. */
-  .card-glow-idle {
-    --glow-color: 255, 150, 0;
+  /* Shiny-card glow lives on the OUTER wrapper (.card-glow-wrapper, applied
+     to the innerRef div in CardScene.tsx) NOT on .card-flipper.
+     Putting animation on .card-flipper promoted it to its own GPU
+     compositing layer; during iOS Safari 3D rendering that caused the dino
+     (z-20) and text overlay (z-30) siblings to not composite into that
+     layer, showing only the raw habitat background on every drag.
+     On the outer wrapper the animation creates a GPU layer that already
+     CONTAINS the entire 3D scene as one subtree — no cross-layer boundary,
+     no compositing conflict. */
+  .card-glow-wrapper {
+    border-radius: 48px;
     animation: card-glow-pulse 2.4s ease-in-out infinite,
                card-glow-reveal 0.8s ease-out 0.3s both;
   }
-
-  /* Holographic sheen removed — mix-blend-mode:screen on a ::before
-     pseudo-element inside a 3D-transformed face forces a new compositing
-     layer in iOS Safari that prevents the dino and text overlay siblings
-     (z-20 / z-30) from rendering into it, showing only the raw habitat
-     background. The entrance burst + idle glow pulse already give plenty
-     of "shiny card" feeling on their own. */
 
   @keyframes card-glow-pulse {
     0%, 100% {
