@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { GenerateDinoResponse, DinoAttributes } from '../../shared/types';
 import { Card } from './Card';
 import { calculateRarity } from '../utils/speciesHash';
@@ -45,11 +45,14 @@ const DINO_OVERFLOW_BUFFER_PX = 56;
 
 const MAX_TILT_DEG = 15;
 const FLIP_DURATION_MS = 800;
-const SPIN_DURATION_MS = 1000;
+const SPIN_DURATION_MS = 1400;
+const DRAG_SENSITIVITY_DEG_PER_PX = 0.6;
+const DRAG_SNAP_TRANSITION = '320ms ease-out';
 const TILT_ACTIVE_TRANSITION = '80ms linear';
 const TILT_RESET_TRANSITION = '400ms ease-out';
 const FLIP_TRANSITION = `transform ${FLIP_DURATION_MS}ms ease-out`;
 const SPIN_TRANSITION = `transform ${SPIN_DURATION_MS}ms ease-in-out`;
+const NO_TRANSITION = 'none';
 
 export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   const [hasFlippedIn, setHasFlippedIn] = useState(false);
@@ -66,6 +69,8 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   const [facing, setFacing] = useState<'front' | 'back'>('back');
   const spinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const facingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dragStartXRef = useRef<number | null>(null);
+  const dragBaseSpinRef = useRef(0);
 
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
@@ -102,7 +107,11 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
     };
   }, []);
 
-  useEffect(() => {
+  // useLayoutEffect (not useEffect) so the fit-scale is measured and applied
+  // before the browser paints — otherwise the card briefly renders at its
+  // full unscaled 420px width on first paint, visibly overflowing/off-center
+  // for a frame before snapping down to the correct scale.
+  useLayoutEffect(() => {
     const outer = outerRef.current;
     const inner = innerRef.current;
     if (!outer || !inner) return;
@@ -134,11 +143,38 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
     setTilt({ rotateX: 0, rotateY: 0 });
   }
 
+  // Drag-to-rotate: the card follows the finger horizontally while dragging
+  // (no CSS transition — `spinDeg` is updated directly per touchmove, so the
+  // rendered rotation always matches the live drag position 1:1), and snaps
+  // to whichever face (front/back) ends up closer on release.
+  function handleTouchStart(event: React.TouchEvent<HTMLDivElement>) {
+    if (isSpinning) return;
+    const touch = event.touches[0];
+    if (!touch) return;
+    dragStartXRef.current = touch.clientX;
+    dragBaseSpinRef.current = spinDeg;
+    setTransition(NO_TRANSITION);
+  }
+
   function handleTouchMove(event: React.TouchEvent<HTMLDivElement>) {
     if (isSpinning) return;
     const touch = event.touches[0];
     if (!touch) return;
     const rect = event.currentTarget.getBoundingClientRect();
+    const verticalTilt = clampTilt(touch.clientX, touch.clientY, rect, MAX_TILT_DEG).rotateX;
+
+    if (dragStartXRef.current !== null) {
+      const deltaX = touch.clientX - dragStartXRef.current;
+      const nextSpin = dragBaseSpinRef.current + deltaX * DRAG_SENSITIVITY_DEG_PER_PX;
+      setTransition(NO_TRANSITION);
+      setSpinDeg(nextSpin);
+      setTilt({ rotateX: verticalTilt, rotateY: 0 });
+      const totalDeg = baseFlipDeg + nextSpin;
+      const mod = ((totalDeg % 360) + 360) % 360;
+      setFacing(mod > 90 && mod < 270 ? 'back' : 'front');
+      return;
+    }
+
     const next = clampTilt(touch.clientX, touch.clientY, rect, MAX_TILT_DEG);
     setTransition(TILT_ACTIVE_TRANSITION);
     setTilt(next);
@@ -146,11 +182,25 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
 
   function handleTouchEnd() {
     if (isSpinning) return;
+    if (dragStartXRef.current !== null) {
+      dragStartXRef.current = null;
+      setSpinDeg((current) => {
+        const totalDeg = baseFlipDeg + current;
+        const snapped = Math.round(totalDeg / 180) * 180;
+        const mod = ((snapped % 360) + 360) % 360;
+        setFacing(mod === 180 ? 'back' : 'front');
+        return snapped - baseFlipDeg;
+      });
+      setTransition(DRAG_SNAP_TRANSITION);
+      setTilt({ rotateX: 0, rotateY: 0 });
+      return;
+    }
     setTransition(TILT_RESET_TRANSITION);
     setTilt({ rotateX: 0, rotateY: 0 });
   }
 
   function handleSpinClick() {
+    dragStartXRef.current = null;
     if (spinTimeoutRef.current !== null) {
       clearTimeout(spinTimeoutRef.current);
     }
@@ -167,8 +217,8 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
       facingTimeoutRef.current = setTimeout(() => {
         facingTimeoutRef.current = null;
         setFacing('front');
-      }, SPIN_DURATION_MS / 2);
-    }, SPIN_DURATION_MS / 4);
+      }, SPIN_DURATION_MS * 0.55);
+    }, SPIN_DURATION_MS * 0.2);
     spinTimeoutRef.current = setTimeout(() => {
       spinTimeoutRef.current = null;
       setIsSpinning(false);
@@ -193,10 +243,15 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
       >
         <div
           ref={innerRef}
-          className="mx-auto"
+          className="absolute left-1/2 top-0"
           style={{
             width: CARD_NATURAL_WIDTH,
-            transform: `scale(${scale})`,
+            // translateX(-50%) centers using the element's own (unscaled)
+            // width, so this stays centered even when that width is wider
+            // than the parent — `margin: auto` can't do that (it resolves
+            // to 0 once the child's intrinsic width exceeds the container,
+            // which silently left-aligned the card on narrow phones).
+            transform: `translateX(-50%) scale(${scale})`,
             transformOrigin: 'top center',
           }}
         >
@@ -204,6 +259,7 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
             className="card-perspective"
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
+            onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             onTouchCancel={handleTouchEnd}

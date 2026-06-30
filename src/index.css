@@ -4,11 +4,18 @@
 
 /* Kids' app: block pinch-zoom / double-tap-zoom gestures everywhere except
    the card's own tilt interaction (handled by JS touchmove on .card-perspective,
-   which still receives single-finger touches under touch-action: manipulation). */
+   which still receives single-finger touches under touch-action: manipulation).
+   `background-color` is set on both html and body (not just body) and
+   `overscroll-behavior` disables rubber-band bounce, because iOS Safari's
+   bounce-past-the-content-edge reveals the *html* element's background —
+   leaving it at the browser default white flashes white at the top/bottom
+   of the page during a normal scroll bounce. */
 html,
 body {
   touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
+  background-color: #0d1a0f;
+  overscroll-behavior-y: none;
 }
 
 @layer utilities {
