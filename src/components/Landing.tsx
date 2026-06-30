@@ -15,10 +15,7 @@ export function Landing({ onStart }: LandingProps) {
           className="w-full h-auto block"
         />
       </div>
-      <span className="px-3 py-1 mb-4 sm:mb-6 border border-accent text-accent text-xs uppercase tracking-[3px]">
-        Laboratorio de paleontología
-      </span>
-      <h1 className="font-display text-4xl sm:text-5xl md:text-6xl leading-tight tracking-[5px] uppercase">
+<h1 className="font-display text-4xl sm:text-5xl md:text-6xl leading-tight tracking-[5px] uppercase">
         <span className="block text-cream">Dino</span>
         <span className="block text-accent [text-shadow:0_0_40px_rgba(178,255,0,0.4)]">
           Discovery
