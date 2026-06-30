@@ -166,7 +166,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
 
             <div className="border-t border-accent/20 my-3" />
 
-            <div className="flex items-center justify-between px-2 text-xs">
+            <div className="grid grid-cols-3 px-2 text-xs">
               <div className="text-center">
                 <p className="text-[11px] uppercase tracking-wide text-sage">Puntuación</p>
                 <p className="font-display text-lg text-cream">{score}</p>

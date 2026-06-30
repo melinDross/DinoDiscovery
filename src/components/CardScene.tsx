@@ -278,6 +278,7 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
         >
           <div
             className="card-perspective"
+            style={{ touchAction: 'none' }}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
             onTouchStart={handleTouchStart}
