@@ -136,12 +136,13 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
               like the icons were clipped, but nothing was actually clipping
               them, they were just painted over by a higher z-index element. */}
           <div
-            className="relative z-[2] mx-4 rounded-[24px] border border-accent/20 px-2 pt-4 pb-3 overflow-visible"
+            className="relative z-[2] mx-4 rounded-[24px] border border-accent/30 px-2 pt-4 pb-3 overflow-visible shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
             style={{
               background:
-                'radial-gradient(circle at 18% 0%, rgba(178,255,0,0.10), transparent 55%),' +
-                'radial-gradient(circle at 85% 100%, rgba(123,77,255,0.16), transparent 55%),' +
-                'linear-gradient(165deg, #232a1f 0%, #15181c 55%, #1d1626 100%)',
+                'radial-gradient(circle at 15% -10%, rgba(178,255,0,0.28), transparent 50%),' +
+                'radial-gradient(circle at 90% 110%, rgba(157,92,255,0.4), transparent 55%),' +
+                'radial-gradient(circle at 50% 50%, rgba(80,50,140,0.35), transparent 70%),' +
+                'linear-gradient(160deg, #2d1b4e 0%, #1a1330 45%, #142420 75%, #0f1f16 100%)',
             }}
           >
             <div className="grid grid-cols-5 gap-1 text-center">
