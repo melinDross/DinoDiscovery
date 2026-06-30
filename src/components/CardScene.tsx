@@ -70,9 +70,7 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   const spinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const facingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragStartXRef = useRef<number | null>(null);
-  const dragStartYRef = useRef(0);
   const dragBaseSpinRef = useRef(0);
-  const dragBaseTiltXRef = useRef(0);
 
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
@@ -145,23 +143,19 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
     setTilt({ rotateX: 0, rotateY: 0 });
   }
 
-  // Drag-to-rotate: the card follows the finger on both axes while dragging
-  // (no CSS transition — `spinDeg`/`tilt` are updated directly per
-  // touchmove, so the rendered rotation always matches the live drag
-  // position 1:1). Horizontal drag (rotateY, via `spinDeg`) snaps to
-  // whichever face — front/back — ended up closer on release, since that's
-  // the axis the back face's art is oriented for. Vertical drag (rotateX,
-  // via `tilt`) always springs back to 0 on release instead, same as the
-  // existing hover/light-touch parallax tilt — there's no "back"
-  // orientation that makes sense to snap to on that axis.
+  // Drag-to-rotate: the card follows the finger horizontally while dragging
+  // (no CSS transition — `spinDeg` is updated directly per touchmove, so the
+  // rendered rotation always matches the live drag position 1:1), and snaps
+  // to whichever face (front/back) ended up closer on release. Vertical
+  // finger movement still drives the small clamped parallax tilt (rotateX),
+  // same as before — a free/unclamped vertical drag was tried and reverted,
+  // it made the gesture feel worse, not better.
   function handleTouchStart(event: React.TouchEvent<HTMLDivElement>) {
     if (isSpinning) return;
     const touch = event.touches[0];
     if (!touch) return;
     dragStartXRef.current = touch.clientX;
-    dragStartYRef.current = touch.clientY;
     dragBaseSpinRef.current = spinDeg;
-    dragBaseTiltXRef.current = tilt.rotateX;
     setTransition(NO_TRANSITION);
   }
 
@@ -169,22 +163,21 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
     if (isSpinning) return;
     const touch = event.touches[0];
     if (!touch) return;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const verticalTilt = clampTilt(touch.clientX, touch.clientY, rect, MAX_TILT_DEG).rotateX;
 
     if (dragStartXRef.current !== null) {
       const deltaX = touch.clientX - dragStartXRef.current;
-      const deltaY = touch.clientY - dragStartYRef.current;
       const nextSpin = dragBaseSpinRef.current + deltaX * DRAG_SENSITIVITY_DEG_PER_PX;
-      const nextTiltX = dragBaseTiltXRef.current - deltaY * DRAG_SENSITIVITY_DEG_PER_PX;
       setTransition(NO_TRANSITION);
       setSpinDeg(nextSpin);
-      setTilt({ rotateX: nextTiltX, rotateY: 0 });
+      setTilt({ rotateX: verticalTilt, rotateY: 0 });
       const totalDeg = baseFlipDeg + nextSpin;
       const mod = ((totalDeg % 360) + 360) % 360;
       setFacing(mod > 90 && mod < 270 ? 'back' : 'front');
       return;
     }
 
-    const rect = event.currentTarget.getBoundingClientRect();
     const next = clampTilt(touch.clientX, touch.clientY, rect, MAX_TILT_DEG);
     setTransition(TILT_ACTIVE_TRANSITION);
     setTilt(next);
