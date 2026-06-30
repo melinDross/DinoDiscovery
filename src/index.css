@@ -14,29 +14,38 @@ html,
 body {
   touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
-  background-color: #0d1a0f;
+  background-color: #07091a;
   overscroll-behavior-y: none;
 }
 
 @layer utilities {
+  /* Fantasy night-sky backdrop. The card (black border + dark art) needs
+     clear contrast against it — deep indigo/violet base with coloured
+     radial glows (emerald top-left, violet bottom-right, gold centre-top)
+     gives the magical look without competing with the card's own art.
+     The hair-thin star-grid is retained but dimmed so it reads as a
+     constellation map rather than a tech grid. */
   .grid-overlay {
-    background-color: #0d1a0f;
+    background-color: #07091a;
     background-image:
-      radial-gradient(circle at 20% 20%, rgba(26, 61, 26, 0.6), transparent 50%),
-      radial-gradient(circle at 80% 80%, rgba(15, 42, 15, 0.6), transparent 50%),
+      radial-gradient(ellipse at 10% 15%, rgba(80, 200, 120, 0.35), transparent 45%),
+      radial-gradient(ellipse at 90% 85%, rgba(140, 60, 255, 0.45), transparent 50%),
+      radial-gradient(ellipse at 70% 5%,  rgba(255, 180, 50, 0.22), transparent 35%),
+      radial-gradient(ellipse at 30% 95%, rgba(50, 120, 255, 0.20), transparent 40%),
+      radial-gradient(ellipse at 50% 50%, rgba(10, 10, 40, 0.60), transparent 70%),
       repeating-linear-gradient(
         0deg,
-        rgba(178, 255, 0, 0.04) 0px,
-        rgba(178, 255, 0, 0.04) 1px,
+        rgba(178, 255, 0, 0.025) 0px,
+        rgba(178, 255, 0, 0.025) 1px,
         transparent 1px,
-        transparent 40px
+        transparent 60px
       ),
       repeating-linear-gradient(
         90deg,
-        rgba(178, 255, 0, 0.04) 0px,
-        rgba(178, 255, 0, 0.04) 1px,
+        rgba(178, 255, 0, 0.025) 0px,
+        rgba(178, 255, 0, 0.025) 1px,
         transparent 1px,
-        transparent 40px
+        transparent 60px
       );
   }
 
