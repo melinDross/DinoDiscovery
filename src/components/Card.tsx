@@ -134,7 +134,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
               like the icons were clipped, but nothing was actually clipping
               them, they were just painted over by a higher z-index element. */}
           <div
-            className="relative z-[2] mx-4 rounded-[24px] border border-accent/30 px-2 pt-4 pb-3 overflow-visible shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+            className="relative z-[2] mx-4 rounded-[24px] border border-accent/30 px-2 pt-8 pb-3 overflow-visible shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
             style={{
               background:
                 'radial-gradient(circle at 15% -10%, rgba(178,255,0,0.28), transparent 50%),' +
@@ -147,12 +147,12 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
               {cells.map((cell, index) => (
                 <div
                   key={cell.label}
-                  className="flex flex-col items-center min-w-0 px-0.5"
+                  className={`flex flex-col items-center min-w-0 px-0.5 ${index === 2 ? '-mt-7' : ''}`}
                 >
                   <img
                     src={cell.icon}
                     alt={cell.alt}
-                    className={`max-w-none object-contain rounded-[40px] ${index === 2 ? 'w-[72px] h-[72px]' : 'w-12 h-12'}`}
+                    className={`max-w-none object-contain rounded-[40px] ${index === 2 ? 'w-16 h-16' : 'w-12 h-12'}`}
                   />
                   <span className="mt-1 text-[10px] uppercase tracking-wide text-cream/70 leading-tight">
                     {cell.label}
