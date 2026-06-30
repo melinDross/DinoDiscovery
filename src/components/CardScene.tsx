@@ -43,12 +43,6 @@ const CARD_NATURAL_WIDTH = 420;
 // the buttons rendered after CardScene in ResultScreen.
 const DINO_OVERFLOW_BUFFER_PX = 56;
 
-// On short mobile viewports, fitting only to width still leaves a card
-// taller than the visible screen, pushing the share/restart buttons off
-// past the fold. Reserve this much vertical space for the title text and
-// button row that render below CardScene, and fit the remainder to height too.
-const VERTICAL_CHROME_RESERVE_PX = 420;
-
 const MAX_TILT_DEG = 15;
 const FLIP_DURATION_MS = 800;
 const SPIN_DURATION_MS = 1000;
@@ -63,7 +57,15 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   const [transition, setTransition] = useState(FLIP_TRANSITION);
   const [spinDeg, setSpinDeg] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
+  // Some WebKit/iOS Safari versions fail to honor backface-visibility:hidden
+  // inside a 3D-transformed, filtered subtree (the dino's drop-shadow layer
+  // triggers it) and render both faces blended together mid-flip. As a
+  // browser-agnostic fallback, explicitly hide whichever face isn't the one
+  // currently facing the viewer via visibility, timed to the midpoint of
+  // each rotation — independent of whatever backface-visibility does.
+  const [facing, setFacing] = useState<'front' | 'back'>('back');
   const spinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const facingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
@@ -79,9 +81,23 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   }
 
   useEffect(() => {
+    if (!hasFlippedIn) return;
+    facingTimeoutRef.current = setTimeout(() => setFacing('front'), FLIP_DURATION_MS / 2);
+    return () => {
+      if (facingTimeoutRef.current !== null) {
+        clearTimeout(facingTimeoutRef.current);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasFlippedIn]);
+
+  useEffect(() => {
     return () => {
       if (spinTimeoutRef.current !== null) {
         clearTimeout(spinTimeoutRef.current);
+      }
+      if (facingTimeoutRef.current !== null) {
+        clearTimeout(facingTimeoutRef.current);
       }
     };
   }, []);
@@ -93,25 +109,15 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
 
     function update() {
       if (!outer || !inner) return;
-      const height = inner.offsetHeight;
-      const widthScale = computeFitScale(outer.offsetWidth, CARD_NATURAL_WIDTH);
-      const heightBudget = Math.max(200, window.innerHeight - VERTICAL_CHROME_RESERVE_PX);
-      const heightScale = computeFitScale(heightBudget, height);
-      setScale(Math.min(widthScale, heightScale));
-      setNaturalHeight(height);
+      setScale(computeFitScale(outer.offsetWidth, CARD_NATURAL_WIDTH));
+      setNaturalHeight(inner.offsetHeight);
     }
 
     update();
     const resizeObserver = new ResizeObserver(update);
     resizeObserver.observe(outer);
     resizeObserver.observe(inner);
-    window.addEventListener('resize', update);
-    window.addEventListener('orientationchange', update);
-    return () => {
-      resizeObserver.disconnect();
-      window.removeEventListener('resize', update);
-      window.removeEventListener('orientationchange', update);
-    };
+    return () => resizeObserver.disconnect();
   }, []);
 
   function handleMouseMove(event: React.MouseEvent<HTMLDivElement>) {
@@ -148,17 +154,28 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
     if (spinTimeoutRef.current !== null) {
       clearTimeout(spinTimeoutRef.current);
     }
+    if (facingTimeoutRef.current !== null) {
+      clearTimeout(facingTimeoutRef.current);
+    }
     setIsSpinning(true);
     setHasFlippedIn(true);
     setTransition(SPIN_TRANSITION);
     setTilt({ rotateX: 0, rotateY: 0 });
     setSpinDeg((current) => current + 360);
+    facingTimeoutRef.current = setTimeout(() => {
+      setFacing('back');
+      facingTimeoutRef.current = setTimeout(() => {
+        facingTimeoutRef.current = null;
+        setFacing('front');
+      }, SPIN_DURATION_MS / 2);
+    }, SPIN_DURATION_MS / 4);
     spinTimeoutRef.current = setTimeout(() => {
       spinTimeoutRef.current = null;
       setIsSpinning(false);
       setTransition(TILT_RESET_TRANSITION);
       setSpinDeg(0);
       setTilt({ rotateX: 0, rotateY: 0 });
+      setFacing('front');
     }, SPIN_DURATION_MS);
   }
 
@@ -198,10 +215,13 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
                 transition,
               }}
             >
-              <div className="card-face">
+              <div className="card-face" style={{ visibility: facing === 'front' ? 'visible' : 'hidden' }}>
                 <Card discovererName={discovererName} result={result} attrs={attrs} />
               </div>
-              <div className="card-face card-face-back">
+              <div
+                className="card-face card-face-back"
+                style={{ visibility: facing === 'back' ? 'visible' : 'hidden' }}
+              >
                 <img
                   src={CARD_BACK_PATH}
                   alt="Dino Discovery"
