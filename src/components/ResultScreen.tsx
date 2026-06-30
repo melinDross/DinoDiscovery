@@ -23,7 +23,7 @@ export function ResultScreen({ result, attrs, discovererName, onDownloadClick, o
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-start justify-center pt-4 pb-8 px-4">
       <div className="max-w-xl w-full text-center">
         <CardScene discovererName={discovererName} result={result} attrs={attrs} />
         <div className="mt-3 flex flex-wrap gap-3 justify-center">
