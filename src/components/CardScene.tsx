@@ -70,7 +70,9 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   const spinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const facingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragStartXRef = useRef<number | null>(null);
+  const dragStartYRef = useRef(0);
   const dragBaseSpinRef = useRef(0);
+  const dragBaseTiltXRef = useRef(0);
 
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
@@ -143,16 +145,23 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
     setTilt({ rotateX: 0, rotateY: 0 });
   }
 
-  // Drag-to-rotate: the card follows the finger horizontally while dragging
-  // (no CSS transition — `spinDeg` is updated directly per touchmove, so the
-  // rendered rotation always matches the live drag position 1:1), and snaps
-  // to whichever face (front/back) ends up closer on release.
+  // Drag-to-rotate: the card follows the finger on both axes while dragging
+  // (no CSS transition — `spinDeg`/`tilt` are updated directly per
+  // touchmove, so the rendered rotation always matches the live drag
+  // position 1:1). Horizontal drag (rotateY, via `spinDeg`) snaps to
+  // whichever face — front/back — ended up closer on release, since that's
+  // the axis the back face's art is oriented for. Vertical drag (rotateX,
+  // via `tilt`) always springs back to 0 on release instead, same as the
+  // existing hover/light-touch parallax tilt — there's no "back"
+  // orientation that makes sense to snap to on that axis.
   function handleTouchStart(event: React.TouchEvent<HTMLDivElement>) {
     if (isSpinning) return;
     const touch = event.touches[0];
     if (!touch) return;
     dragStartXRef.current = touch.clientX;
+    dragStartYRef.current = touch.clientY;
     dragBaseSpinRef.current = spinDeg;
+    dragBaseTiltXRef.current = tilt.rotateX;
     setTransition(NO_TRANSITION);
   }
 
@@ -160,21 +169,22 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
     if (isSpinning) return;
     const touch = event.touches[0];
     if (!touch) return;
-    const rect = event.currentTarget.getBoundingClientRect();
-    const verticalTilt = clampTilt(touch.clientX, touch.clientY, rect, MAX_TILT_DEG).rotateX;
 
     if (dragStartXRef.current !== null) {
       const deltaX = touch.clientX - dragStartXRef.current;
+      const deltaY = touch.clientY - dragStartYRef.current;
       const nextSpin = dragBaseSpinRef.current + deltaX * DRAG_SENSITIVITY_DEG_PER_PX;
+      const nextTiltX = dragBaseTiltXRef.current - deltaY * DRAG_SENSITIVITY_DEG_PER_PX;
       setTransition(NO_TRANSITION);
       setSpinDeg(nextSpin);
-      setTilt({ rotateX: verticalTilt, rotateY: 0 });
+      setTilt({ rotateX: nextTiltX, rotateY: 0 });
       const totalDeg = baseFlipDeg + nextSpin;
       const mod = ((totalDeg % 360) + 360) % 360;
       setFacing(mod > 90 && mod < 270 ? 'back' : 'front');
       return;
     }
 
+    const rect = event.currentTarget.getBoundingClientRect();
     const next = clampTilt(touch.clientX, touch.clientY, rect, MAX_TILT_DEG);
     setTransition(TILT_ACTIVE_TRANSITION);
     setTilt(next);
@@ -207,25 +217,33 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
     if (facingTimeoutRef.current !== null) {
       clearTimeout(facingTimeoutRef.current);
     }
+    // A full +360 spin always ends up visually identical to where it
+    // started, whichever face that was (the card may already be resting on
+    // its back from a drag-flip) — so the facing sequence and the end-state
+    // reset must both be relative to the *current* facing, never hardcoded
+    // to 'front'/0. Hardcoding either was the cause of a visible jump-cut
+    // (the card appearing to vanish for a frame) whenever the spin was
+    // triggered from the back face.
+    const startFacing = facing;
     setIsSpinning(true);
     setHasFlippedIn(true);
     setTransition(SPIN_TRANSITION);
     setTilt({ rotateX: 0, rotateY: 0 });
     setSpinDeg((current) => current + 360);
     facingTimeoutRef.current = setTimeout(() => {
-      setFacing('back');
+      setFacing(startFacing === 'front' ? 'back' : 'front');
       facingTimeoutRef.current = setTimeout(() => {
         facingTimeoutRef.current = null;
-        setFacing('front');
+        setFacing(startFacing);
       }, SPIN_DURATION_MS * 0.55);
     }, SPIN_DURATION_MS * 0.2);
     spinTimeoutRef.current = setTimeout(() => {
       spinTimeoutRef.current = null;
       setIsSpinning(false);
       setTransition(TILT_RESET_TRANSITION);
-      setSpinDeg(0);
+      setSpinDeg((current) => current - 360);
       setTilt({ rotateX: 0, rotateY: 0 });
-      setFacing('front');
+      setFacing(startFacing);
     }, SPIN_DURATION_MS);
   }
 

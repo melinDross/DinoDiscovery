@@ -136,7 +136,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
                   <img
                     src={cell.icon}
                     alt={cell.alt}
-                    className={`object-contain rounded-[40px] ${index === 2 ? 'w-16 h-16' : 'w-12 h-12'}`}
+                    className={`max-w-none object-contain rounded-[40px] ${index === 2 ? 'w-16 h-16' : 'w-12 h-12'}`}
                   />
                   <span className="mt-1 text-[10px] uppercase tracking-wide text-cream/70 leading-tight">
                     {cell.label}
@@ -179,11 +179,18 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
 
         {/* The dino: above the framed box and not clipped by it, so a large
             enough creature can visually pop a claw/tail/horn past the card's
-            border for a 3D effect. */}
+            border for a 3D effect. `object-top` (instead of the object-contain
+            default of centering) anchors the artwork to the top of its box, so
+            any letterboxing slack from a non-matching aspect ratio collects at
+            the bottom — keeping the creature's feet/tail clear of the
+            medallion panel below instead of riding right up against it. The
+            scale was also pulled back from 110% to 105% (less aggressive
+            bleed) after real-device testing showed dinos getting visually
+            cropped at the bottom edge. */}
         <img
           src={cutoutImageUrl}
           alt={result.commonName}
-          className="absolute object-contain scale-110 pointer-events-none z-20"
+          className="absolute object-contain object-top scale-105 pointer-events-none z-20"
           style={{
             ...artLayerStyle,
             filter:
