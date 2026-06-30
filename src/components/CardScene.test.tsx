@@ -63,7 +63,7 @@ describe('CardScene', () => {
     expect(screen.getByText('Volcanrex')).toBeInTheDocument();
   });
 
-  it('tilts toward a touch point and springs back on touch end', () => {
+  it('rotates toward a horizontal drag and snaps back on touch end', () => {
     render(<CardScene discovererName="Lucía" result={result} attrs={commonAttrs} />);
     const perspective = document.querySelector('.card-perspective') as HTMLElement;
     const flipper = document.querySelector('.card-flipper') as HTMLElement;
@@ -73,7 +73,10 @@ describe('CardScene', () => {
 
     const baseline = flipper.style.transform;
 
-    fireEvent.touchMove(perspective, { touches: [{ clientX: 200, clientY: 200 }] });
+    // Must start a drag first (axis-lock needs touchStart reference point),
+    // then move horizontally far enough to exceed DRAG_AXIS_LOCK_PX (8px).
+    fireEvent.touchStart(perspective, { touches: [{ clientX: 100, clientY: 100 }] });
+    fireEvent.touchMove(perspective, { touches: [{ clientX: 200, clientY: 100 }] });
     expect(flipper.style.transform).not.toBe(baseline);
 
     fireEvent.touchEnd(perspective);

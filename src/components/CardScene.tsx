@@ -47,6 +47,10 @@ const MAX_TILT_DEG = 15;
 const FLIP_DURATION_MS = 800;
 const SPIN_DURATION_MS = 1400;
 const DRAG_SENSITIVITY_DEG_PER_PX = 0.6;
+// How far a finger must travel (px) before we decide the gesture is
+// horizontal (card flip) vs vertical (page scroll). Once resolved the axis
+// is locked for the rest of that touch.
+const DRAG_AXIS_LOCK_PX = 8;
 const DRAG_SNAP_TRANSITION = '320ms ease-out';
 const TILT_ACTIVE_TRANSITION = '80ms linear';
 const TILT_RESET_TRANSITION = '400ms ease-out';
@@ -80,7 +84,11 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   const spinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const facingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dragStartXRef = useRef<number | null>(null);
+  const dragStartYRef = useRef(0);
   const dragBaseSpinRef = useRef(0);
+  // 'h' = locked to horizontal (card flip), 'v' = locked to vertical (let
+  // page scroll, cancel card drag), null = not yet decided
+  const dragAxisRef = useRef<'h' | 'v' | null>(null);
 
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
@@ -156,44 +164,56 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   // Drag-to-rotate: the card follows the finger horizontally while dragging
   // (no CSS transition — `spinDeg` is updated directly per touchmove, so the
   // rendered rotation always matches the live drag position 1:1), and snaps
-  // to whichever face (front/back) ended up closer on release. Vertical
-  // finger movement still drives the small clamped parallax tilt (rotateX),
-  // same as before — a free/unclamped vertical drag was tried and reverted,
-  // it made the gesture feel worse, not better.
+  // Horizontal swipe → card flip (rotateY via spinDeg, snaps on release).
+  // Vertical swipe → page scroll (we cancel the card drag and do nothing,
+  // letting the page scroll naturally). Axis is decided once per gesture
+  // once the finger travels DRAG_AXIS_LOCK_PX in either direction; until
+  // then we wait rather than doing anything that would cause rendering
+  // artifacts on iOS during an ambiguous gesture.
   function handleTouchStart(event: React.TouchEvent<HTMLDivElement>) {
     if (isSpinning) return;
     const touch = event.touches[0];
     if (!touch) return;
     dragStartXRef.current = touch.clientX;
+    dragStartYRef.current = touch.clientY;
     dragBaseSpinRef.current = spinDeg;
-    setTransition(NO_TRANSITION);
+    dragAxisRef.current = null;
   }
 
   function handleTouchMove(event: React.TouchEvent<HTMLDivElement>) {
-    if (isSpinning) return;
+    if (isSpinning || dragStartXRef.current === null) return;
     const touch = event.touches[0];
     if (!touch) return;
-    const rect = event.currentTarget.getBoundingClientRect();
-    const verticalTilt = clampTilt(touch.clientX, touch.clientY, rect, MAX_TILT_DEG).rotateX;
 
-    if (dragStartXRef.current !== null) {
-      const deltaX = touch.clientX - dragStartXRef.current;
-      const nextSpin = dragBaseSpinRef.current + deltaX * DRAG_SENSITIVITY_DEG_PER_PX;
-      setTransition(NO_TRANSITION);
-      setSpinDeg(nextSpin);
-      setTilt({ rotateX: verticalTilt, rotateY: 0 });
-      const totalDeg = baseFlipDeg + nextSpin;
-      const mod = ((totalDeg % 360) + 360) % 360;
-      setFacing(mod > 90 && mod < 270 ? 'back' : 'front');
+    const deltaX = touch.clientX - dragStartXRef.current;
+    const deltaY = touch.clientY - dragStartYRef.current;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    // Resolve the axis lock on first significant movement.
+    if (dragAxisRef.current === null) {
+      if (absX < DRAG_AXIS_LOCK_PX && absY < DRAG_AXIS_LOCK_PX) return;
+      dragAxisRef.current = absX >= absY ? 'h' : 'v';
+    }
+
+    // Vertical gesture: cancel card drag, let page scroll normally.
+    if (dragAxisRef.current === 'v') {
+      dragStartXRef.current = null;
       return;
     }
 
-    const next = clampTilt(touch.clientX, touch.clientY, rect, MAX_TILT_DEG);
-    setTransition(TILT_ACTIVE_TRANSITION);
-    setTilt(next);
+    // Horizontal gesture: rotate the card.
+    const nextSpin = dragBaseSpinRef.current + deltaX * DRAG_SENSITIVITY_DEG_PER_PX;
+    setTransition(NO_TRANSITION);
+    setSpinDeg(nextSpin);
+    setTilt({ rotateX: 0, rotateY: 0 });
+    const totalDeg = baseFlipDeg + nextSpin;
+    const mod = ((totalDeg % 360) + 360) % 360;
+    setFacing(mod > 90 && mod < 270 ? 'back' : 'front');
   }
 
   function handleTouchEnd() {
+    dragAxisRef.current = null;
     if (isSpinning) return;
     if (dragStartXRef.current !== null) {
       dragStartXRef.current = null;
@@ -214,6 +234,7 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
 
   function handleSpinClick() {
     dragStartXRef.current = null;
+    dragAxisRef.current = null;
     if (spinTimeoutRef.current !== null) {
       clearTimeout(spinTimeoutRef.current);
     }
