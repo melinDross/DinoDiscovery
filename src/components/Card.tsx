@@ -10,6 +10,24 @@ import {
   pickHabitatBackground,
 } from '../data/cardTheme';
 
+// "Terminal ARG" look: near-black glass frame, cyan/magenta glow, monospace
+// type — chosen from a 4-way live-preview comparison (see git history for
+// the other three: parchment/museum-plate, comic/sticker, and the original
+// green/purple fantasy look) to lean into the alternate-reality-game
+// "species discovery" framing more explicitly than the previous style.
+const FRAME_BORDER_COLOR = '#0a1420';
+const FRAME_BG = '#050b12';
+const TEXT_COLOR = '#d6faff';
+const PANEL_BACKGROUND =
+  'radial-gradient(circle at 10% 0%, rgba(0,255,225,0.22), transparent 55%),' +
+  'radial-gradient(circle at 95% 100%, rgba(255,0,220,0.28), transparent 55%),' +
+  'linear-gradient(160deg, #081420 0%, #050d16 55%, #060a14 100%)';
+const PANEL_BORDER_COLOR = 'rgba(0,255,225,0.4)';
+const RARITY_BADGE_TEXT_COLOR = '#04121a';
+const FOOTER_TEXT_COLOR = '#5fd9d1';
+const LABEL_TEXT_COLOR = '#5fd9d1';
+const BADGE_BG = `${FRAME_BG}e6`;
+
 // Strips the dino image's known solid background (see src/utils/dinoCutout.ts)
 // so it composites as a true cutout over the habitat art, with its own
 // drop-shadow, instead of showing as a flat rectangle on top of the scene.
@@ -120,7 +138,14 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         {/* Everything that must stay clipped to the rounded frame lives in
             here. The dino and the text/tag overlay are rendered as later
             siblings below, on top of this, so they're never clipped by it. */}
-        <div className="rounded-[28px] border-[20px] border-[#0a0a0a] bg-bg text-cream overflow-hidden">
+        <div
+          className="border-[20px] rounded-[4px] overflow-hidden shadow-[inset_0_0_40px_rgba(0,255,225,0.08)]"
+          style={{
+            borderColor: FRAME_BORDER_COLOR,
+            backgroundColor: FRAME_BG,
+            color: TEXT_COLOR,
+          }}
+        >
           <div className="relative h-[440px] bg-surface2 overflow-hidden">
             <img
               src={habitatBackground.path}
@@ -145,13 +170,10 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
               like the icons were clipped, but nothing was actually clipping
               them, they were just painted over by a higher z-index element. */}
           <div
-            className="relative z-[2] mx-4 rounded-[24px] border border-accent/30 px-2 pt-8 pb-3 overflow-visible shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
+            className="relative z-[2] mx-4 rounded-[24px] border px-2 pt-8 pb-3 overflow-visible shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"
             style={{
-              background:
-                'radial-gradient(circle at 15% -10%, rgba(178,255,0,0.28), transparent 50%),' +
-                'radial-gradient(circle at 90% 110%, rgba(157,92,255,0.4), transparent 55%),' +
-                'radial-gradient(circle at 50% 50%, rgba(80,50,140,0.35), transparent 70%),' +
-                'linear-gradient(160deg, #2d1b4e 0%, #1a1330 45%, #142420 75%, #0f1f16 100%)',
+              background: PANEL_BACKGROUND,
+              borderColor: PANEL_BORDER_COLOR,
             }}
           >
             <div className="grid grid-cols-5 gap-1 text-center">
@@ -163,37 +185,40 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
                   <img
                     src={cell.icon}
                     alt={cell.alt}
-                    className={`max-w-none object-contain rounded-[40px] pointer-events-none ${index === 2 ? 'w-[72px] h-[72px]' : 'w-14 h-14'}`}
+                    className={`max-w-none object-contain rounded-[4px] pointer-events-none ${index === 2 ? 'w-[72px] h-[72px]' : 'w-14 h-14'}`}
                   />
-                  <span className="mt-1 text-[11px] font-semibold leading-tight break-words text-center">
+                  <span
+                    className="mt-1 text-[11px] font-semibold leading-tight break-words text-center font-mono"
+                    style={{ color: TEXT_COLOR }}
+                  >
                     {cell.value}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="border-t border-accent/20 my-3" />
+            <div className="border-t my-3" style={{ borderColor: PANEL_BORDER_COLOR }} />
 
             <div className="grid grid-cols-3 px-2 text-xs">
               <div className="text-center">
-                <p className="text-[11px] uppercase tracking-wide text-sage">Puntuación</p>
-                <p className="font-display text-lg text-cream">{score}</p>
+                <p className="text-[11px] uppercase tracking-wide" style={{ color: LABEL_TEXT_COLOR }}>Puntuación</p>
+                <p className="font-mono uppercase tracking-widest text-lg" style={{ color: TEXT_COLOR }}>{score}</p>
               </div>
               <div className="text-center">
-                <p className="text-[11px] uppercase tracking-wide text-sage">Rareza</p>
-                <p className="font-display text-sm text-cream">{RARITY_LABELS[rarity]}</p>
-                <p className="text-accent">{stars}</p>
+                <p className="text-[11px] uppercase tracking-wide" style={{ color: LABEL_TEXT_COLOR }}>Rareza</p>
+                <p className="font-mono uppercase tracking-widest text-sm" style={{ color: TEXT_COLOR }}>{RARITY_LABELS[rarity]}</p>
+                <p style={{ color: LABEL_TEXT_COLOR }}>{stars}</p>
               </div>
               <div className="text-center">
-                <p className="text-[11px] uppercase tracking-wide text-sage">Tier</p>
-                <p className="font-display text-lg text-cream">{RARITY_STAR_COUNT[rarity]}</p>
+                <p className="text-[11px] uppercase tracking-wide" style={{ color: LABEL_TEXT_COLOR }}>Tier</p>
+                <p className="font-mono uppercase tracking-widest text-lg" style={{ color: TEXT_COLOR }}>{RARITY_STAR_COUNT[rarity]}</p>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between px-5 py-3 text-[11px] text-moss">
+          <div className="flex items-center justify-between px-5 py-3 text-[11px]" style={{ color: FOOTER_TEXT_COLOR }}>
             <span>
-              Descubridor/a: <strong className="text-sage">{discovererName}</strong>
+              Descubridor/a: <strong>{discovererName}</strong>
             </span>
             <span className="text-right">{discoveryDate}</span>
           </div>
@@ -224,24 +249,45 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             badge, sub-biome name and the name/description gradient stay
             legible regardless of how far the dino pose reaches. */}
         <div className="absolute z-30 pointer-events-none" style={artLayerStyle}>
-          <span className="absolute top-3 left-3 px-2 py-1 bg-bg/90 border border-accent/30 shadow-lg text-xs font-mono rounded-[40px]">
+          <span
+            className="absolute top-3 left-3 px-2 py-1 shadow-lg text-xs border font-mono rounded-[4px]"
+            style={{
+              backgroundColor: BADGE_BG,
+              borderColor: PANEL_BORDER_COLOR,
+              color: TEXT_COLOR,
+            }}
+          >
             {speciesId}
           </span>
           <span
-            className="absolute top-3 right-3 px-3 py-1 rounded-[40px] text-xs font-display uppercase tracking-wide text-bg border border-white/20 shadow-lg"
-            style={{ backgroundColor: RARITY_BADGE_COLORS[rarity] }}
+            className="absolute top-3 right-3 px-3 py-1 text-xs font-mono uppercase tracking-widest border border-white/20 shadow-lg rounded-[4px]"
+            style={{ backgroundColor: RARITY_BADGE_COLORS[rarity], color: RARITY_BADGE_TEXT_COLOR }}
           >
             {RARITY_LABELS[rarity]}
           </span>
-          <span className="absolute bottom-[27%] left-3 px-2 py-1 bg-bg/90 border border-accent/30 shadow-lg text-[11px] uppercase tracking-wide rounded-[40px]">
+          <span
+            className="absolute bottom-[27%] left-3 px-2 py-1 shadow-lg text-[11px] uppercase tracking-wide border rounded-[4px]"
+            style={{
+              backgroundColor: BADGE_BG,
+              borderColor: PANEL_BORDER_COLOR,
+              color: TEXT_COLOR,
+            }}
+          >
             {habitatBackground.name}
           </span>
-          <div className="absolute bottom-0 left-0 right-0 px-4 pt-20 pb-3 bg-gradient-to-t from-bg via-bg/90 to-transparent">
-            <h2 className="font-display text-xl text-white uppercase tracking-wide text-center">
+          <div
+            className="absolute bottom-0 left-0 right-0 px-4 pt-20 pb-3"
+            style={{
+              background: `linear-gradient(to top, ${FRAME_BG} 0%, ${BADGE_BG} 55%, transparent 100%)`,
+            }}
+          >
+            <h2 className="font-mono uppercase tracking-widest text-xl text-center" style={{ color: TEXT_COLOR }}>
               {result.commonName}
             </h2>
-            <p className="italic text-xs text-cream/80 text-center">{result.scientificName}</p>
-            <p className="italic text-center text-cream text-xs mt-2 line-clamp-3">
+            <p className="italic text-xs text-center opacity-80 font-mono" style={{ color: TEXT_COLOR }}>
+              {result.scientificName}
+            </p>
+            <p className="italic text-center text-xs mt-2 line-clamp-3 font-mono" style={{ color: TEXT_COLOR }}>
               {result.description}
             </p>
           </div>
