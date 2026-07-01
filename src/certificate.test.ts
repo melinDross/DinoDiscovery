@@ -34,7 +34,12 @@ describe('captureCertificateAsPng', () => {
 
     await captureCertificateAsPng(element, 'certificado-volcanrex.png');
 
-    expect(html2canvas).toHaveBeenCalledWith(element, { scale: 2, useCORS: true, allowTaint: false });
+    expect(html2canvas).toHaveBeenCalledWith(element, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: false,
+      backgroundColor: null,
+    });
     expect(clickSpy).toHaveBeenCalled();
   });
 });

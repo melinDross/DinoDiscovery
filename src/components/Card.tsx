@@ -604,32 +604,32 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         )}
 
         {/* On-screen-only watermark deterrent (see the `watermark` prop
-            doc above): repeating diagonal rows of the site URL, low
-            opacity, above every other layer (z-50) so it survives
-            regardless of dino pose/foil. `select-none` + pointer-events-none
-            so it never interferes with the drag-tilt-flip interaction or
-            reads as selectable/copyable text. */}
-        {/* Two rows, single instance each (no repeated "• text • text"),
-            low opacity, normal weight, confined to the art area (not the
-            medallion panel/footer below it) — an earlier version used 5
-            rows tripled across the *entire* card and read as overwhelming
-            rather than subtle, fighting with the artwork and medallions
-            instead of sitting quietly behind them. */}
+            doc above): repeating diagonal rows of the site URL, above
+            every other layer (z-50) so it survives regardless of dino
+            pose/foil, spanning the whole card (not just the art area).
+            `select-none` + pointer-events-none so it never interferes with
+            the drag-tilt-flip interaction or reads as selectable/copyable
+            text. A toned-down 2-row version was tried and reverted — the
+            density/opacity were never the actual problem reported from a
+            real device; the reported "far from ideal" download was really
+            the habitat tag rendering blank in the html2canvas capture (see
+            useRotatedLabelImage above) and is unrelated to the watermark's
+            own strength. */}
         {watermark && (
-          <div className="absolute z-50 pointer-events-none select-none overflow-hidden" style={artLayerStyle}>
-            {[30, 70].map((top) => (
+          <div className="absolute inset-0 z-50 pointer-events-none select-none overflow-hidden rounded-[28px]">
+            {[12, 32, 52, 72, 92].map((top) => (
               <div
                 key={top}
-                className="absolute left-1/2 whitespace-nowrap font-mono uppercase"
+                className="absolute left-1/2 whitespace-nowrap font-mono font-bold uppercase"
                 style={{
                   top: `${top}%`,
-                  fontSize: 10,
-                  letterSpacing: '0.15em',
-                  color: 'rgba(255,255,255,0.10)',
+                  fontSize: 11,
+                  letterSpacing: '0.18em',
+                  color: 'rgba(255,255,255,0.16)',
                   transform: 'translate(-50%, -50%) rotate(-18deg)',
                 }}
               >
-                {WATERMARK_TEXT}
+                {WATERMARK_TEXT} • {WATERMARK_TEXT} • {WATERMARK_TEXT}
               </div>
             ))}
           </div>

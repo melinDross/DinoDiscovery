@@ -31,7 +31,22 @@ export async function captureCertificateAsPng(element: HTMLElement, fileName: st
   // page — currently true (images load same-origin via /images/[key].ts),
   // but that's an easy invariant to break later without anything here
   // flagging it.
-  const canvas = await html2canvas(element, { scale: 2, useCORS: true, allowTaint: false });
+  //
+  // backgroundColor: null — html2canvas defaults to an opaque white canvas
+  // background. The card's rounded corners are CSS `overflow-hidden`
+  // clipping on a rectangular element, not an actual alpha shape, so
+  // html2canvas (which rasterizes the full bounding box) was filling the
+  // area outside the rounded corners with solid white instead of leaving
+  // it transparent — a visible white halo/corner artifact in the
+  // downloaded PNG that isn't present on screen. `null` makes the canvas
+  // background transparent, matching what's actually visible on screen
+  // (nothing outside the card's own shape).
+  const canvas = await html2canvas(element, {
+    scale: 2,
+    useCORS: true,
+    allowTaint: false,
+    backgroundColor: null,
+  });
   const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
   if (!blob) {
     throw new Error('No se pudo generar la imagen del certificado');
