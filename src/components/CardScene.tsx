@@ -296,7 +296,12 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
                   discovererName={discovererName}
                   result={result}
                   attrs={attrs}
-                  watermark
+                  // Temporarily disabled (not removed) — the user wants the
+                  // on-screen watermark deterrent paused until the
+                  // downloaded-card rendering is confirmed pixel-perfect
+                  // against the on-screen version. Card.tsx's `watermark`
+                  // prop/implementation is untouched; re-add `watermark`
+                  // here (a bare boolean prop) once that's resolved.
                   foilTilt={{
                     // Driven by the card's actual total rotation (not just
                     // live hover/drag tilt) so the foil visibly shifts as
