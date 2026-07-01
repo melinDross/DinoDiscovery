@@ -320,7 +320,18 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             smooth gradient can get. Kept as a third layer rather than
             replacing the broad rainbow sweep, since the two serve different
             jobs: the sweep gives an overall color wash, this gives fine
-            structure/texture within it. */}
+            structure/texture within it.
+
+            Bands are wide (40-70px period) with soft transparent-to-color
+            fades between them, not hard-edged narrow stripes — a first
+            version used a ~20px period with fully opaque adjacent bands,
+            which read as harsh flickering "old TV static" rather than a
+            soft hologram texture, especially at small drag movements where
+            the pattern shifted by a full band-width in a couple of pixels.
+            Wider, softer bands plus smaller position multipliers (both
+            roughly half of the earlier version) fix both problems: fewer
+            visible edges, and the pattern shifts more gradually per pixel
+            of tilt. */}
         {isFoilEligible && (
           <div
             aria-hidden="true"
@@ -329,21 +340,21 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
               ...artLayerStyle,
               borderTopLeftRadius: 8,
               borderTopRightRadius: 8,
-              opacity: 0.35,
+              opacity: 0.22,
               backgroundImage:
                 'repeating-linear-gradient(70deg,' +
-                'rgba(255,80,180,0.55) 0px,' +
-                'rgba(255,225,80,0.55) 5px,' +
-                'rgba(110,255,200,0.55) 10px,' +
-                'rgba(90,140,255,0.55) 15px,' +
-                'rgba(255,80,180,0.55) 20px),' +
+                'transparent 0px,' +
+                'rgba(255,110,190,0.4) 20px,' +
+                'transparent 40px,' +
+                'rgba(120,200,255,0.4) 60px,' +
+                'transparent 80px),' +
                 'repeating-linear-gradient(20deg,' +
                 'transparent 0px,' +
-                'rgba(255,255,255,0.4) 3px,' +
-                'transparent 7px)',
+                'rgba(255,255,255,0.28) 25px,' +
+                'transparent 50px)',
               backgroundPosition:
-                `${foilTilt.x * 60}px ${foilTilt.y * 20}px, ` +
-                `${foilTilt.y * 70}px ${foilTilt.x * 20}px`,
+                `${foilTilt.x * 30}px ${foilTilt.y * 10}px, ` +
+                `${foilTilt.y * 35}px ${foilTilt.x * 10}px`,
               WebkitMaskImage:
                 'linear-gradient(to bottom, black 0%, black 72%, transparent 100%)',
               maskImage: 'linear-gradient(to bottom, black 0%, black 72%, transparent 100%)',
