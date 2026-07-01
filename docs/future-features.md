@@ -2,42 +2,44 @@
 
 Recopilación de mejoras propuestas para iterar sobre el MVP del Dino Discovery. Ordenadas de más a menos críticas. Ninguna está aprobada para implementación — esta lista es para estudiar y priorizar.
 
+**Estado del proyecto (actualizado a v0.6.1):** major-features concluidas — ver `README.md` para el resumen como caso de estudio y `CLAUDE.md` para el registro técnico completo. Lo que queda abierto en este documento es trabajo evaluado y no priorizado, no un roadmap activo.
+
 ## Críticas (bloquean fiabilidad/uso real)
 
 1. ✅ **Persistencia real de emails** — implementado: el email ya no se guarda en `localStorage`; Kit (vía `POST /api/subscribe`) es la única fuente de verdad de leads/suscriptores. Ver `docs/superpowers/specs/2026-06-29-email-verification-and-result-persistence-design.md`.
 2. ❌ **Verificación del email antes de entregar el certificado** — descartado deliberadamente tras intentarlo: Kit no ofrece (en plan gratuito) ninguna forma fiable de notificarnos la confirmación sin mantener una pantalla de espera con polling, y la fricción de bloquear la descarga no compensaba frente al riesgo de perder leads. Se prioriza no bloquear nunca la descarga; el email se sigue capturando y enviando a Kit (punto 1), solo que sin gating. Ver "Decisiones descartadas" en `docs/superpowers/specs/2026-06-29-email-verification-and-result-persistence-design.md`.
 3. ✅ **Manejo de errores de generación visible al usuario** — implementado: pantalla de error dedicada (`flowState: 'error'` en `App.tsx`) con mensaje específico para rate limit vs. fallo de API, y botón "Volver a intentar".
-4. ✅ **Persistencia de resultados** — implementado: cada descubrimiento se guarda en `RESULTS_KV` con un `resultId` propio, accesible y recuperable vía `/r/:resultId` (`GET /api/results/:id`), sobreviviendo a refrescos y compartible por URL.
+4. ✅ **Persistencia de resultados** — implementado: cada descubrimiento se guarda en `RESULTS_KV` con un `resultId` propio, accesible y recuperable vía `/r/:resultId` (`GET /api/results/:id`), sobreviviendo a refrescos y compartible por URL. Este endpoint es de solo lectura y no cuenta contra el rate limit (ver punto 21).
 5. ✅ **Adaptación mobile** — implementado (commit `41e27cb`): touch targets de 44px, layout y legibilidad ajustados a 320px en Landing, WizardShell, AttributeGroup, EmailGateModal, NameStep y ResultScreen.
 
 ## Importantes (mejoran la experiencia central)
 
-6. 🟡 **Compartir el dinosaurio** (link o imagen para redes/WhatsApp) — parcialmente implementado: botón "Compartir dinosaurio" en `ResultScreen` que comparte la imagen generada vía Web Share API (fallback a descarga). El punto 4 (bloqueante) ya está resuelto — existe un link persistente `/r/:resultId` — pero el botón de compartir todavía no lo usa; sigue compartiendo solo la imagen suelta.
-7. **Mejorar la pantalla de carga (`LoadingDino`)**:
-   - Animación del huevo rompiéndose por fases (sin emojis, ilustración/SVG propia).
-   - Barra de progreso en la parte inferior.
-   - Mensajes progresivos si la generación tarda (DALL-E puede tardar 10-20s) para que no parezca colgado.
-8. **"Mi colección"** — que el niño pueda acceder a sus dinosaurios descubiertos anteriormente (la persistencia de resultados del punto 4 ya está resuelta; falta construir la propia vista de colección).
+6. ❌ **Compartir el dinosaurio** (link o imagen para redes/WhatsApp) — el botón "Compartir dinosaurio" que existía en `ResultScreen` (Web Share API con fallback a descarga) fue **retirado y sustituido por un botón "Crear otro dinosaurio"** (ver punto 13) — decisión de priorizar el flujo de reinicio sobre el de compartir directo. El punto 4 (persistencia, bloqueante) sigue resuelto — existe un link compartible `/r/:resultId` — pero ya no hay botón dedicado que lo use; compartir el link es manual (copiar la URL del navegador).
+7. ✅ **Mejorar la pantalla de carga (`LoadingDino`)** — implementado: animación del huevo rompiéndose por fases (`egg-1-intact.png` → `egg-6-burst.png`, ilustración propia, sin emojis), barra de progreso con curva de aproximación exponencial (`calculateProgress`, nunca llega al 100% hasta que el resultado está listo), y mensajes de reafirmación progresivos a los 16s y 24s si la generación tarda más de lo normal. El texto de estos mensajes, al envolver en dos líneas, no se centraba correctamente — arreglado en v0.6.x (`text-center` + `max-w-*` en el `<p>` del caption).
+8. **"Mi colección"** — que el niño pueda acceder a sus dinosaurios descubiertos anteriormente (la persistencia de resultados del punto 4 ya está resuelta; falta construir la propia vista de colección). Sigue sin implementar.
 9. ✅ **Sonidos** al hacer click en las opciones del wizard (atributos, botones) — implementado con un click sintetizado vía Web Audio API (sin assets de audio).
-10. **Transiciones y animaciones** entre pantallas del wizard (más allá del auto-advance actual).
+10. **Transiciones y animaciones** entre pantallas del wizard (más allá del auto-advance actual). Sigue sin implementar.
 11. ✅ **Confeti al descubrir el dinosaurio** — implementado: animación de confeti en `ResultScreen` al revelar el dino generado.
-12. **Accesibilidad básica** (foco, contraste, navegación por teclado) — pensado para niños, posiblemente usado en tablets/coles.
-13. ✅ **Navegación tras ver el resultado** — implementado: botón "Crear otro dinosaurio" en `ResultScreen` que reinicia el wizard sin recargar la página.
-14. **Elección de color del dino** — añadir un paso/atributo donde el niño elija un color y el dinosaurio generado lo refleje mayoritariamente (requiere ajustar el prompt de generación de imagen para respetar el color elegido).
-15. **Nuevo atributo de dieta: comedor de huevos** — añadir una opción de dieta para dinosaurios que se alimentan de huevos de otras especies. Nota de terminología: el término correcto sería "ovívoro" (se alimenta de huevos); conviene revisar el nombre exacto antes de implementarlo.
-16. ✅ **Quitar el fondo blanco de las imágenes generadas** — implementado: el prompt de `gpt-image-2` ahora pide un fondo sólido `#0d1a0f` (verde oscuro de la app) en vez de blanco. No es transparencia real (gpt-image-2 no la soporta) ni una escena contextual (eso queda como punto 17, sin implementar).
-17. **Contextualizar visualmente a cada dinosaurio en su hábitat** — de momento solo el hábitat "Volcán" muestra al dinosaurio dentro de su entorno (con un volcán de fondo); el resto de hábitats se genera sin ambientación. Por ejemplo, "Océano" debería mostrar al dinosaurio bajo el agua, "Desierto" entre dunas, etc. Requiere reforzar el prompt de generación de imagen para que el hábitat seleccionado forme parte de la escena, no solo se mencione como atributo del dinosaurio.
+12. **Accesibilidad básica** (foco, contraste, navegación por teclado) — pensado para niños, posiblemente usado en tablets/coles. Sigue sin auditar formalmente; no hay tooling de a11y automatizado en el proyecto (ver "Known gaps" en `CLAUDE.md`).
+13. ✅ **Navegación tras ver el resultado** — implementado: botón "Crear otro dinosaurio" en `ResultScreen` que reinicia el wizard sin recargar la página (sustituyó al botón de compartir, ver punto 6).
+14. **Elección de color del dino** — añadir un paso/atributo donde el niño elija un color y el dinosaurio generado lo refleje mayoritariamente (requiere ajustar el prompt de generación de imagen para respetar el color elegido). Sigue sin implementar.
+15. **Nuevo atributo de dieta: comedor de huevos** — añadir una opción de dieta para dinosaurios que se alimentan de huevos de otras especies. Nota de terminología: el término correcto sería "ovívoro" (se alimenta de huevos); conviene revisar el nombre exacto antes de implementarlo. Sigue sin implementar — la dieta "Oófago" ya cubre parcialmente esta idea (dieta más rara del sistema de puntos, ver `docs/RARITY_SYSTEM.md`).
+16. ✅ **Quitar el fondo blanco de las imágenes generadas** — implementado: el prompt de `gpt-image-2` pide un fondo sólido `#0d1a0f` (verde oscuro de la app), y `dinoCutout.ts` hace un chroma-key de ese color exacto en el cliente para componer el dino como recorte real sobre el arte de hábitat (ver punto 17). No es transparencia nativa (gpt-image-2 no la soporta), es post-procesado.
+17. ✅ **Contextualizar visualmente a cada dinosaurio en su hábitat** — implementado, aunque por una vía distinta a la descrita originalmente: en vez de pedirle al modelo de imagen que incluya el hábitat en la propia ilustración del dino, cada uno de los 6 hábitats tiene arte de fondo ilustrado propio (2 variantes de sub-bioma cada uno, `public/habitats/`, elegidas de forma determinista por `pickHabitatBackground`), y el dino se compone como recorte (punto 16) sobre ese fondo. El resultado es equivalente — el dino se ve "en su hábitat" — sin depender de que el prompt de generación respete la ambientación de forma consistente.
 
 ## Deseables (pulido y crecimiento)
 
-18. **Exportar a PDF** además de PNG — explícitamente fuera de alcance del MVP original, pero muy pedido en este tipo de producto.
-19. **Analítica básica** (cuántos completan el wizard, en qué paso abandonan) — necesario para saber qué iterar después.
-20. **Tests E2E** — explícitamente fuera del MVP; útil antes de escalar tráfico pero no bloquea el lanzamiento.
+18. **Exportar a PDF** además de PNG — explícitamente fuera de alcance del MVP original, pero muy pedido en este tipo de producto. Sigue sin implementar.
+19. **Analítica básica** (cuántos completan el wizard, en qué paso abandonan) — necesario para saber qué iterar después. Sigue sin implementar.
+20. **Tests E2E** — explícitamente fuera del MVP; útil antes de escalar tráfico pero no bloquea el lanzamiento. Sigue sin implementar — la suite actual (136 tests, Vitest + Testing Library) cubre componentes y funciones de backend de forma aislada, no el flujo completo en un navegador real.
+21. **Suite de regresión de píxeles para la descarga (`html2canvas`)** — no implementada, evaluada explícitamente y descartada por ahora. La ruta de descarga (`captureCertificateAsPng`) fue la mayor fuente de bugs reales del proyecto en la ronda v0.6.x (texto rotado que no capturaba, esquinas con artefacto blanco) — todos encontrados con harnesses de comparación puntuales (montar el componente dos veces, ejecutar `html2canvas` de verdad, muestrear `getImageData` del PNG resultante) que se borraban tras arreglar y documentar cada bug. Una suite permanente de diff de píxeles sería el siguiente paso natural si el proyecto escalase a más de un contribuidor o si esta ruta se tocase con más frecuencia — ver "Cómo lo he testeado" en `README.md`.
+22. **Reactivar la marca de agua en pantalla** — implementada en v0.6 (ver "On-screen watermark deterrent" en `CLAUDE.md`), pausada a petición explícita mientras se terminaba de verificar que la descarga real coincide pixel a pixel con la carta en pantalla. La implementación (`Card.tsx`'s `watermark` prop) está intacta; solo falta volver a pasar el prop `watermark` en la llamada a `<Card>` dentro de `CardScene.tsx` una vez se dé por cerrado el punto 21/la fiabilidad de la descarga.
 
 ## Notas
 
 - Los puntos 1 y 4 se implementaron juntos usando Kit como proveedor de email marketing; ver `docs/superpowers/specs/2026-06-29-email-verification-and-result-persistence-design.md`. El punto 2 se evaluó y se descartó deliberadamente (ver esa misma spec) en favor de no bloquear nunca la descarga del certificado.
+- El punto 6 (compartir) se dio de baja activamente en favor del punto 13 (reiniciar) — no es un olvido, es un cambio de prioridad documentado.
 - El punto 8 ("Mi colección") ya tiene resuelta su dependencia de datos (punto 4); falta construir la vista de colección en sí.
-- El punto 17 sigue pendiente y ahora está desacoplado del 16: una escena contextual por hábitat necesita su propio fondo, incompatible con el fondo sólido fijo que implementa el punto 16.
+- Los puntos 16 y 17 se resolvieron juntos, por la misma vía (chroma-key + arte de hábitat ilustrado) — la nota original que los desacoplaba ya no aplica.
 - Antes de implementar cualquiera de estos puntos, pasar por el proceso de brainstorming/diseño habitual.
-- Puntos 3, 5, 9, 11 y 13 (y parcialmente el 6) entregados en la release v0.2.3. Puntos 1, 2 y 4 entregados posteriormente (ver commit "Add real result persistence and email verification via Kit").
+- Puntos 3, 5, 9, 11 y 13 entregados en la release v0.2.3. Puntos 1, 2 y 4 entregados posteriormente (ver commit "Add real result persistence and email verification via Kit"). Puntos 7, 16 y 17 entregados en rondas posteriores (ver `CLAUDE.md` e historial de tags v0.3–v0.6.1 para el detalle). El punto 6 se retiró en la misma ventana en que se entregó el 13.
