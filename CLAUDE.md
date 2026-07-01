@@ -10,6 +10,8 @@ Live: https://dino-discovery-generator.pages.dev
 
 Tech stack: Vite + React 19 + TypeScript (strict) + Tailwind CSS, deployed on Cloudflare Pages with Wrangler (Pages Functions for the backend, KV for caching/rate-limiting/results, R2 for generated images).
 
+**Status: prototype, major features concluded** (as of v0.6.1). This is a portfolio/QA-demonstration project, not a product with an open roadmap — see `README.md` for the project writeup and `docs/future-features.md` for ideas that were deliberately not pursued further. Future work on this repo is expected to be maintenance/polish (bug fixes, doc upkeep) rather than new features, unless explicitly requested.
+
 ## Commands
 
 ```bash
