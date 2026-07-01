@@ -24,7 +24,7 @@ export function NameStep({ value, onChange, onNext }: NameStepProps) {
         type="button"
         disabled={!canContinue}
         onClick={onNext}
-        className="mt-6 w-full px-6 py-3 text-bg font-display text-lg uppercase tracking-wide bg-accent hover:shadow-[6px_6px_0_0_#f5e6c8] transition-shadow disabled:bg-[#3a3a3a] disabled:text-moss disabled:shadow-none disabled:cursor-not-allowed"
+        className="mt-6 w-full px-6 py-3 text-white font-display2 font-semibold text-lg uppercase tracking-wide rounded-[999px] bg-brand hover:shadow-[6px_6px_0_0_#f5e6c8] transition-shadow disabled:bg-[#3a3a3a] disabled:text-moss disabled:shadow-none disabled:cursor-not-allowed"
       >
         Siguiente
       </button>

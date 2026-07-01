@@ -293,7 +293,7 @@ export default function App() {
               setWizardStep(0);
               setFlowState('wizard');
             }}
-            className="px-6 py-3 bg-accent text-bg font-display uppercase tracking-wide"
+            className="px-6 py-3 bg-brand text-white font-display2 font-semibold uppercase tracking-wide rounded-[999px]"
           >
             Volver a intentar
           </button>

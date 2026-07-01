@@ -11,9 +11,24 @@ export default {
         cream: '#f5e6c8',
         sage: '#7a9e7a',
         moss: '#5a7a5a',
+        // Pink/magenta palette lifted by eye from the "Dino Discovery"
+        // logo (public/dino-discovery-logo.png) — used for buttons
+        // project-wide (see the logo-matching brand refresh), kept
+        // separate from `accent` (lime) since the card/rarity system's
+        // green identity wasn't part of that request and stays untouched.
+        brand: {
+          DEFAULT: '#ec1a8f',
+          light: '#ff7fd5',
+          dark: '#7a0d4a',
+        },
       },
       fontFamily: {
         display: ['Bangers', 'cursive'],
+        // Rounded "bubble" display font matching the logo's lettering —
+        // used for buttons project-wide alongside the `brand` palette
+        // above. Kept separate from `display` (Bangers), which the card
+        // and other non-button UI still use.
+        display2: ['Fredoka', 'sans-serif'],
         body: ['"Space Grotesk"', 'sans-serif'],
       },
       borderRadius: {

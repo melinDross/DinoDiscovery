@@ -30,14 +30,14 @@ export function ResultScreen({ result, attrs, discovererName, onDownloadClick, o
           <button
             type="button"
             onClick={onDownloadClick}
-            className="px-6 py-3 min-h-[44px] text-bg font-display uppercase tracking-wide bg-accent hover:shadow-[6px_6px_0_0_#f5e6c8] transition-shadow"
+            className="px-6 py-3 min-h-[44px] text-white font-display2 font-semibold uppercase tracking-wide rounded-[999px] bg-brand hover:shadow-[6px_6px_0_0_#f5e6c8] transition-shadow"
           >
             Descargar carta
           </button>
           <button
             type="button"
             onClick={handleShareClick}
-            className="px-6 py-3 min-h-[44px] text-accent font-display uppercase tracking-wide border border-accent/40 hover:border-accent transition-colors"
+            className="px-6 py-3 min-h-[44px] text-brand font-display2 font-semibold uppercase tracking-wide rounded-[999px] border border-brand/40 hover:border-brand transition-colors"
           >
             Compartir dinosaurio
           </button>
@@ -45,7 +45,7 @@ export function ResultScreen({ result, attrs, discovererName, onDownloadClick, o
         <button
           type="button"
           onClick={onRestart}
-          className="mt-2 px-4 py-2 min-h-[44px] text-sage font-display uppercase tracking-wide text-sm hover:text-cream transition-colors"
+          className="mt-2 px-4 py-2 min-h-[44px] text-sage font-display2 font-semibold uppercase tracking-wide text-sm hover:text-cream transition-colors"
         >
           Detectar otra especie
         </button>

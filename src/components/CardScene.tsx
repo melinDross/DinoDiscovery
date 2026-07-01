@@ -332,7 +332,7 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
       <button
         type="button"
         onClick={handleSpinClick}
-        className="px-4 py-2 min-h-[44px] text-accent font-display uppercase tracking-wide border border-accent/40 hover:border-accent transition-colors"
+        className="px-4 py-2 min-h-[44px] text-brand font-display2 font-semibold uppercase tracking-wide rounded-[999px] border border-brand/40 hover:border-brand transition-colors"
       >
         Girar carta
       </button>

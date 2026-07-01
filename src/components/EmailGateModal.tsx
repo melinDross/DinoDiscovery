@@ -43,14 +43,14 @@ export function EmailGateModal({ onConfirm, onCancel }: EmailGateModalProps) {
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 px-4 py-3 border border-moss text-sage font-semibold"
+            className="flex-1 px-4 py-3 border border-moss text-sage font-semibold rounded-[999px]"
           >
             Cancelar
           </button>
           <button
             type="button"
             onClick={handleConfirm}
-            className="flex-1 px-4 py-3 bg-accent text-bg font-display uppercase tracking-wide"
+            className="flex-1 px-4 py-3 bg-brand text-white font-display2 font-semibold uppercase tracking-wide rounded-[999px]"
           >
             Confirmar
           </button>

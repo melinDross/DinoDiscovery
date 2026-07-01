@@ -36,7 +36,7 @@ export function Landing({ onStart }: LandingProps) {
         type="button"
         onClick={handleVideoTap}
         aria-label="Reproducir rugido"
-        className="relative mb-3 sm:mb-4 w-52 sm:w-72 md:w-80 rounded-3xl overflow-hidden shadow-[0_0_40px_rgba(178,255,0,0.20),0_8px_32px_rgba(0,0,0,0.6)] ring-2 ring-accent/30 active:scale-95 transition-transform"
+        className="relative mb-3 sm:mb-4 w-52 sm:w-72 md:w-80 rounded-3xl overflow-hidden shadow-[0_0_40px_rgba(236,26,143,0.20),0_8px_32px_rgba(0,0,0,0.6)] ring-2 ring-brand/30 active:scale-95 transition-transform"
       >
         <video
           ref={(el) => {
@@ -63,19 +63,31 @@ export function Landing({ onStart }: LandingProps) {
           Browsers block audio autoplay without a direct user gesture, so the
           roar can't fire on page load alongside the (muted) video. */}
       <audio ref={roarRef} src="/t-rex-sound.mp3" preload="auto" />
-      <h1 className="font-display text-4xl sm:text-5xl md:text-6xl leading-tight tracking-[5px] uppercase">
-        <span className="block text-cream">Dino</span>
-        <span className="block text-accent [text-shadow:0_0_40px_rgba(178,255,0,0.4)]">
-          Discovery
-        </span>
-      </h1>
-      <p className="mt-3 sm:mt-4 text-sm sm:text-base uppercase tracking-[2px] text-sage">
+      {/* Wordmark: a tight crop of public/card-back.png's own logo art
+          (same illustrated "Dino Discovery" lettering, extracted rather
+          than regenerated since it already existed as an asset), not a
+          plain text heading — a rectangular crop, not a true transparent
+          cutout (the source background is a busy multi-color nebula, not a
+          solid color, so simple chroma-keying like dinoCutout.ts does for
+          the dino photos doesn't apply here). The `mask-image` radial fade
+          blends the crop's rectangular edges into the page's own similarly
+          dark/starry background instead of showing a hard edge. */}
+      <img
+        src="/dino-discovery-logo.png"
+        alt="Dino Discovery"
+        className="w-full max-w-xs sm:max-w-sm md:max-w-md"
+        style={{
+          WebkitMaskImage: 'radial-gradient(ellipse 65% 55% at center, black 25%, transparent 95%)',
+          maskImage: 'radial-gradient(ellipse 65% 55% at center, black 25%, transparent 95%)',
+        }}
+      />
+      <p className="mt-1 sm:mt-2 text-sm sm:text-base uppercase tracking-[2px] text-sage">
         Descubre tu propia especie única
       </p>
       <button
         type="button"
         onClick={onStart}
-        className="mt-6 sm:mt-8 w-full max-w-xs sm:max-w-sm px-6 py-3 sm:py-4 text-bg font-display text-xl uppercase tracking-[2px] bg-accent hover:shadow-[6px_6px_0_0_#f5e6c8] transition-shadow"
+        className="mt-6 sm:mt-8 w-full max-w-xs sm:max-w-sm px-6 py-3 sm:py-4 text-white font-display2 font-semibold text-xl uppercase tracking-[2px] rounded-[999px] bg-brand hover:shadow-[6px_6px_0_0_#f5e6c8] transition-shadow"
       >
         ¡Empezar!
       </button>
