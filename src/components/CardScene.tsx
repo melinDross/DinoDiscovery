@@ -46,14 +46,6 @@ const MAX_TILT_DEG = 15;
 const FLIP_DURATION_MS = 800;
 const SPIN_DURATION_MS = 1400;
 const DRAG_SENSITIVITY_DEG_PER_PX = 0.6;
-// Both axes of a drag also nudge the card's on-screen position a little
-// (not just rotation) — DRAG_TRANSLATE_SENSITIVITY scales the raw finger
-// delta down before DRAG_TRANSLATE_MAX_PX clamps it, so dragging in a
-// circle visibly moves the card without ever letting it drift far from its
-// resting position. Deliberately much smaller than 1:1 ("a bit", not
-// "wherever you drag it").
-const DRAG_TRANSLATE_SENSITIVITY = 0.4;
-const DRAG_TRANSLATE_MAX_PX = 26;
 const DRAG_SNAP_TRANSITION = '320ms ease-out';
 const TILT_ACTIVE_TRANSITION = '80ms linear';
 const TILT_RESET_TRANSITION = '400ms ease-out';
@@ -64,7 +56,13 @@ const NO_TRANSITION = 'none';
 export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   const [hasFlippedIn, setHasFlippedIn] = useState(false);
   const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  // Pivot point for the .card-flipper transform, as a CSS transform-origin
+  // string. Defaults to the center, but is set to wherever a touch drag
+  // started (see handleTouchStart) so the rotation/tilt pivots around the
+  // point the user is actually "holding", instead of spinning the whole
+  // card around its center regardless of where they touched — this is what
+  // makes it feel like grabbing a physical card at that spot.
+  const [dragOrigin, setDragOrigin] = useState('50% 50%');
   const [transition, setTransition] = useState(FLIP_TRANSITION);
   const [spinDeg, setSpinDeg] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -150,20 +148,29 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
     setTilt({ rotateX: 0, rotateY: 0 });
   }
 
-  // Drag-to-rotate + drag-to-nudge: the card follows the finger while
-  // dragging (no CSS transition — `spinDeg`/`dragOffset` are updated
-  // directly per touchmove, so the rendered position always matches the
-  // live drag position 1:1/proportionally, with no easing lag). Horizontal
-  // movement drives rotation (rotateY via spinDeg, unclamped, snaps to the
-  // nearest face on release) — rotation is deliberately horizontal-only,
-  // like a real card being spun around its vertical axis. Both axes
-  // together also drive a small clamped on-screen translation
-  // (DRAG_TRANSLATE_MAX_PX), so dragging in any direction — including
-  // diagonally or in a circle — visibly moves the card a little without
-  // adding any vertical rotation. An earlier version routed vertical
-  // movement to page-scroll passthrough instead of card movement; this
-  // supersedes that on explicit request — touching the card while dragging
-  // now always drives the card, not the page.
+  // Drag-to-rotate + drag-to-tilt: the card follows the finger while
+  // dragging (no CSS transition — `spinDeg`/`tilt` are updated directly per
+  // touchmove, so the rendered rotation always matches the live drag
+  // position 1:1, with no easing lag). Horizontal movement drives rotation
+  // (rotateY via spinDeg, unclamped, snaps to the nearest face on release)
+  // — this is deliberately the only axis that fully rotates the card, like
+  // spinning it around its vertical axis to flip it over. Vertical movement
+  // drives a clamped tilt (rotateX, ±MAX_TILT_DEG), the same axis the
+  // desktop hover effect already uses, so dragging up/down visibly tips the
+  // card toward/away from the viewer instead of doing nothing.
+  //
+  // Crucially, the pivot for both is `dragOrigin` — set from the touch's
+  // own position on the card at the start of the drag (see handleTouchStart)
+  // instead of staying at the card's center. Without that, dragging felt
+  // like spinning a flat disc regardless of where you touched; anchoring
+  // the transform-origin to the touch point makes it feel like grabbing the
+  // physical card at that spot, since the grabbed point stays roughly put
+  // while the rest of the card rotates/tilts around it.
+  //
+  // An earlier version routed vertical movement to page-scroll passthrough
+  // instead of driving the card at all; that was superseded on explicit
+  // request — touching the card while dragging always drives the card now,
+  // not the page (see `touch-action: none` on .card-perspective in index.css).
   function handleTouchStart(event: React.TouchEvent<HTMLDivElement>) {
     if (isSpinning) return;
     const touch = event.touches[0];
@@ -171,6 +178,13 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
     dragStartXRef.current = touch.clientX;
     dragStartYRef.current = touch.clientY;
     dragBaseSpinRef.current = spinDeg;
+
+    const rect = flipperRef.current?.getBoundingClientRect();
+    if (rect && rect.width > 0 && rect.height > 0) {
+      const originXPercent = ((touch.clientX - rect.left) / rect.width) * 100;
+      const originYPercent = ((touch.clientY - rect.top) / rect.height) * 100;
+      setDragOrigin(`${originXPercent}% ${originYPercent}%`);
+    }
   }
 
   function handleTouchMove(event: React.TouchEvent<HTMLDivElement>) {
@@ -182,16 +196,14 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
     const deltaY = touch.clientY - dragStartYRef.current;
 
     const nextSpin = dragBaseSpinRef.current + deltaX * DRAG_SENSITIVITY_DEG_PER_PX;
-    const clampOffset = (value: number) =>
-      Math.max(-DRAG_TRANSLATE_MAX_PX, Math.min(DRAG_TRANSLATE_MAX_PX, value));
+    const nextTiltX = Math.max(
+      -MAX_TILT_DEG,
+      Math.min(MAX_TILT_DEG, -deltaY * DRAG_SENSITIVITY_DEG_PER_PX)
+    );
 
     setTransition(NO_TRANSITION);
     setSpinDeg(nextSpin);
-    setDragOffset({
-      x: clampOffset(deltaX * DRAG_TRANSLATE_SENSITIVITY),
-      y: clampOffset(deltaY * DRAG_TRANSLATE_SENSITIVITY),
-    });
-    setTilt({ rotateX: 0, rotateY: 0 });
+    setTilt({ rotateX: nextTiltX, rotateY: 0 });
     const totalDeg = baseFlipDeg + nextSpin;
     const mod = ((totalDeg % 360) + 360) % 360;
     setFacing(mod > 90 && mod < 270 ? 'back' : 'front');
@@ -209,7 +221,7 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
         return snapped - baseFlipDeg;
       });
       setTransition(DRAG_SNAP_TRANSITION);
-      setDragOffset({ x: 0, y: 0 });
+      setDragOrigin('50% 50%');
       setTilt({ rotateX: 0, rotateY: 0 });
       return;
     }
@@ -219,7 +231,7 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
 
   function handleSpinClick() {
     dragStartXRef.current = null;
-    setDragOffset({ x: 0, y: 0 });
+    setDragOrigin('50% 50%');
     if (spinTimeoutRef.current !== null) {
       clearTimeout(spinTimeoutRef.current);
     }
@@ -290,7 +302,8 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
               ref={flipperRef}
               className="card-flipper"
               style={{
-                transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) rotateX(${tilt.rotateX}deg) rotateY(${totalRotateY}deg)`,
+                transform: `rotateX(${tilt.rotateX}deg) rotateY(${totalRotateY}deg)`,
+                transformOrigin: dragOrigin,
                 transition,
               }}
             >

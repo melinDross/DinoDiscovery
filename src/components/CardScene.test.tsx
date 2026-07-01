@@ -83,22 +83,25 @@ describe('CardScene', () => {
     expect(flipper.style.transform).toBe(baseline);
   });
 
-  it('nudges the card position on a vertical drag without rotating it', () => {
+  it('tilts the card on a vertical drag without rotating it', () => {
     render(<CardScene discovererName="Lucía" result={result} attrs={commonAttrs} />);
     const perspective = document.querySelector('.card-perspective') as HTMLElement;
     const flipper = document.querySelector('.card-flipper') as HTMLElement;
 
     perspective.getBoundingClientRect = () =>
       ({ left: 0, top: 0, width: 200, height: 200 }) as DOMRect;
+    flipper.getBoundingClientRect = () => ({ left: 0, top: 0, width: 200, height: 200 }) as DOMRect;
 
     const baseline = flipper.style.transform;
+    const baselineRotateY = baseline.match(/rotateY\(([^)]+)\)/)?.[1];
 
-    // Pure vertical drag: should translate the card (translate(...)) but
-    // not change its rotateY (rotation stays horizontal-only).
+    // Pure vertical drag: should tilt the card (rotateX) but not change its
+    // rotateY (rotation stays horizontal-only).
     fireEvent.touchStart(perspective, { touches: [{ clientX: 100, clientY: 100 }] });
     fireEvent.touchMove(perspective, { touches: [{ clientX: 100, clientY: 150 }] });
-    expect(flipper.style.transform).toMatch(/translate\(0px, \d+(\.\d+)?px\)/);
-    expect(flipper.style.transform).not.toBe(baseline);
+    expect(flipper.style.transform).toMatch(/rotateX\(-?\d+(\.\d+)?deg\)/);
+    expect(flipper.style.transform).not.toMatch(/rotateX\(0deg\)/);
+    expect(flipper.style.transform.match(/rotateY\(([^)]+)\)/)?.[1]).toBe(baselineRotateY);
 
     fireEvent.touchEnd(perspective);
     expect(flipper.style.transform).toBe(baseline);
