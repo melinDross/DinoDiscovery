@@ -3,6 +3,11 @@
 # Dino Discovery — Generador de cartas de dinosaurios con IA
 ### Proyecto de QA / ingeniería de producto | React · TypeScript · Cloudflare Workers · Claude · GPT Image
 
+[![Deploy](https://img.shields.io/github/actions/workflow/status/melinDross/DinoDiscovery/deploy.yml?branch=main&label=deploy)](https://github.com/melinDross/DinoDiscovery/actions/workflows/deploy.yml)
+[![Sitio en vivo](https://img.shields.io/website?url=https%3A%2F%2Fdino-discovery-generator.pages.dev&label=demo%20en%20vivo)](https://dino-discovery-generator.pages.dev)
+[![Último commit](https://img.shields.io/github/last-commit/melinDross/DinoDiscovery)](https://github.com/melinDross/DinoDiscovery/commits/main)
+[![Licencia](https://img.shields.io/badge/licencia-PolyForm%20Noncommercial-blue)](LICENSE)
+
 ![Carta de resultado — un descubrimiento real generado por IA](docs/screenshots/result-card.png)
 
 Dino Discovery es una app web infantil donde un niño o niña crea su propio dinosaurio eligiendo cinco atributos (tamaño, hábitat, dieta, característica especial, personalidad) a través de un wizard corto, y recibe a cambio una criatura generada por IA —imagen, nombre científico, nombre común y una descripción de tres frases— reformulada como una **carta coleccionable de "descubrimiento de especie"**: un ID de especie determinista, un nivel de rareza calculado, arte de hábitat ilustrado detrás del dino, y una carta con giro/inclinación 3D que se puede arrastrar con el dedo o el ratón.
@@ -207,6 +212,12 @@ Para el stack completo en local (frontend + Cloudflare Pages Functions), copia `
 3. `npx wrangler pages project create dino-discovery-generator --production-branch main`
 4. `npx wrangler pages secret put ANTHROPIC_API_KEY / OPENAI_API_KEY / KIT_API_KEY / KIT_FORM_ID / ADMIN_KEY --project-name dino-discovery-generator`
 5. `npm run build && npx wrangler pages deploy dist --project-name dino-discovery-generator`
+
+---
+
+## 📜 Licencia
+
+[PolyForm Noncommercial 1.0.0](LICENSE) — libre para ver, ejecutar, modificar y compartir con cualquier fin no comercial (aprendizaje, proyectos personales, forks). No está permitido vender este proyecto ni usarlo comercialmente bajo esta licencia.
 
 ---
 

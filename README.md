@@ -3,6 +3,11 @@
 # Dino Discovery — AI Dinosaur Card Generator
 ### QA / product-engineering project | React · TypeScript · Cloudflare Workers · Claude · GPT Image
 
+[![Deploy](https://img.shields.io/github/actions/workflow/status/melinDross/DinoDiscovery/deploy.yml?branch=main&label=deploy)](https://github.com/melinDross/DinoDiscovery/actions/workflows/deploy.yml)
+[![Live site](https://img.shields.io/website?url=https%3A%2F%2Fdino-discovery-generator.pages.dev&label=live%20demo)](https://dino-discovery-generator.pages.dev)
+[![Last commit](https://img.shields.io/github/last-commit/melinDross/DinoDiscovery)](https://github.com/melinDross/DinoDiscovery/commits/main)
+[![License](https://img.shields.io/badge/license-PolyForm%20Noncommercial-blue)](LICENSE)
+
 ![Result card — a real AI-generated discovery](docs/screenshots/result-card.png)
 
 Dino Discovery is a kids' web app where a child builds their own dinosaur by picking five attributes (size, habitat, diet, special feature, personality) through a short wizard, and receives back an AI-generated creature — image, scientific name, common name, and a three-sentence description — reframed as a collectible **"species discovery" card**: a deterministic species ID, a computed rarity tier, illustrated habitat art behind the dino, and a 3D flip/tilt card you can drag with a finger or mouse.
@@ -207,6 +212,12 @@ For the full stack locally (frontend + Cloudflare Pages Functions), copy `.dev.v
 3. `npx wrangler pages project create dino-discovery-generator --production-branch main`
 4. `npx wrangler pages secret put ANTHROPIC_API_KEY / OPENAI_API_KEY / KIT_API_KEY / KIT_FORM_ID / ADMIN_KEY --project-name dino-discovery-generator`
 5. `npm run build && npx wrangler pages deploy dist --project-name dino-discovery-generator`
+
+---
+
+## 📜 License
+
+[PolyForm Noncommercial 1.0.0](LICENSE) — free to view, run, modify, and share for any non-commercial purpose (learning, personal projects, forks). Selling this project or using it commercially isn't permitted under this license.
 
 ---
 
