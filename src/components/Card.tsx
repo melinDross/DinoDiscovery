@@ -266,27 +266,40 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             on `transform`/tilt-driven interaction, the one class of
             continuous update already proven safe inside this 3D scene,
             instead of the `box-shadow`/`filter` properties that broke
-            things in earlier rarity-glow attempts (see CLAUDE.md). */}
+            things in earlier rarity-glow attempts (see CLAUDE.md).
+
+            The base offset (20%, not 50%) biases the visible rainbow band
+            toward the art's top-left corner at rest, so the diagonal sweep
+            (the gradient runs at 115deg, roughly top-left-to-bottom-right)
+            reads immediately at a glance instead of requiring the user to
+            tilt the card first to reveal it. `mix-blend-overlay` (not
+            color-dodge, tried first) — color-dodge only ever brightens,
+            which blew out to a washed/flat look against bright habitat art,
+            most visibly on mobile Safari's wide-gamut rendering; overlay
+            respects the underlying luminance so it reads as a subtle sheen
+            on both light and dark parts of the art instead of a uniform
+            haze. Gradient stop alphas and the layer's own opacity were also
+            both turned down for the same "too strong by default" reason. */}
         {isFoilEligible && (
           <div
             aria-hidden="true"
-            className="absolute pointer-events-none mix-blend-color-dodge z-40"
+            className="absolute pointer-events-none mix-blend-overlay z-40"
             style={{
               ...artLayerStyle,
               borderTopLeftRadius: 8,
               borderTopRightRadius: 8,
-              opacity: 0.5,
+              opacity: 0.32,
               backgroundImage:
                 'linear-gradient(115deg,' +
                 'transparent 0%,' +
-                'rgba(255,80,180,0.9) 18%,' +
-                'rgba(255,225,80,0.9) 34%,' +
-                'rgba(110,255,200,0.9) 50%,' +
-                'rgba(90,140,255,0.9) 66%,' +
-                'rgba(255,80,180,0.9) 82%,' +
+                'rgba(255,80,180,0.55) 18%,' +
+                'rgba(255,225,80,0.55) 34%,' +
+                'rgba(110,255,200,0.55) 50%,' +
+                'rgba(90,140,255,0.55) 66%,' +
+                'rgba(255,80,180,0.55) 82%,' +
                 'transparent 100%)',
-              backgroundSize: '260% 260%',
-              backgroundPosition: `${50 + foilTilt.x * 30}% ${50 + foilTilt.y * 30}%`,
+              backgroundSize: '180% 180%',
+              backgroundPosition: `${20 + foilTilt.x * 20}% ${20 + foilTilt.y * 20}%`,
               WebkitMaskImage:
                 'linear-gradient(to bottom, black 0%, black 72%, transparent 100%)',
               maskImage: 'linear-gradient(to bottom, black 0%, black 72%, transparent 100%)',
