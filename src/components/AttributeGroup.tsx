@@ -45,7 +45,7 @@ export function AttributeGroup<T extends string>({
               src={ATTRIBUTE_MEDALLION_PATHS[option] ?? ''}
               alt=""
               aria-hidden="true"
-              className="w-full h-[84px] sm:h-[102px] object-cover pointer-events-none"
+              className="w-full h-[84px] sm:h-[102px] object-contain pointer-events-none"
             />
             <span className="flex-1 flex items-center justify-center px-1.5 py-2 font-display2 font-semibold text-cream uppercase tracking-wide text-xs sm:text-sm text-center leading-tight">
               {option}
