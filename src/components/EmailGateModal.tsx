@@ -21,8 +21,8 @@ export function EmailGateModal({ onConfirm, onCancel }: EmailGateModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 overflow-y-auto">
-      <div className="bg-bg border border-accent p-6 max-w-sm w-full my-auto max-h-[90vh] overflow-y-auto">
-        <h3 className="font-display text-xl text-cream mb-2 uppercase tracking-wide">¡Casi listo!</h3>
+      <div className="bg-bg border border-brand p-6 max-w-sm w-full my-auto max-h-[90vh] overflow-y-auto">
+        <h3 className="font-display2 font-semibold text-xl text-cream mb-2 uppercase tracking-wide">¡Casi listo!</h3>
         <p className="text-sage mb-4">
           Escribe tu email para descargar la carta de descubrimiento.
         </p>
@@ -36,7 +36,7 @@ export function EmailGateModal({ onConfirm, onCancel }: EmailGateModalProps) {
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full px-3 py-2 bg-surface2 border border-accent/20 text-cream focus:outline-none focus:border-accent"
+          className="w-full px-3 py-2 bg-surface2 border border-brand/20 text-cream focus:outline-none focus:border-brand"
         />
         {error && <p className="text-red-400 mt-1 text-sm">{error}</p>}
         <div className="flex gap-2 mt-4">

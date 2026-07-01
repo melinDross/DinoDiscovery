@@ -73,7 +73,7 @@ export function LoadingDino({ isDone, onTransitionEnd }: LoadingDinoProps) {
         <div className={`w-28 h-28 flex items-center justify-center ${BURST_PHASE.animationClass}`}>
           <img src={BURST_PHASE.image} alt={BURST_PHASE.caption} className="w-full h-full object-contain" />
         </div>
-        <p className="mt-6 font-display text-lg text-accent uppercase tracking-wide">
+        <p className="mt-6 font-display2 font-semibold text-lg text-brand uppercase tracking-wide">
           {BURST_PHASE.caption}
         </p>
       </div>
@@ -90,7 +90,7 @@ export function LoadingDino({ isDone, onTransitionEnd }: LoadingDinoProps) {
       <div className={`w-28 h-28 flex items-center justify-center ${phase.animationClass}`}>
         <img src={phase.image} alt={caption} className="w-full h-full object-contain" />
       </div>
-      <p className="mt-6 font-display text-lg text-accent uppercase tracking-wide">{caption}</p>
+      <p className="mt-6 font-display2 font-semibold text-lg text-brand uppercase tracking-wide">{caption}</p>
       <div
         className="w-64 sm:w-80 h-2 mt-6 bg-[#1a1a1a] overflow-hidden"
         role="progressbar"
@@ -98,7 +98,7 @@ export function LoadingDino({ isDone, onTransitionEnd }: LoadingDinoProps) {
         aria-valuemin={0}
         aria-valuemax={100}
       >
-        <div className="h-full bg-accent transition-all" style={{ width: `${progress}%` }} />
+        <div className="h-full bg-brand transition-all" style={{ width: `${progress}%` }} />
       </div>
     </div>
   );

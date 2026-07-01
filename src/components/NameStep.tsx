@@ -9,7 +9,7 @@ export function NameStep({ value, onChange, onNext }: NameStepProps) {
 
   return (
     <div className="text-center max-w-sm sm:max-w-md w-full">
-      <h2 className="font-display text-2xl sm:text-3xl text-cream mb-4 uppercase tracking-wide">
+      <h2 className="font-display2 font-semibold text-2xl sm:text-3xl text-cream mb-4 uppercase tracking-wide">
         ¿Cómo te llamas, descubridor/a?
       </h2>
       <input
@@ -18,7 +18,7 @@ export function NameStep({ value, onChange, onNext }: NameStepProps) {
         onChange={(e) => onChange(e.target.value)}
         placeholder="Escribe tu nombre"
         aria-label="Tu nombre"
-        className="w-full px-4 py-3 bg-bg border-2 border-accent/20 focus:outline-none focus:border-accent text-lg text-center text-cream placeholder:text-moss"
+        className="w-full px-4 py-3 bg-bg border-2 border-brand/20 focus:outline-none focus:border-brand text-lg text-center text-cream placeholder:text-moss"
       />
       <button
         type="button"

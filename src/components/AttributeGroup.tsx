@@ -18,7 +18,7 @@ export function AttributeGroup<T extends string>({
 }: AttributeGroupProps<T>) {
   return (
     <div className="mb-6">
-      <h3 className="font-display text-2xl sm:text-3xl text-cream mb-3 sm:mb-4 uppercase tracking-wide text-center">
+      <h3 className="font-display2 font-semibold text-2xl sm:text-3xl text-cream mb-3 sm:mb-4 uppercase tracking-wide text-center">
         {label}
       </h3>
       {description && (

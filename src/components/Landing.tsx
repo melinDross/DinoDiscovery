@@ -77,8 +77,8 @@ export function Landing({ onStart }: LandingProps) {
         alt="Dino Discovery"
         className="w-full max-w-xs sm:max-w-sm md:max-w-md"
         style={{
-          WebkitMaskImage: 'radial-gradient(ellipse 65% 55% at center, black 25%, transparent 95%)',
-          maskImage: 'radial-gradient(ellipse 65% 55% at center, black 25%, transparent 95%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 95% 90% at center, black 55%, transparent 100%)',
+          maskImage: 'radial-gradient(ellipse 95% 90% at center, black 55%, transparent 100%)',
         }}
       />
       <p className="mt-1 sm:mt-2 text-sm sm:text-base uppercase tracking-[2px] text-sage">

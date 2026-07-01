@@ -32,7 +32,7 @@ export function WizardShell({ step, totalSteps, onBack, children }: WizardShellP
           aria-valuemin={0}
           aria-valuemax={100}
         >
-          <div className="h-full bg-accent transition-all" style={{ width: `${progressPercent}%` }} />
+          <div className="h-full bg-brand transition-all" style={{ width: `${progressPercent}%` }} />
         </div>
       </div>
       <div className="flex-1 flex items-start sm:items-center justify-center p-4 pt-8 sm:pt-4">
