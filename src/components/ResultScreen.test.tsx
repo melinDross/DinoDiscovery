@@ -5,10 +5,6 @@ import confetti from 'canvas-confetti';
 import { ResultScreen } from './ResultScreen';
 import type { GenerateDinoResponse, DinoAttributes } from '../../shared/types';
 
-vi.mock('../certificate', () => ({ shareDinoImage: vi.fn().mockResolvedValue(undefined) }));
-
-import { shareDinoImage } from '../certificate';
-
 const result: GenerateDinoResponse = {
   resultId: 'result-1',
   scientificName: 'Volcanius ferox',
@@ -44,12 +40,6 @@ describe('ResultScreen', () => {
     render(<ResultScreen result={result} attrs={attrs} discovererName="Lucía" onDownloadClick={onDownloadClick} onRestart={() => {}} />);
     await userEvent.click(screen.getByRole('button', { name: /descargar carta/i }));
     expect(onDownloadClick).toHaveBeenCalled();
-  });
-
-  it('shares the dino image when the share button is clicked', async () => {
-    render(<ResultScreen result={result} attrs={attrs} discovererName="Lucía" onDownloadClick={() => {}} onRestart={() => {}} />);
-    await userEvent.click(screen.getByRole('button', { name: /compartir dinosaurio/i }));
-    expect(shareDinoImage).toHaveBeenCalledWith('/images/abc.png', 'dino-volcanrex.png', 'Volcanrex');
   });
 
   it('calls onRestart when "Detectar otra especie" is clicked', async () => {

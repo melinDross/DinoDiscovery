@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { shareDinoImage } from '../certificate';
 import type { GenerateDinoResponse, DinoAttributes } from '../../shared/types';
 import { CardScene } from './CardScene';
 
@@ -17,11 +16,6 @@ export function ResultScreen({ result, attrs, discovererName, onDownloadClick, o
     confetti({ particleCount: 120, spread: 70, origin: { y: 0.6 } });
   }, []);
 
-  function handleShareClick() {
-    const fileName = `dino-${result.commonName.toLowerCase().replace(/\s+/g, '-')}.png`;
-    void shareDinoImage(result.imageUrl, fileName, result.commonName);
-  }
-
   return (
     <div className="min-h-screen flex items-start justify-center pt-4 pb-8 px-4">
       <div className="max-w-xl w-full text-center">
@@ -36,19 +30,12 @@ export function ResultScreen({ result, attrs, discovererName, onDownloadClick, o
           </button>
           <button
             type="button"
-            onClick={handleShareClick}
+            onClick={onRestart}
             className="px-6 py-3 min-h-[44px] text-brand font-display2 font-semibold uppercase tracking-wide rounded-[999px] border border-brand/40 hover:border-brand transition-colors"
           >
-            Compartir dinosaurio
+            Detectar otra especie
           </button>
         </div>
-        <button
-          type="button"
-          onClick={onRestart}
-          className="mt-2 px-4 py-2 min-h-[44px] text-sage font-display2 font-semibold uppercase tracking-wide text-sm hover:text-cream transition-colors"
-        >
-          Detectar otra especie
-        </button>
       </div>
     </div>
   );
