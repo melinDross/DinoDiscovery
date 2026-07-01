@@ -83,14 +83,18 @@ describe('CardScene', () => {
     expect(flipper.style.transform).toBe(baseline);
   });
 
-  it('applies the idle glow class only for legendary rarity', () => {
+  it('renders a .card-flipper element for both common and legendary rarity', () => {
+    // The rAF glow loop writes box-shadow imperatively on .card-flipper —
+    // there is no CSS class toggled for glow presence (that would cause the
+    // iOS Safari habitat-shows bug). Verify the flipper element exists for
+    // both rarities so the rAF loop has a target to write to.
     const { rerender } = render(
       <CardScene discovererName="Lucía" result={result} attrs={commonAttrs} />
     );
-    expect(document.querySelector('.card-glow-wrapper')).not.toBeInTheDocument();
+    expect(document.querySelector('.card-flipper')).toBeInTheDocument();
 
     rerender(<CardScene discovererName="Lucía" result={result} attrs={legendaryAttrs} />);
-    expect(document.querySelector('.card-glow-wrapper')).toBeInTheDocument();
+    expect(document.querySelector('.card-flipper')).toBeInTheDocument();
   });
 
   it('spins the card 360 degrees when the rotate button is clicked', async () => {

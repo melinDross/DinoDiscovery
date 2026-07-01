@@ -92,6 +92,7 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
 
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
+  const flipperRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [naturalHeight, setNaturalHeight] = useState(0);
 
@@ -105,7 +106,7 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   // scene and causes the raw habitat background to show on drag. rAF-driven
   // inline style updates don't trigger layer promotion.
   useEffect(() => {
-    const el = innerRef.current;
+    const el = flipperRef.current;
     if (!glowColor || !el) return;
 
     const startTime = performance.now();
@@ -148,7 +149,7 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
     rafId = requestAnimationFrame(frame);
     return () => {
       cancelAnimationFrame(rafId);
-      if (innerRef.current) innerRef.current.style.boxShadow = '';
+      if (flipperRef.current) flipperRef.current.style.boxShadow = '';
     };
   }, [glowColor]);
 
@@ -339,12 +340,11 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
       >
         <div
           ref={innerRef}
-          className={`absolute left-1/2 top-0 card-scene-wrapper${glowColor ? ' card-glow-wrapper' : ''}`}
+          className="absolute left-1/2 top-0 card-scene-wrapper"
           style={{
             width: CARD_NATURAL_WIDTH,
             transform: `translateX(-50%) scale(${scale})`,
             transformOrigin: 'top center',
-            ...(glowColor ? { ['--glow-color' as string]: glowColor } : {}),
           }}
         >
           <div
@@ -357,6 +357,7 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
             onTouchCancel={handleTouchEnd}
           >
             <div
+              ref={flipperRef}
               className="card-flipper"
               style={{
                 transform: `rotateX(${tilt.rotateX}deg) rotateY(${totalRotateY}deg)`,
