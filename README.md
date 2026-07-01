@@ -1,11 +1,9 @@
+**EN** | [ES](README.es.md)
+
 # Dino Discovery — AI Dinosaur Card Generator
 ### QA / product-engineering project | React · TypeScript · Cloudflare Workers · Claude · GPT Image
 
-*Read this in [Español](README.es.md).*
-
----
-
-## What this is
+![Result card — a real AI-generated discovery](docs/screenshots/result-card.png)
 
 Dino Discovery is a kids' web app where a child builds their own dinosaur by picking five attributes (size, habitat, diet, special feature, personality) through a short wizard, and receives back an AI-generated creature — image, scientific name, common name, and a three-sentence description — reframed as a collectible **"species discovery" card**: a deterministic species ID, a computed rarity tier, illustrated habitat art behind the dino, and a 3D flip/tilt card you can drag with a finger or mouse.
 
@@ -15,7 +13,20 @@ This README documents the project as a **QA and product-engineering case study**
 
 ---
 
-## Where the idea came from
+## 🚀 Quick start
+
+```bash
+git clone https://github.com/melinDross/DinoDiscovery.git
+cd DinoDiscovery
+npm install
+npm run dev        # Vite dev server at localhost:5173 (frontend only)
+```
+
+The dev server above runs the frontend alone — the wizard and card work, but generating a dino needs the backend (Cloudflare Pages Functions) with your **own** Anthropic/OpenAI API keys, since those aren't included in the repo. For the full stack locally or to deploy your own copy, see "⚙️ Running it locally" further down.
+
+---
+
+## 💡 Where the idea came from
 
 The starting point wasn't "let's build an AI dinosaur generator" in the abstract — it was a reference trading card I liked the layout of, and a question: could a kid design *this*, with an AI filling in the art and the flavor text?
 
@@ -25,13 +36,13 @@ That reference (a fantasy-TCG-style card, dark background, stone attribute panel
 
 ---
 
-## Who it's for
+## 🧒 Who it's for
 
 Kids (roughly ages 5–10) who like dinosaurs and collectible-card games, playing solo or with a parent reading the picks aloud. The wizard is deliberately simple — six-way picture-button choices, no reading required beyond attribute names, auto-advance after each pick — and the payoff (a shareable, downloadable card) is designed to feel like *finding* something rather than *generating* something, hence the "alternate-reality-game species discovery" framing (deterministic species IDs, rarity tiers, "Descubridor/a" credit) instead of a plain "here's your AI image" result screen.
 
 ---
 
-## Tools and technologies
+## 🛠️ Tools and technologies
 
 | Layer | Choice | Why |
 |---|---|---|
@@ -47,7 +58,7 @@ Kids (roughly ages 5–10) who like dinosaurs and collectible-card games, playin
 
 ---
 
-## Technical problems solved
+## 🐛 Technical problems solved
 
 A sample of the real engineering problems this project ran into — not a feature list, a "what actually went wrong and how it got fixed" list:
 
@@ -60,7 +71,7 @@ A sample of the real engineering problems this project ran into — not a featur
 
 ---
 
-## How I built it
+## 🏗️ How I built it
 
 ### Phase 1 — Core generation flow
 
@@ -88,7 +99,7 @@ Fit-to-container scaling for the card (a `ResizeObserver`-driven `transform: sca
 
 ---
 
-## Screenshots
+## 📸 Screenshots
 
 | Landing | Wizard | Loading | Result card |
 |---|---|---|---|
@@ -98,7 +109,7 @@ The result card above ("Dragón de Fuego") is a real generation, not a mockup �
 
 ---
 
-## How I tested this
+## 🧪 How I tested this
 
 **136 automated tests** (Vitest + Testing Library), covering frontend components and backend Pages Functions with in-memory fakes for KV/R2 — no shared mock library, each test file builds its own `createFakeKV`/`createEnv` helpers. Backend and frontend share the same test runner and conventions.
 
@@ -110,7 +121,7 @@ What automated tests *don't* cover, and how those gaps got handled instead:
 
 ---
 
-## Design decisions
+## 🎯 Design decisions
 
 **Never block the download on email verification.** Evaluated and explicitly rejected — Kit's free tier has no reliable way to notify the app of a confirmed subscription without a polling wait screen, and the fraction of users who'd abandon rather than wait wasn't worth it. The email is still captured and sent to Kit; it just never gates the certificate download.
 
@@ -122,7 +133,7 @@ What automated tests *don't* cover, and how those gaps got handled instead:
 
 ---
 
-## Repository structure
+## 📁 Repository structure
 
 ```
 Dino-discovery/
@@ -148,7 +159,7 @@ Dino-discovery/
 
 ---
 
-## Version history
+## 🕓 Version history
 
 | Version | Highlights |
 |---|---|
@@ -162,7 +173,7 @@ Full detail per release: [GitHub Releases](https://github.com/melinDross/DinoDis
 
 ---
 
-## Ideas evaluated and not pursued
+## 🚫 Ideas evaluated and not pursued
 
 From `docs/future-features.md` — kept here because *deciding not to build something* is as much a product decision as building it:
 
@@ -174,7 +185,7 @@ From `docs/future-features.md` — kept here because *deciding not to build some
 
 ---
 
-## Running it locally
+## ⚙️ Running it locally
 
 ```bash
 npm install
@@ -199,6 +210,6 @@ For the full stack locally (frontend + Cloudflare Pages Functions), copy `.dev.v
 
 ---
 
-## Repository
+## 🔗 Repository
 
 [github.com/melinDross/DinoDiscovery](https://github.com/melinDross/DinoDiscovery)

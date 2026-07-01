@@ -1,11 +1,9 @@
+[EN](README.md) | **ES**
+
 # Dino Discovery — Generador de cartas de dinosaurios con IA
 ### Proyecto de QA / ingeniería de producto | React · TypeScript · Cloudflare Workers · Claude · GPT Image
 
-*Read this in [English](README.md).*
-
----
-
-## Qué es este proyecto
+![Carta de resultado — un descubrimiento real generado por IA](docs/screenshots/result-card.png)
 
 Dino Discovery es una app web infantil donde un niño o niña crea su propio dinosaurio eligiendo cinco atributos (tamaño, hábitat, dieta, característica especial, personalidad) a través de un wizard corto, y recibe a cambio una criatura generada por IA —imagen, nombre científico, nombre común y una descripción de tres frases— reformulada como una **carta coleccionable de "descubrimiento de especie"**: un ID de especie determinista, un nivel de rareza calculado, arte de hábitat ilustrado detrás del dino, y una carta con giro/inclinación 3D que se puede arrastrar con el dedo o el ratón.
 
@@ -15,7 +13,20 @@ Este README documenta el proyecto como un **caso de estudio de QA e ingeniería 
 
 ---
 
-## De dónde salió la idea
+## 🚀 Inicio rápido
+
+```bash
+git clone https://github.com/melinDross/DinoDiscovery.git
+cd DinoDiscovery
+npm install
+npm run dev        # Servidor de Vite en localhost:5173 (solo frontend)
+```
+
+El servidor de arriba corre solo el frontend — el wizard y la carta funcionan, pero generar un dino necesita el backend (Cloudflare Pages Functions) con tus **propias** claves de API de Anthropic/OpenAI, ya que no están incluidas en el repo. Para el stack completo en local o para desplegar tu propia copia, ver "⚙️ Ejecutarlo en local" más abajo.
+
+---
+
+## 💡 De dónde salió la idea
 
 El punto de partida no fue "vamos a construir un generador de dinosaurios con IA" en abstracto — fue una carta de referencia cuyo layout me gustaba, y una pregunta: ¿podría un niño diseñar *esto*, con una IA rellenando el arte y el texto de sabor?
 
@@ -25,13 +36,13 @@ Esa referencia (una carta estilo TCG de fantasía, fondo oscuro, panel de atribu
 
 ---
 
-## Para quién es
+## 🧒 Para quién es
 
 Niños y niñas (aproximadamente 5–10 años) a los que les gustan los dinosaurios y los juegos de cartas coleccionables, jugando solos o con un adulto leyendo las opciones en voz alta. El wizard es deliberadamente simple —elecciones de seis botones con imagen, sin necesidad de leer más allá del nombre del atributo, avance automático tras cada elección— y el resultado final (una carta compartible y descargable) está pensado para sentirse como *encontrar* algo en vez de *generar* algo, de ahí el enfoque de "descubrimiento de especie tipo ARG" (IDs de especie deterministas, niveles de rareza, crédito de "Descubridor/a") en vez de una pantalla de resultado tipo "aquí tienes tu imagen de IA".
 
 ---
 
-## Herramientas y tecnologías
+## 🛠️ Herramientas y tecnologías
 
 | Capa | Elección | Por qué |
 |---|---|---|
@@ -47,7 +58,7 @@ Niños y niñas (aproximadamente 5–10 años) a los que les gustan los dinosaur
 
 ---
 
-## Problemas técnicos resueltos
+## 🐛 Problemas técnicos resueltos
 
 Una muestra de los problemas de ingeniería reales con los que se topó este proyecto — no una lista de features, sino una lista de "qué falló de verdad y cómo se arregló":
 
@@ -60,7 +71,7 @@ Una muestra de los problemas de ingeniería reales con los que se topó este pro
 
 ---
 
-## Cómo lo construí
+## 🏗️ Cómo lo construí
 
 ### Fase 1 — Flujo de generación principal
 
@@ -88,7 +99,7 @@ Escalado ajustado al contenedor para la carta (un wrapper `transform: scale()` d
 
 ---
 
-## Capturas de pantalla
+## 📸 Capturas de pantalla
 
 | Landing | Wizard | Carga | Carta de resultado |
 |---|---|---|---|
@@ -98,7 +109,7 @@ La carta de resultado de arriba ("Dragón de Fuego") es una generación real, no
 
 ---
 
-## Cómo lo he testeado
+## 🧪 Cómo lo he testeado
 
 **136 tests automatizados** (Vitest + Testing Library), cubriendo componentes de frontend y Pages Functions de backend con fakes en memoria para KV/R2 — sin librería de mocks compartida, cada fichero de test construye sus propios helpers `createFakeKV`/`createEnv`. Backend y frontend comparten el mismo test runner y las mismas convenciones.
 
@@ -110,7 +121,7 @@ Lo que los tests automatizados *no* cubren, y cómo se gestionaron esos huecos:
 
 ---
 
-## Decisiones de diseño
+## 🎯 Decisiones de diseño
 
 **Nunca bloquear la descarga por verificación de email.** Evaluado y rechazado explícitamente — el plan gratuito de Kit no tiene forma fiable de notificar a la app de una suscripción confirmada sin una pantalla de espera con polling, y la fracción de usuarios que abandonarían en vez de esperar no compensaba. El email se sigue capturando y enviando a Kit; simplemente nunca condiciona la descarga del certificado.
 
@@ -122,7 +133,7 @@ Lo que los tests automatizados *no* cubren, y cómo se gestionaron esos huecos:
 
 ---
 
-## Estructura del repositorio
+## 📁 Estructura del repositorio
 
 ```
 Dino-discovery/
@@ -148,7 +159,7 @@ Dino-discovery/
 
 ---
 
-## Historial de versiones
+## 🕓 Historial de versiones
 
 | Versión | Highlights |
 |---|---|
@@ -162,7 +173,7 @@ Detalle completo por release: [GitHub Releases](https://github.com/melinDross/Di
 
 ---
 
-## Ideas evaluadas y no implementadas
+## 🚫 Ideas evaluadas y no implementadas
 
 De `docs/future-features.md` — se mantienen aquí porque *decidir no construir algo* es tan decisión de producto como construirlo:
 
@@ -174,7 +185,7 @@ De `docs/future-features.md` — se mantienen aquí porque *decidir no construir
 
 ---
 
-## Ejecutarlo en local
+## ⚙️ Ejecutarlo en local
 
 ```bash
 npm install
@@ -199,6 +210,6 @@ Para el stack completo en local (frontend + Cloudflare Pages Functions), copia `
 
 ---
 
-## Repositorio
+## 🔗 Repositorio
 
 [github.com/melinDross/DinoDiscovery](https://github.com/melinDross/DinoDiscovery)
