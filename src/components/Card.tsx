@@ -307,20 +307,64 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
           />
         )}
 
-        {/* Specular glare — a second, independent foil layer on top of the
-            rainbow sheen above. One gradient reacting to tilt reads as "a
+        {/* Diffraction bands — a third foil layer, between the broad rainbow
+            sweep and the glare below/above respectively. Two independent
+            `repeating-linear-gradient`s at different angles, each reacting
+            to a *different* axis of `foilTilt` (the steep-angle stripes to
+            `x`, the shallow-angle ones to `y`) and at different pixel
+            offsets, so the two stripe patterns visibly cross and re-align
+            as the card tilts, rather than moving in lockstep. This is
+            closer to how a real diffraction-grating hologram (the shiny
+            foil on real trading cards) actually looks — several fine bands
+            that separate and converge with viewing angle — than a single
+            smooth gradient can get. Kept as a third layer rather than
+            replacing the broad rainbow sweep, since the two serve different
+            jobs: the sweep gives an overall color wash, this gives fine
+            structure/texture within it. */}
+        {isFoilEligible && (
+          <div
+            aria-hidden="true"
+            className="absolute pointer-events-none mix-blend-overlay z-40"
+            style={{
+              ...artLayerStyle,
+              borderTopLeftRadius: 8,
+              borderTopRightRadius: 8,
+              opacity: 0.35,
+              backgroundImage:
+                'repeating-linear-gradient(70deg,' +
+                'rgba(255,80,180,0.55) 0px,' +
+                'rgba(255,225,80,0.55) 5px,' +
+                'rgba(110,255,200,0.55) 10px,' +
+                'rgba(90,140,255,0.55) 15px,' +
+                'rgba(255,80,180,0.55) 20px),' +
+                'repeating-linear-gradient(20deg,' +
+                'transparent 0px,' +
+                'rgba(255,255,255,0.4) 3px,' +
+                'transparent 7px)',
+              backgroundPosition:
+                `${foilTilt.x * 60}px ${foilTilt.y * 20}px, ` +
+                `${foilTilt.y * 70}px ${foilTilt.x * 20}px`,
+              WebkitMaskImage:
+                'linear-gradient(to bottom, black 0%, black 72%, transparent 100%)',
+              maskImage: 'linear-gradient(to bottom, black 0%, black 72%, transparent 100%)',
+            }}
+          />
+        )}
+
+        {/* Specular glare — a fourth, independent foil layer on top of
+            everything above. One gradient reacting to tilt reads as "a
             stripe sliding across the card," not "shimmering" — real foil
             (and the well-known CSS holo-card techniques it's modeled on)
-            gets its liveliness from *two* things moving differently at
-            once: a slow, broad rainbow sweep (above) and a small, fast
-            bright glint that moves like a reflected light source (this
-            layer). Both read `foilTilt`, but this one uses a much larger
-            multiplier so it visibly darts around while the rainbow layer
-            is still gently sweeping — that speed difference between the
-            two layers is what actually sells "alive" instead of "sliding".
+            gets its liveliness from multiple things moving differently at
+            once: a slow, broad rainbow sweep, fine diffraction bands
+            (both above), and a small, fast bright glint that moves like a
+            reflected light source (this layer). All three read `foilTilt`,
+            but this one uses a much larger multiplier so it visibly darts
+            around while the other layers move more slowly — that speed
+            difference is what actually sells "alive" instead of "sliding".
             `mix-blend-screen` (not overlay, used above) always brightens
             like a highlight would, which is correct for a glint but would
-            wash out the habitat art if used for the broad rainbow layer
+            wash out the habitat art if used for the broader layers
             (see the overlay-vs-color-dodge note above). */}
         {isFoilEligible && (
           <div
