@@ -15,8 +15,15 @@ import {
 // the other three: parchment/museum-plate, comic/sticker, and the original
 // green/purple fantasy look) to lean into the alternate-reality-game
 // "species discovery" framing more explicitly than the previous style.
-const FRAME_BORDER_COLOR = '#0a1420';
-const FRAME_BG = '#050b12';
+// The frame ring itself is a separate warm amber gradient (not the cyan
+// glass tone used inside) — picked from a 4-color live comparison
+// (cyan/indigo/amber/emerald) for warmth against the cool interior glow,
+// and a plain gradient over two textured options (hammered/scaled) tried
+// alongside it — the flat gradient read as cleaner at the ring's 20px
+// width, where a repeating pattern felt busy/noisy up close.
+const FRAME_BORDER_COLOR = '#5a3a10';
+const FRAME_BG = '#160f06';
+const FRAME_TEXTURE = `linear-gradient(160deg, #caa03a 0%, #8a5a1a 50%, ${FRAME_BORDER_COLOR} 100%)`;
 const TEXT_COLOR = '#d6faff';
 const PANEL_BACKGROUND =
   'radial-gradient(circle at 10% 0%, rgba(0,255,225,0.22), transparent 55%),' +
@@ -139,13 +146,10 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             here. The dino and the text/tag overlay are rendered as later
             siblings below, on top of this, so they're never clipped by it. */}
         <div
-          className="border-[20px] rounded-[4px] overflow-hidden shadow-[inset_0_0_40px_rgba(0,255,225,0.08)]"
-          style={{
-            borderColor: FRAME_BORDER_COLOR,
-            backgroundColor: FRAME_BG,
-            color: TEXT_COLOR,
-          }}
+          className="p-[20px] rounded-[28px] overflow-hidden shadow-[inset_0_0_40px_rgba(0,0,0,0.35)]"
+          style={{ backgroundImage: FRAME_TEXTURE, color: TEXT_COLOR }}
         >
+          <div className="rounded-[10px] overflow-hidden" style={{ backgroundColor: FRAME_BG }}>
           <div className="relative h-[440px] bg-surface2 overflow-hidden">
             <img
               src={habitatBackground.path}
@@ -222,6 +226,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             </span>
             <span className="text-right">{discoveryDate}</span>
           </div>
+        </div>
         </div>
 
         {/* The dino: above the framed box and not clipped by it, so a large
