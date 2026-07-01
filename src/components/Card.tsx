@@ -270,16 +270,26 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
           >
             {RARITY_LABELS[rarity]}
           </span>
-          <span
-            className="absolute bottom-[27%] left-3 px-2 py-1 shadow-lg text-[11px] uppercase tracking-wide border rounded-[4px]"
-            style={{
-              backgroundColor: BADGE_BG,
-              borderColor: PANEL_BORDER_COLOR,
-              color: TEXT_COLOR,
-            }}
+          {/* Habitat sub-biome tag: a bar flush against the left edge of
+              the art, like a spine label on a book — the text is centered
+              within the strip and rotated -90deg, rather than floating
+              over the art as a horizontal pill, so it reads as part of the
+              frame's structure. Chosen from a 3-way live-preview comparison
+              (a rotated version of the old pill, and a bookmark-ribbon tab
+              poking past the edge — both since deleted). Spans the middle
+              60% of the art height (not the full height) so it doesn't
+              collide with the species-ID pill in the top-left corner. */}
+          <div
+            className="absolute left-0 top-[20%] bottom-[20%] w-7 flex items-center justify-center border-r shadow-lg"
+            style={{ backgroundColor: BADGE_BG, borderColor: PANEL_BORDER_COLOR }}
           >
-            {habitatBackground.name}
-          </span>
+            <span
+              className="text-[11px] uppercase tracking-wide whitespace-nowrap"
+              style={{ color: TEXT_COLOR, transform: 'rotate(-90deg)' }}
+            >
+              {habitatBackground.name}
+            </span>
+          </div>
           <div
             className="absolute bottom-0 left-0 right-0 px-4 pt-20 pb-3"
             style={{
