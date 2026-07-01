@@ -93,63 +93,116 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const flipperRef = useRef<HTMLDivElement>(null);
+  const glowCanvasRef = useRef<HTMLCanvasElement>(null);
   const [scale, setScale] = useState(1);
   const [naturalHeight, setNaturalHeight] = useState(0);
+  // Mirrors of `scale`/`naturalHeight` for the glow rAF loop below, so it
+  // can read current layout numbers every frame without re-running the
+  // effect (and restarting the entrance burst) on every resize.
+  const scaleRef = useRef(1);
+  const naturalHeightRef = useRef(0);
+  scaleRef.current = scale;
+  naturalHeightRef.current = naturalHeight;
 
   const rarity = calculateRarity(attrs);
   const glowColor = GLOW_RGB_BY_RARITY[rarity];
 
-  // JS-driven glow loop — imperative rAF writes `filter` directly on
-  // innerRef (.card-scene-wrapper) every frame instead of using a CSS
-  // animation. This must target the wrapper *outside* .card-perspective,
-  // not flipperRef (.card-flipper): that element lives inside the 3D
-  // transform context, and continuously mutating any visual property on it
-  // — even via rAF, not just CSS `animation` — reintroduces the same iOS
-  // Safari bug the card-scene-wrapper split exists to avoid (raw habitat
-  // background showing through during drag). Animating `filter` here
-  // composes with the wrapper's own static drop-shadow (see index.css) by
-  // concatenating filter functions each frame.
+  // Traces a rounded-rect path manually (rather than relying on
+  // ctx.roundRect, unsupported on iOS Safari < 16) so the glow stroke
+  // follows the card's actual rounded shape instead of a plain rectangle.
+  function tracePillPath(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    r: number
+  ) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + r, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y + h - r, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + r, y, r);
+    ctx.closePath();
+  }
+
+  // Rarity glow — Option D: an absolutely-positioned <canvas> drawn above
+  // the whole card scene, sharing no rendering context with the 3D
+  // transform tree at all. Two earlier attempts both failed for reasons
+  // tied to that 3D tree: animating `box-shadow` on flipperRef
+  // (.card-flipper, inside .card-perspective) reintroduced the iOS habitat-
+  // flash compositing bug; animating `filter` on innerRef
+  // (.card-scene-wrapper, an ancestor of .card-perspective) rendered
+  // nothing at all — WebKit/Chromium don't reliably rasterize `filter` on
+  // an ancestor of a `preserve-3d` subtree. A canvas overlay is a fully
+  // separate element with its own 2D rendering context, so neither failure
+  // mode can occur; the trade-off (also true of both prior attempts) is
+  // that the glow doesn't visually rotate with the card mid-flip.
   useEffect(() => {
-    const el = innerRef.current;
-    if (!glowColor || !el) return;
+    const canvas = glowCanvasRef.current;
+    const outer = outerRef.current;
+    if (!glowColor || !canvas || !outer) return;
 
-    const baseFilter =
-      'drop-shadow(0 20px 40px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 30px rgba(178, 255, 0, 0.10))';
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return; // e.g. jsdom in tests, or unsupported environments
 
+    const CARD_RADIUS_PX = 48; // must match .card-flipper's border-radius
     const startTime = performance.now();
-    const BURST_MS = 600;      // entrance flash duration
-    const PULSE_MS = 2400;     // breathing cycle
+    const BURST_MS = 600;  // entrance flash duration
+    const PULSE_MS = 2400; // breathing cycle
 
     let rafId: number;
 
     function frame(now: number) {
-      const elapsed = now - startTime;
+      const dpr = window.devicePixelRatio || 1;
+      const cssWidth = outer!.offsetWidth;
+      const cssHeight = outer!.offsetHeight;
+      if (canvas!.width !== cssWidth * dpr || canvas!.height !== cssHeight * dpr) {
+        canvas!.width = cssWidth * dpr;
+        canvas!.height = cssHeight * dpr;
+      }
+      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx!.clearRect(0, 0, cssWidth, cssHeight);
 
-      let innerPx: number, outerPx: number, innerA: number, outerA: number;
+      const elapsed = now - startTime;
+      let blur: number, alpha: number, lineWidth: number;
 
       if (elapsed < BURST_MS) {
         // Entrance burst: ramp up to peak at 40%, settle back to idle by 100%
         const t = elapsed / BURST_MS;
         const burst = t < 0.4 ? t / 0.4 : 1 - (t - 0.4) / 0.6;
-        innerPx = 18 + burst * 52;
-        innerA  = 0.45 + burst * 0.5;
-        outerPx = 40 + burst * 90;
-        outerA  = 0.20 + burst * 0.35;
+        blur = 24 + burst * 46;
+        alpha = 0.55 + burst * 0.4;
+        lineWidth = 4 + burst * 4;
       } else {
         // Smooth breathing sine wave
         const phase = ((elapsed - BURST_MS) / PULSE_MS) * Math.PI * 2;
         const breath = Math.sin(phase) * 0.5 + 0.5; // 0→1→0
-        innerPx = 18 + breath * 17;
-        innerA  = 0.45 + breath * 0.30;
-        outerPx = 40 + breath * 30;
-        outerA  = 0.20 + breath * 0.15;
+        blur = 24 + breath * 20;
+        alpha = 0.5 + breath * 0.3;
+        lineWidth = 4 + breath * 2;
       }
 
-      if (!el) return;
-      el.style.filter =
-        `${baseFilter} ` +
-        `drop-shadow(0 0 ${innerPx}px rgba(${glowColor},${innerA})) ` +
-        `drop-shadow(0 0 ${outerPx}px rgba(${glowColor},${outerA}))`;
+      const cardWidth = CARD_NATURAL_WIDTH * scaleRef.current;
+      const cardHeight = naturalHeightRef.current * scaleRef.current;
+      const x = (cssWidth - cardWidth) / 2;
+      const radius = CARD_RADIUS_PX * scaleRef.current;
+
+      if (cardWidth > 0 && cardHeight > 0) {
+        ctx!.save();
+        ctx!.shadowColor = `rgba(${glowColor}, ${alpha})`;
+        ctx!.shadowBlur = blur;
+        ctx!.strokeStyle = `rgba(${glowColor}, ${alpha})`;
+        ctx!.lineWidth = lineWidth;
+        tracePillPath(ctx!, x, 0, cardWidth, cardHeight, radius);
+        ctx!.stroke();
+        ctx!.restore();
+      }
 
       rafId = requestAnimationFrame(frame);
     }
@@ -157,7 +210,7 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
     rafId = requestAnimationFrame(frame);
     return () => {
       cancelAnimationFrame(rafId);
-      if (innerRef.current) innerRef.current.style.filter = '';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
     };
   }, [glowColor]);
 
@@ -388,6 +441,11 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
             </div>
           </div>
         </div>
+        <canvas
+          ref={glowCanvasRef}
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full pointer-events-none z-40"
+        />
       </div>
       <button
         type="button"
