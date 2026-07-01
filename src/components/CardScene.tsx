@@ -131,18 +131,20 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
     ctx.closePath();
   }
 
-  // Rarity glow — Option D: an absolutely-positioned <canvas> drawn above
-  // the whole card scene, sharing no rendering context with the 3D
-  // transform tree at all. Two earlier attempts both failed for reasons
-  // tied to that 3D tree: animating `box-shadow` on flipperRef
+  // Rarity glow — Option D: a <canvas> positioned first in DOM order
+  // (i.e. *behind* the card visually), sharing no rendering context with
+  // the 3D transform tree at all. Two earlier attempts both failed for
+  // reasons tied to that 3D tree: animating `box-shadow` on flipperRef
   // (.card-flipper, inside .card-perspective) reintroduced the iOS habitat-
   // flash compositing bug; animating `filter` on innerRef
   // (.card-scene-wrapper, an ancestor of .card-perspective) rendered
   // nothing at all — WebKit/Chromium don't reliably rasterize `filter` on
-  // an ancestor of a `preserve-3d` subtree. A canvas overlay is a fully
-  // separate element with its own 2D rendering context, so neither failure
-  // mode can occur; the trade-off (also true of both prior attempts) is
-  // that the glow doesn't visually rotate with the card mid-flip.
+  // an ancestor of a `preserve-3d` subtree. The canvas avoids both, but
+  // being a separate element it has no automatic occlusion the way CSS
+  // box-shadow does (an element's own opaque box always hides a
+  // box-shadow's inward bleed) — see the fill-behind-the-card note below
+  // for how that's faked. Trade-off (also true of both prior attempts):
+  // the glow doesn't visually rotate with the card mid-flip.
   useEffect(() => {
     const canvas = glowCanvasRef.current;
     const outer = outerRef.current;
@@ -170,22 +172,20 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
       ctx!.clearRect(0, 0, cssWidth, cssHeight);
 
       const elapsed = now - startTime;
-      let blur: number, alpha: number, lineWidth: number;
+      let blur: number, alpha: number;
 
       if (elapsed < BURST_MS) {
         // Entrance burst: ramp up to peak at 40%, settle back to idle by 100%
         const t = elapsed / BURST_MS;
         const burst = t < 0.4 ? t / 0.4 : 1 - (t - 0.4) / 0.6;
-        blur = 24 + burst * 46;
-        alpha = 0.55 + burst * 0.4;
-        lineWidth = 4 + burst * 4;
+        blur = 40 + burst * 90;
+        alpha = 0.5 + burst * 0.45;
       } else {
         // Smooth breathing sine wave
         const phase = ((elapsed - BURST_MS) / PULSE_MS) * Math.PI * 2;
         const breath = Math.sin(phase) * 0.5 + 0.5; // 0→1→0
-        blur = 24 + breath * 20;
-        alpha = 0.5 + breath * 0.3;
-        lineWidth = 4 + breath * 2;
+        blur = 40 + breath * 30;
+        alpha = 0.45 + breath * 0.3;
       }
 
       const cardWidth = CARD_NATURAL_WIDTH * scaleRef.current;
@@ -194,13 +194,19 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
       const radius = CARD_RADIUS_PX * scaleRef.current;
 
       if (cardWidth > 0 && cardHeight > 0) {
+        // Filled (not stroked) and drawn *behind* the card in DOM order —
+        // the card's own opaque content covers the fill plus the shadow's
+        // inward bleed, leaving only the soft outward halo visible past its
+        // edges. This is what actual CSS box-shadow does implicitly; a
+        // canvas has no such automatic occlusion, so it has to be faked by
+        // z-ordering rather than by only stroking a thin outline (which
+        // read as a hard ring around the card instead of ambient light).
         ctx!.save();
         ctx!.shadowColor = `rgba(${glowColor}, ${alpha})`;
         ctx!.shadowBlur = blur;
-        ctx!.strokeStyle = `rgba(${glowColor}, ${alpha})`;
-        ctx!.lineWidth = lineWidth;
+        ctx!.fillStyle = `rgba(${glowColor}, ${alpha})`;
         tracePillPath(ctx!, x, 0, cardWidth, cardHeight, radius);
-        ctx!.stroke();
+        ctx!.fill();
         ctx!.restore();
       }
 
@@ -399,6 +405,11 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
           height: naturalHeight ? (naturalHeight + DINO_OVERFLOW_BUFFER_PX) * scale : undefined,
         }}
       >
+        <canvas
+          ref={glowCanvasRef}
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full pointer-events-none"
+        />
         <div
           ref={innerRef}
           className="absolute left-1/2 top-0 card-scene-wrapper"
@@ -441,11 +452,6 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
             </div>
           </div>
         </div>
-        <canvas
-          ref={glowCanvasRef}
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full pointer-events-none z-40"
-        />
       </div>
       <button
         type="button"
