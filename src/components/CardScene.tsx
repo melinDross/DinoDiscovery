@@ -1,7 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { GenerateDinoResponse, DinoAttributes } from '../../shared/types';
 import { Card } from './Card';
-import { calculateRarity, type Rarity } from '../utils/speciesHash';
 import { CARD_BACK_PATH } from '../data/cardTheme';
 
 interface CardSceneProps {
@@ -58,16 +57,6 @@ const FLIP_TRANSITION = `transform ${FLIP_DURATION_MS}ms ease-out`;
 const SPIN_TRANSITION = `transform ${SPIN_DURATION_MS}ms ease-in-out`;
 const NO_TRANSITION = 'none';
 
-// "Shiny card" idle glow, keyed by rarity tier — common/uncommon don't glow
-// (undefined), rare/epic/legendary do, each in a color that roughly matches
-// its RARITY_BADGE_COLORS hue (blue/purple/gold) so the glow reads as
-// "this rarity" rather than just "expensive-looking".
-const GLOW_RGB_BY_RARITY: Partial<Record<Rarity, string>> = {
-  rare: '64, 140, 255',
-  epic: '190, 90, 255',
-  legendary: '255, 150, 0',
-};
-
 export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   const [hasFlippedIn, setHasFlippedIn] = useState(false);
   const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
@@ -93,132 +82,8 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const flipperRef = useRef<HTMLDivElement>(null);
-  const glowCanvasRef = useRef<HTMLCanvasElement>(null);
   const [scale, setScale] = useState(1);
   const [naturalHeight, setNaturalHeight] = useState(0);
-  // Mirrors of `scale`/`naturalHeight` for the glow rAF loop below, so it
-  // can read current layout numbers every frame without re-running the
-  // effect (and restarting the entrance burst) on every resize.
-  const scaleRef = useRef(1);
-  const naturalHeightRef = useRef(0);
-  scaleRef.current = scale;
-  naturalHeightRef.current = naturalHeight;
-
-  const rarity = calculateRarity(attrs);
-  const glowColor = GLOW_RGB_BY_RARITY[rarity];
-
-  // Traces a rounded-rect path manually (rather than relying on
-  // ctx.roundRect, unsupported on iOS Safari < 16) so the glow stroke
-  // follows the card's actual rounded shape instead of a plain rectangle.
-  function tracePillPath(
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    w: number,
-    h: number,
-    r: number
-  ) {
-    ctx.beginPath();
-    ctx.moveTo(x + r, y);
-    ctx.lineTo(x + w - r, y);
-    ctx.arcTo(x + w, y, x + w, y + r, r);
-    ctx.lineTo(x + w, y + h - r);
-    ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
-    ctx.lineTo(x + r, y + h);
-    ctx.arcTo(x, y + h, x, y + h - r, r);
-    ctx.lineTo(x, y + r);
-    ctx.arcTo(x, y, x + r, y, r);
-    ctx.closePath();
-  }
-
-  // Rarity glow — Option D: a <canvas> positioned first in DOM order
-  // (i.e. *behind* the card visually), sharing no rendering context with
-  // the 3D transform tree at all. Two earlier attempts both failed for
-  // reasons tied to that 3D tree: animating `box-shadow` on flipperRef
-  // (.card-flipper, inside .card-perspective) reintroduced the iOS habitat-
-  // flash compositing bug; animating `filter` on innerRef
-  // (.card-scene-wrapper, an ancestor of .card-perspective) rendered
-  // nothing at all — WebKit/Chromium don't reliably rasterize `filter` on
-  // an ancestor of a `preserve-3d` subtree. The canvas avoids both, but
-  // being a separate element it has no automatic occlusion the way CSS
-  // box-shadow does (an element's own opaque box always hides a
-  // box-shadow's inward bleed) — see the fill-behind-the-card note below
-  // for how that's faked. Trade-off (also true of both prior attempts):
-  // the glow doesn't visually rotate with the card mid-flip.
-  useEffect(() => {
-    const canvas = glowCanvasRef.current;
-    const outer = outerRef.current;
-    if (!glowColor || !canvas || !outer) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return; // e.g. jsdom in tests, or unsupported environments
-
-    const CARD_RADIUS_PX = 48; // must match .card-flipper's border-radius
-    const startTime = performance.now();
-    const BURST_MS = 600;  // entrance flash duration
-    const PULSE_MS = 2400; // breathing cycle
-
-    let rafId: number;
-
-    function frame(now: number) {
-      const dpr = window.devicePixelRatio || 1;
-      const cssWidth = outer!.offsetWidth;
-      const cssHeight = outer!.offsetHeight;
-      if (canvas!.width !== cssWidth * dpr || canvas!.height !== cssHeight * dpr) {
-        canvas!.width = cssWidth * dpr;
-        canvas!.height = cssHeight * dpr;
-      }
-      ctx!.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx!.clearRect(0, 0, cssWidth, cssHeight);
-
-      const elapsed = now - startTime;
-      let blur: number, alpha: number;
-
-      if (elapsed < BURST_MS) {
-        // Entrance burst: ramp up to peak at 40%, settle back to idle by 100%
-        const t = elapsed / BURST_MS;
-        const burst = t < 0.4 ? t / 0.4 : 1 - (t - 0.4) / 0.6;
-        blur = 40 + burst * 90;
-        alpha = 0.5 + burst * 0.45;
-      } else {
-        // Smooth breathing sine wave
-        const phase = ((elapsed - BURST_MS) / PULSE_MS) * Math.PI * 2;
-        const breath = Math.sin(phase) * 0.5 + 0.5; // 0→1→0
-        blur = 40 + breath * 30;
-        alpha = 0.45 + breath * 0.3;
-      }
-
-      const cardWidth = CARD_NATURAL_WIDTH * scaleRef.current;
-      const cardHeight = naturalHeightRef.current * scaleRef.current;
-      const x = (cssWidth - cardWidth) / 2;
-      const radius = CARD_RADIUS_PX * scaleRef.current;
-
-      if (cardWidth > 0 && cardHeight > 0) {
-        // Filled (not stroked) and drawn *behind* the card in DOM order —
-        // the card's own opaque content covers the fill plus the shadow's
-        // inward bleed, leaving only the soft outward halo visible past its
-        // edges. This is what actual CSS box-shadow does implicitly; a
-        // canvas has no such automatic occlusion, so it has to be faked by
-        // z-ordering rather than by only stroking a thin outline (which
-        // read as a hard ring around the card instead of ambient light).
-        ctx!.save();
-        ctx!.shadowColor = `rgba(${glowColor}, ${alpha})`;
-        ctx!.shadowBlur = blur;
-        ctx!.fillStyle = `rgba(${glowColor}, ${alpha})`;
-        tracePillPath(ctx!, x, 0, cardWidth, cardHeight, radius);
-        ctx!.fill();
-        ctx!.restore();
-      }
-
-      rafId = requestAnimationFrame(frame);
-    }
-
-    rafId = requestAnimationFrame(frame);
-    return () => {
-      cancelAnimationFrame(rafId);
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    };
-  }, [glowColor]);
 
   if (!hasFlippedIn) {
     // Triggers the flip-in transition on the first paint after mount.
@@ -405,11 +270,6 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
           height: naturalHeight ? (naturalHeight + DINO_OVERFLOW_BUFFER_PX) * scale : undefined,
         }}
       >
-        <canvas
-          ref={glowCanvasRef}
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full pointer-events-none"
-        />
         <div
           ref={innerRef}
           className="absolute left-1/2 top-0 card-scene-wrapper"
@@ -437,7 +297,12 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
               }}
             >
               <div className="card-face" style={{ visibility: facing === 'front' ? 'visible' : 'hidden' }}>
-                <Card discovererName={discovererName} result={result} attrs={attrs} />
+                <Card
+                  discovererName={discovererName}
+                  result={result}
+                  attrs={attrs}
+                  foilTilt={{ x: tilt.rotateY / MAX_TILT_DEG, y: -tilt.rotateX / MAX_TILT_DEG }}
+                />
               </div>
               <div
                 className="card-face card-face-back"

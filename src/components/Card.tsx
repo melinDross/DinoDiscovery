@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useState } from 'react';
 import type { GenerateDinoResponse, DinoAttributes } from '../../shared/types';
-import { generateSpeciesId, calculateRarity, calculateRarityScore } from '../utils/speciesHash';
+import { generateSpeciesId, calculateRarity, calculateRarityScore, type Rarity } from '../utils/speciesHash';
 import { cutoutDinoImage } from '../utils/dinoCutout';
 import {
   RARITY_LABELS,
@@ -38,7 +38,17 @@ export interface CardProps {
   discovererName: string;
   result: GenerateDinoResponse;
   attrs: DinoAttributes;
+  // Normalized -1..1 tilt, from CardScene's live mouse/touch tilt state.
+  // Drives the holo-foil sheen's position (see below) so it visibly sweeps
+  // as the card is tilted, like real foil trading cards. Optional/defaulted
+  // so Card can still be used standalone (e.g. the hidden html2canvas
+  // capture node in App.tsx) without CardScene wiring this through.
+  foilTilt?: { x: number; y: number };
 }
+
+// Rarity tiers eligible for the holo-foil sheen — same tiers that got the
+// (now-removed) rarity glow, so common/uncommon stay visually plainer.
+const FOIL_ELIGIBLE_RARITIES: ReadonlySet<Rarity> = new Set(['rare', 'epic', 'legendary']);
 
 // Must match the frame's border-[20px] and the art area's h-[ART_HEIGHT_PX]
 // below. Stacking, from back to front: the framed box (background art,
@@ -51,7 +61,7 @@ const CARD_BORDER_PX = 20;
 const ART_HEIGHT_PX = 440;
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ discovererName, result, attrs }, ref) => {
+  ({ discovererName, result, attrs, foilTilt = { x: 0, y: 0 } }, ref) => {
     const discoveryDate = new Date().toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',
@@ -59,6 +69,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     });
     const speciesId = generateSpeciesId({ ...attrs });
     const rarity = calculateRarity(attrs);
+    const isFoilEligible = FOIL_ELIGIBLE_RARITIES.has(rarity);
     const score = calculateRarityScore(attrs);
     const stars = '★'.repeat(RARITY_STAR_COUNT[rarity]);
     const cutoutImageUrl = useDinoCutout(result.imageUrl);
@@ -238,6 +249,50 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             </p>
           </div>
         </div>
+
+        {/* Holo-foil sheen — rare/epic/legendary only, matching the tiers
+            that previously got a rarity glow (see CLAUDE.md for the glow's
+            history: it went through a rarity-colored <canvas> before being
+            dropped for this foil look instead). Sits above the dino (z-20)
+            and the text overlay (z-30) since a real foil laminate covers
+            the whole card front, but its own mask fades it out before it
+            reaches the description text block so legibility isn't
+            affected — the description's own gradient backing already
+            starts around the same point (see the text overlay above).
+            `background-position` is driven directly by `foilTilt`, which
+            CardScene derives from its existing mouse/touch tilt state — no
+            new render loop, just one more inline style write alongside the
+            ones tilt already causes every frame it changes. This piggybacks
+            on `transform`/tilt-driven interaction, the one class of
+            continuous update already proven safe inside this 3D scene,
+            instead of the `box-shadow`/`filter` properties that broke
+            things in earlier rarity-glow attempts (see CLAUDE.md). */}
+        {isFoilEligible && (
+          <div
+            aria-hidden="true"
+            className="absolute pointer-events-none mix-blend-color-dodge z-40"
+            style={{
+              ...artLayerStyle,
+              borderTopLeftRadius: 8,
+              borderTopRightRadius: 8,
+              opacity: 0.5,
+              backgroundImage:
+                'linear-gradient(115deg,' +
+                'transparent 0%,' +
+                'rgba(255,80,180,0.9) 18%,' +
+                'rgba(255,225,80,0.9) 34%,' +
+                'rgba(110,255,200,0.9) 50%,' +
+                'rgba(90,140,255,0.9) 66%,' +
+                'rgba(255,80,180,0.9) 82%,' +
+                'transparent 100%)',
+              backgroundSize: '260% 260%',
+              backgroundPosition: `${50 + foilTilt.x * 30}% ${50 + foilTilt.y * 30}%`,
+              WebkitMaskImage:
+                'linear-gradient(to bottom, black 0%, black 72%, transparent 100%)',
+              maskImage: 'linear-gradient(to bottom, black 0%, black 72%, transparent 100%)',
+            }}
+          />
+        )}
       </div>
     );
   }
