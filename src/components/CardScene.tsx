@@ -56,13 +56,6 @@ const NO_TRANSITION = 'none';
 export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   const [hasFlippedIn, setHasFlippedIn] = useState(false);
   const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
-  // Pivot point for the .card-flipper transform, as a CSS transform-origin
-  // string. Defaults to the center, but is set to wherever a touch drag
-  // started (see handleTouchStart) so the rotation/tilt pivots around the
-  // point the user is actually "holding", instead of spinning the whole
-  // card around its center regardless of where they touched — this is what
-  // makes it feel like grabbing a physical card at that spot.
-  const [dragOrigin, setDragOrigin] = useState('50% 50%');
   const [transition, setTransition] = useState(FLIP_TRANSITION);
   const [spinDeg, setSpinDeg] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -159,16 +152,17 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   // desktop hover effect already uses, so dragging up/down visibly tips the
   // card toward/away from the viewer instead of doing nothing.
   //
-  // Crucially, the pivot for both is `dragOrigin` — set from the touch's
-  // own position on the card at the start of the drag (see handleTouchStart)
-  // instead of staying at the card's center. Without that, dragging felt
-  // like spinning a flat disc regardless of where you touched; anchoring
-  // the transform-origin to the touch point makes it feel like grabbing the
-  // physical card at that spot, since the grabbed point stays roughly put
-  // while the rest of the card rotates/tilts around it.
+  // The pivot stays at the card's default center (no custom transform-origin
+  // here) — an earlier version anchored it to wherever the touch started,
+  // to make dragging feel like grabbing the card at that spot, but an
+  // off-center pivot combined with 3D perspective visibly translates the
+  // whole element toward whichever edge was touched (worse near the
+  // corners), which read as broken rather than "grabbed". Reverted on
+  // explicit feedback; don't reintroduce without a way to keep the element
+  // visually centered despite the off-center pivot.
   //
-  // An earlier version routed vertical movement to page-scroll passthrough
-  // instead of driving the card at all; that was superseded on explicit
+  // An earlier version also routed vertical movement to page-scroll
+  // passthrough instead of driving the card at all; that was superseded on
   // request — touching the card while dragging always drives the card now,
   // not the page (see `touch-action: none` on .card-perspective in index.css).
   function handleTouchStart(event: React.TouchEvent<HTMLDivElement>) {
@@ -178,13 +172,6 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
     dragStartXRef.current = touch.clientX;
     dragStartYRef.current = touch.clientY;
     dragBaseSpinRef.current = spinDeg;
-
-    const rect = flipperRef.current?.getBoundingClientRect();
-    if (rect && rect.width > 0 && rect.height > 0) {
-      const originXPercent = ((touch.clientX - rect.left) / rect.width) * 100;
-      const originYPercent = ((touch.clientY - rect.top) / rect.height) * 100;
-      setDragOrigin(`${originXPercent}% ${originYPercent}%`);
-    }
   }
 
   function handleTouchMove(event: React.TouchEvent<HTMLDivElement>) {
@@ -221,7 +208,6 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
         return snapped - baseFlipDeg;
       });
       setTransition(DRAG_SNAP_TRANSITION);
-      setDragOrigin('50% 50%');
       setTilt({ rotateX: 0, rotateY: 0 });
       return;
     }
@@ -231,7 +217,6 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
 
   function handleSpinClick() {
     dragStartXRef.current = null;
-    setDragOrigin('50% 50%');
     if (spinTimeoutRef.current !== null) {
       clearTimeout(spinTimeoutRef.current);
     }
@@ -303,7 +288,6 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
               className="card-flipper"
               style={{
                 transform: `rotateX(${tilt.rotateX}deg) rotateY(${totalRotateY}deg)`,
-                transformOrigin: dragOrigin,
                 transition,
               }}
             >
@@ -312,7 +296,23 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
                   discovererName={discovererName}
                   result={result}
                   attrs={attrs}
-                  foilTilt={{ x: tilt.rotateY / MAX_TILT_DEG, y: -tilt.rotateX / MAX_TILT_DEG }}
+                  foilTilt={{
+                    // Driven by the card's actual total rotation (not just
+                    // live hover/drag tilt) so the foil visibly shifts as
+                    // the card is spun/flipped, not only while a mouse
+                    // happens to be hovering it. `sin` gives a smooth,
+                    // naturally bounded -1..1 value that cycles as the card
+                    // rotates all the way around, and is 0 at rest facing
+                    // the viewer head-on (0°/360°) so it doesn't fight the
+                    // resting position baked into Card.tsx's own gradient
+                    // offset. Using `tilt.rotateY` here (an earlier version
+                    // did) was a bug: that field is only ever set by desktop
+                    // mouse hover, never by touch drag, so on an actual
+                    // phone — the primary way anyone interacts with this
+                    // card — the foil never reacted to rotation at all.
+                    x: Math.sin((totalRotateY * Math.PI) / 180),
+                    y: -tilt.rotateX / MAX_TILT_DEG,
+                  }}
                 />
               </div>
               <div
