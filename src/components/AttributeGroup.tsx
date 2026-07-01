@@ -35,7 +35,7 @@ export function AttributeGroup<T extends string>({
             }}
             aria-pressed={selected === option}
             aria-label={option}
-            className={`flex flex-col items-stretch overflow-hidden w-[104px] sm:w-[126px] min-h-[44px] border rounded-2xl transition-colors ${
+            className={`flex flex-col items-stretch overflow-hidden w-[108px] sm:w-[132px] min-h-[44px] border rounded-2xl transition-colors ${
               selected === option
                 ? 'bg-brand/[0.12] border-brand shadow-[0_0_20px_rgba(236,26,143,0.3)]'
                 : 'bg-brand/5 border-brand/20 hover:border-brand/50'
@@ -45,7 +45,7 @@ export function AttributeGroup<T extends string>({
               src={ATTRIBUTE_MEDALLION_PATHS[option] ?? ''}
               alt=""
               aria-hidden="true"
-              className="w-full h-[84px] sm:h-[102px] object-contain pointer-events-none"
+              className="w-full h-[108px] sm:h-[132px] object-contain pointer-events-none"
             />
             <span className="flex-1 flex items-center justify-center px-1.5 py-2 font-display2 font-semibold text-cream uppercase tracking-wide text-xs sm:text-sm text-center leading-tight">
               {option}
