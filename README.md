@@ -227,4 +227,4 @@ For the full stack locally (frontend + Cloudflare Pages Functions), copy `.dev.v
 
 ---
 
-Found a bug, have an idea, or just want to say hi? [Open an issue](https://github.com/melinDross/DinoDiscovery/issues) — I read every one. If you liked the project and want to support the API costs of keeping the live demo running, [GitHub Sponsors](https://github.com/sponsors/melinDross) is very appreciated. ☕
+Found a bug, have an idea, or just want to say hi? [Open an issue](https://github.com/melinDross/DinoDiscovery/issues) — I read every one. If you liked the project and want to support the API costs of keeping the live demo running, [Ko-fi](https://ko-fi.com/melindross) is very appreciated. ☕
