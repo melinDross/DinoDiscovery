@@ -14,57 +14,63 @@ if (!apiKey) {
 
 const outDir = 'public/icons/medallions';
 
+// Colorful enamel/gemstone medallions, not a uniform dark-stone bas-relief
+// (the original look) — each attribute *category* gets its own accent
+// palette so the five medallion rows on a card read as visually distinct
+// groups instead of a monotone set, echoing the app's new pink/vibrant
+// branding without making every icon identically pink.
 const STYLE_PREFIX =
-  'A circular stone medallion icon for a dark-fantasy collectible card game, ' +
-  'bas-relief carving of ';
+  'A vibrant glossy enamel medallion icon for a colorful collectible card ' +
+  'game, bold flat-color illustration of ';
 const STYLE_SUFFIX =
-  ', engraved in dark grey stone, glowing purple rim light, dramatic ' +
-  'side lighting, centered composition, single icon, no text, no watermark, ' +
-  'transparent background';
+  ', rich saturated colors, glossy enamel/cloisonné finish with a subtle ' +
+  'metallic gold border ring, dramatic rim light in ACCENT_COLOR, centered ' +
+  'composition, single icon, no text, no watermark, transparent background';
 
 const ICONS = [
-  // size
-  { slug: 'diminuto', subject: 'a tiny shrew-like creature' },
-  { slug: 'pequeno', subject: 'a small lizard' },
-  { slug: 'mediano', subject: 'a medium-sized reptile silhouette' },
-  { slug: 'grande', subject: 'a large beast head' },
-  { slug: 'gigante', subject: 'a giant dinosaur silhouette' },
-  { slug: 'coloso', subject: 'a colossal hulking beast silhouette' },
-  // diet
-  { slug: 'carnivoro', subject: 'a sharp set of carnivore teeth' },
-  { slug: 'herbivoro', subject: 'a single leaf' },
-  { slug: 'omnivoro', subject: 'a leaf and a bone crossed' },
-  { slug: 'oofago', subject: 'a cracked egg' },
-  // feature
-  { slug: 'cuernos', subject: 'a pair of curved horns' },
-  { slug: 'alas', subject: 'a pair of dragon wings' },
-  { slug: 'escamas-coloridas', subject: 'colorful iridescent scales' },
-  { slug: 'cola-poderosa', subject: 'a powerful spiked tail' },
-  { slug: 'armadura', subject: 'an armored shield plate' },
-  { slug: 'super-garras', subject: 'sharp claws' },
-  // personality
-  { slug: 'feroz', subject: 'a roaring fanged mouth' },
-  { slug: 'amigable', subject: 'a friendly heart' },
-  { slug: 'veloz', subject: 'a lightning bolt motion trail' },
-  { slug: 'sigiloso', subject: 'a stealthy hooded shadow figure' },
-  // habitat
-  { slug: 'selva', subject: 'jungle leaves and vines' },
-  { slug: 'desierto', subject: 'a desert dune with a sun' },
-  { slug: 'oceano', subject: 'ocean waves' },
-  { slug: 'montana', subject: 'a snow-capped mountain peak' },
-  { slug: 'volcan', subject: 'an erupting volcano' },
-  { slug: 'artico', subject: 'a sharp ice crystal' },
-  // brand emblem (title bar logo)
+  // size — warm amber/orange
+  { slug: 'diminuto', subject: 'a tiny shrew-like creature', accent: 'warm amber-orange' },
+  { slug: 'pequeno', subject: 'a small lizard', accent: 'warm amber-orange' },
+  { slug: 'mediano', subject: 'a medium-sized reptile silhouette', accent: 'warm amber-orange' },
+  { slug: 'grande', subject: 'a large beast head', accent: 'warm amber-orange' },
+  { slug: 'gigante', subject: 'a giant dinosaur silhouette', accent: 'warm amber-orange' },
+  { slug: 'coloso', subject: 'a colossal hulking beast silhouette', accent: 'warm amber-orange' },
+  // diet — fresh green/teal
+  { slug: 'carnivoro', subject: 'a sharp set of carnivore teeth', accent: 'fresh green-teal' },
+  { slug: 'herbivoro', subject: 'a single leaf', accent: 'fresh green-teal' },
+  { slug: 'omnivoro', subject: 'a leaf and a bone crossed', accent: 'fresh green-teal' },
+  { slug: 'oofago', subject: 'a cracked egg', accent: 'fresh green-teal' },
+  // feature — hot pink/magenta (matches the app's brand accent)
+  { slug: 'cuernos', subject: 'a pair of curved horns', accent: 'hot pink-magenta' },
+  { slug: 'alas', subject: 'a pair of dragon wings', accent: 'hot pink-magenta' },
+  { slug: 'escamas-coloridas', subject: 'colorful iridescent scales', accent: 'hot pink-magenta' },
+  { slug: 'cola-poderosa', subject: 'a powerful spiked tail', accent: 'hot pink-magenta' },
+  { slug: 'armadura', subject: 'an armored shield plate', accent: 'hot pink-magenta' },
+  { slug: 'super-garras', subject: 'sharp claws', accent: 'hot pink-magenta' },
+  // personality — royal purple/violet
+  { slug: 'feroz', subject: 'a roaring fanged mouth', accent: 'royal purple-violet' },
+  { slug: 'amigable', subject: 'a friendly heart', accent: 'royal purple-violet' },
+  { slug: 'veloz', subject: 'a lightning bolt motion trail', accent: 'royal purple-violet' },
+  { slug: 'sigiloso', subject: 'a stealthy hooded shadow figure', accent: 'royal purple-violet' },
+  // habitat — sky blue/cyan
+  { slug: 'selva', subject: 'jungle leaves and vines', accent: 'sky blue-cyan' },
+  { slug: 'desierto', subject: 'a desert dune with a sun', accent: 'sky blue-cyan' },
+  { slug: 'oceano', subject: 'ocean waves', accent: 'sky blue-cyan' },
+  { slug: 'montana', subject: 'a snow-capped mountain peak', accent: 'sky blue-cyan' },
+  { slug: 'volcan', subject: 'an erupting volcano', accent: 'sky blue-cyan' },
+  { slug: 'artico', subject: 'a sharp ice crystal', accent: 'sky blue-cyan' },
+  // brand emblem (title bar logo) — full rainbow, it's the odd one out on purpose
   {
     slug: 'emblem',
     subject:
       'an ouroboros-like circular discovery symbol with a compass star at its center, ' +
       'a brand emblem',
+    accent: 'rainbow multicolor',
   },
 ];
 
-async function generateIcon(subject) {
-  const prompt = `${STYLE_PREFIX}${subject}${STYLE_SUFFIX}`;
+async function generateIcon(subject, accent) {
+  const prompt = `${STYLE_PREFIX}${subject}${STYLE_SUFFIX}`.replace('ACCENT_COLOR', accent);
   const response = await fetch('https://api.openai.com/v1/images/generations', {
     method: 'POST',
     headers: {
@@ -98,10 +104,10 @@ async function main() {
     await mkdir(outDir, { recursive: true });
   }
 
-  for (const { slug, subject } of ICONS) {
+  for (const { slug, subject, accent } of ICONS) {
     const outPath = `${outDir}/${slug}.png`;
     console.log(`Generating ${slug}.png ...`);
-    const buffer = await generateIcon(subject);
+    const buffer = await generateIcon(subject, accent);
     await writeFile(outPath, buffer);
     console.log(`  saved ${outPath} (${buffer.length} bytes)`);
   }
