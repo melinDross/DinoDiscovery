@@ -73,8 +73,8 @@ describe('CardScene', () => {
 
     const baseline = flipper.style.transform;
 
-    // Must start a drag first (axis-lock needs touchStart reference point),
-    // then move horizontally far enough to exceed DRAG_AXIS_LOCK_PX (8px).
+    // Must start a drag first to establish the touchStart reference point,
+    // then move horizontally to rotate.
     fireEvent.touchStart(perspective, { touches: [{ clientX: 100, clientY: 100 }] });
     fireEvent.touchMove(perspective, { touches: [{ clientX: 200, clientY: 100 }] });
     expect(flipper.style.transform).not.toBe(baseline);
@@ -83,11 +83,30 @@ describe('CardScene', () => {
     expect(flipper.style.transform).toBe(baseline);
   });
 
+  it('nudges the card position on a vertical drag without rotating it', () => {
+    render(<CardScene discovererName="Lucía" result={result} attrs={commonAttrs} />);
+    const perspective = document.querySelector('.card-perspective') as HTMLElement;
+    const flipper = document.querySelector('.card-flipper') as HTMLElement;
+
+    perspective.getBoundingClientRect = () =>
+      ({ left: 0, top: 0, width: 200, height: 200 }) as DOMRect;
+
+    const baseline = flipper.style.transform;
+
+    // Pure vertical drag: should translate the card (translate(...)) but
+    // not change its rotateY (rotation stays horizontal-only).
+    fireEvent.touchStart(perspective, { touches: [{ clientX: 100, clientY: 100 }] });
+    fireEvent.touchMove(perspective, { touches: [{ clientX: 100, clientY: 150 }] });
+    expect(flipper.style.transform).toMatch(/translate\(0px, \d+(\.\d+)?px\)/);
+    expect(flipper.style.transform).not.toBe(baseline);
+
+    fireEvent.touchEnd(perspective);
+    expect(flipper.style.transform).toBe(baseline);
+  });
+
   it('renders a .card-flipper element for both common and legendary rarity', () => {
-    // The rAF glow loop writes box-shadow imperatively on .card-flipper —
-    // there is no CSS class toggled for glow presence (that would cause the
-    // iOS Safari habitat-shows bug). Verify the flipper element exists for
-    // both rarities so the rAF loop has a target to write to.
+    // .card-flipper is the drag/tilt/spin transform target regardless of
+    // rarity — the holo-foil sheen (rarity-gated) lives in Card.tsx, not here.
     const { rerender } = render(
       <CardScene discovererName="Lucía" result={result} attrs={commonAttrs} />
     );

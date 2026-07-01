@@ -84,6 +84,15 @@ body {
        rendering, causing the card to show its habitat background on touch
        instead of the dino/overlay. The drop-shadow is applied on the
        .card-scene-wrapper div outside this element in CardScene.tsx. */
+    /* Vertical touch drags on the card now move the card itself (see
+       CardScene.tsx's handleTouchMove), not the page — an earlier version
+       let vertical drags fall through to page scroll instead, which needed
+       the default `touch-action: manipulation` inherited from html/body.
+       `touch-action: none` here stops the browser from also trying to pan
+       the page during the same gesture, which would otherwise fight the
+       JS-driven card movement. Touches starting outside this element are
+       unaffected, so the page still scrolls normally everywhere else. */
+    touch-action: none;
   }
 
   /* Wrapper that sits outside .card-perspective so its filter doesn't

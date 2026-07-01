@@ -46,10 +46,14 @@ const MAX_TILT_DEG = 15;
 const FLIP_DURATION_MS = 800;
 const SPIN_DURATION_MS = 1400;
 const DRAG_SENSITIVITY_DEG_PER_PX = 0.6;
-// How far a finger must travel (px) before we decide the gesture is
-// horizontal (card flip) vs vertical (page scroll). Once resolved the axis
-// is locked for the rest of that touch.
-const DRAG_AXIS_LOCK_PX = 8;
+// Both axes of a drag also nudge the card's on-screen position a little
+// (not just rotation) — DRAG_TRANSLATE_SENSITIVITY scales the raw finger
+// delta down before DRAG_TRANSLATE_MAX_PX clamps it, so dragging in a
+// circle visibly moves the card without ever letting it drift far from its
+// resting position. Deliberately much smaller than 1:1 ("a bit", not
+// "wherever you drag it").
+const DRAG_TRANSLATE_SENSITIVITY = 0.4;
+const DRAG_TRANSLATE_MAX_PX = 26;
 const DRAG_SNAP_TRANSITION = '320ms ease-out';
 const TILT_ACTIVE_TRANSITION = '80ms linear';
 const TILT_RESET_TRANSITION = '400ms ease-out';
@@ -60,6 +64,7 @@ const NO_TRANSITION = 'none';
 export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   const [hasFlippedIn, setHasFlippedIn] = useState(false);
   const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 });
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [transition, setTransition] = useState(FLIP_TRANSITION);
   const [spinDeg, setSpinDeg] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
@@ -75,9 +80,6 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   const dragStartXRef = useRef<number | null>(null);
   const dragStartYRef = useRef(0);
   const dragBaseSpinRef = useRef(0);
-  // 'h' = locked to horizontal (card flip), 'v' = locked to vertical (let
-  // page scroll, cancel card drag), null = not yet decided
-  const dragAxisRef = useRef<'h' | 'v' | null>(null);
 
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
@@ -148,15 +150,20 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
     setTilt({ rotateX: 0, rotateY: 0 });
   }
 
-  // Drag-to-rotate: the card follows the finger horizontally while dragging
-  // (no CSS transition — `spinDeg` is updated directly per touchmove, so the
-  // rendered rotation always matches the live drag position 1:1), and snaps
-  // Horizontal swipe → card flip (rotateY via spinDeg, snaps on release).
-  // Vertical swipe → page scroll (we cancel the card drag and do nothing,
-  // letting the page scroll naturally). Axis is decided once per gesture
-  // once the finger travels DRAG_AXIS_LOCK_PX in either direction; until
-  // then we wait rather than doing anything that would cause rendering
-  // artifacts on iOS during an ambiguous gesture.
+  // Drag-to-rotate + drag-to-nudge: the card follows the finger while
+  // dragging (no CSS transition — `spinDeg`/`dragOffset` are updated
+  // directly per touchmove, so the rendered position always matches the
+  // live drag position 1:1/proportionally, with no easing lag). Horizontal
+  // movement drives rotation (rotateY via spinDeg, unclamped, snaps to the
+  // nearest face on release) — rotation is deliberately horizontal-only,
+  // like a real card being spun around its vertical axis. Both axes
+  // together also drive a small clamped on-screen translation
+  // (DRAG_TRANSLATE_MAX_PX), so dragging in any direction — including
+  // diagonally or in a circle — visibly moves the card a little without
+  // adding any vertical rotation. An earlier version routed vertical
+  // movement to page-scroll passthrough instead of card movement; this
+  // supersedes that on explicit request — touching the card while dragging
+  // now always drives the card, not the page.
   function handleTouchStart(event: React.TouchEvent<HTMLDivElement>) {
     if (isSpinning) return;
     const touch = event.touches[0];
@@ -164,7 +171,6 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
     dragStartXRef.current = touch.clientX;
     dragStartYRef.current = touch.clientY;
     dragBaseSpinRef.current = spinDeg;
-    dragAxisRef.current = null;
   }
 
   function handleTouchMove(event: React.TouchEvent<HTMLDivElement>) {
@@ -174,25 +180,17 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
 
     const deltaX = touch.clientX - dragStartXRef.current;
     const deltaY = touch.clientY - dragStartYRef.current;
-    const absX = Math.abs(deltaX);
-    const absY = Math.abs(deltaY);
 
-    // Resolve the axis lock on first significant movement.
-    if (dragAxisRef.current === null) {
-      if (absX < DRAG_AXIS_LOCK_PX && absY < DRAG_AXIS_LOCK_PX) return;
-      dragAxisRef.current = absX >= absY ? 'h' : 'v';
-    }
-
-    // Vertical gesture: cancel card drag, let page scroll normally.
-    if (dragAxisRef.current === 'v') {
-      dragStartXRef.current = null;
-      return;
-    }
-
-    // Horizontal gesture: rotate the card.
     const nextSpin = dragBaseSpinRef.current + deltaX * DRAG_SENSITIVITY_DEG_PER_PX;
+    const clampOffset = (value: number) =>
+      Math.max(-DRAG_TRANSLATE_MAX_PX, Math.min(DRAG_TRANSLATE_MAX_PX, value));
+
     setTransition(NO_TRANSITION);
     setSpinDeg(nextSpin);
+    setDragOffset({
+      x: clampOffset(deltaX * DRAG_TRANSLATE_SENSITIVITY),
+      y: clampOffset(deltaY * DRAG_TRANSLATE_SENSITIVITY),
+    });
     setTilt({ rotateX: 0, rotateY: 0 });
     const totalDeg = baseFlipDeg + nextSpin;
     const mod = ((totalDeg % 360) + 360) % 360;
@@ -200,7 +198,6 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   }
 
   function handleTouchEnd() {
-    dragAxisRef.current = null;
     if (isSpinning) return;
     if (dragStartXRef.current !== null) {
       dragStartXRef.current = null;
@@ -212,6 +209,7 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
         return snapped - baseFlipDeg;
       });
       setTransition(DRAG_SNAP_TRANSITION);
+      setDragOffset({ x: 0, y: 0 });
       setTilt({ rotateX: 0, rotateY: 0 });
       return;
     }
@@ -221,7 +219,7 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
 
   function handleSpinClick() {
     dragStartXRef.current = null;
-    dragAxisRef.current = null;
+    setDragOffset({ x: 0, y: 0 });
     if (spinTimeoutRef.current !== null) {
       clearTimeout(spinTimeoutRef.current);
     }
@@ -292,7 +290,7 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
               ref={flipperRef}
               className="card-flipper"
               style={{
-                transform: `rotateX(${tilt.rotateX}deg) rotateY(${totalRotateY}deg)`,
+                transform: `translate(${dragOffset.x}px, ${dragOffset.y}px) rotateX(${tilt.rotateX}deg) rotateY(${totalRotateY}deg)`,
                 transition,
               }}
             >
