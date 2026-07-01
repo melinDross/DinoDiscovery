@@ -1,5 +1,5 @@
 import { playClickSound } from '../sound';
-import { ATTRIBUTE_EMOJIS } from '../data/attributes';
+import { ATTRIBUTE_MEDALLION_PATHS } from '../data/cardTheme';
 
 interface AttributeGroupProps<T extends string> {
   label: string;
@@ -41,9 +41,12 @@ export function AttributeGroup<T extends string>({
                 : 'bg-brand/5 border-brand/20 hover:border-brand/50'
             }`}
           >
-            <span className="text-2xl sm:text-3xl" aria-hidden="true">
-              {ATTRIBUTE_EMOJIS[option] ?? ''}
-            </span>
+            <img
+              src={ATTRIBUTE_MEDALLION_PATHS[option] ?? ''}
+              alt=""
+              aria-hidden="true"
+              className="max-w-none w-10 h-10 sm:w-12 sm:h-12 object-cover rounded-[999px] pointer-events-none"
+            />
             <span className="font-display2 font-semibold text-cream uppercase tracking-wide text-sm sm:text-base">
               {option}
             </span>
