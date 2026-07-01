@@ -7,14 +7,14 @@ describe('Landing', () => {
   it('shows the title, subtitle and start button', () => {
     render(<Landing onStart={() => {}} />);
     expect(screen.getByAltText('Dino Discovery')).toBeInTheDocument();
-    expect(screen.getByText('Descubre tu propia especie única')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '¡Empezar!' })).toBeInTheDocument();
+    expect(screen.getByText(/descubiertas/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '¡Comienza a explorar!' })).toBeInTheDocument();
   });
 
   it('calls onStart when the button is clicked', async () => {
     const onStart = vi.fn();
     render(<Landing onStart={onStart} />);
-    await userEvent.click(screen.getByRole('button', { name: '¡Empezar!' }));
+    await userEvent.click(screen.getByRole('button', { name: '¡Comienza a explorar!' }));
     expect(onStart).toHaveBeenCalledTimes(1);
   });
 });

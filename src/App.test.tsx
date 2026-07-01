@@ -30,11 +30,11 @@ describe('App wizard flow', () => {
     window.history.pushState(null, '', '/');
   });
 
-  it('shows the landing page first, then the name step after clicking ¡Empezar!', async () => {
+  it('shows the landing page first, then the name step after clicking ¡Comienza a explorar!', async () => {
     render(<App />);
     expect(screen.getByAltText('Dino Discovery')).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: '¡Empezar!' }));
+    await userEvent.click(screen.getByRole('button', { name: '¡Comienza a explorar!' }));
     expect(screen.getByLabelText('Tu nombre')).toBeInTheDocument();
   });
 
@@ -50,7 +50,7 @@ describe('App wizard flow', () => {
       });
 
       render(<App />);
-      await userEvent.click(screen.getByRole('button', { name: '¡Empezar!' }));
+      await userEvent.click(screen.getByRole('button', { name: '¡Comienza a explorar!' }));
 
       await userEvent.type(screen.getByLabelText('Tu nombre'), 'Lucía');
       await userEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
@@ -88,7 +88,7 @@ describe('App wizard flow', () => {
 
   it('lets the user go back a step without losing the previously entered name', async () => {
     render(<App />);
-    await userEvent.click(screen.getByRole('button', { name: '¡Empezar!' }));
+    await userEvent.click(screen.getByRole('button', { name: '¡Comienza a explorar!' }));
     await userEvent.type(screen.getByLabelText('Tu nombre'), 'Lucía');
     await userEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
 
@@ -100,7 +100,7 @@ describe('App wizard flow', () => {
 
   it('does not skip a screen when two options on the same step are clicked in quick succession', async () => {
     render(<App />);
-    await userEvent.click(screen.getByRole('button', { name: '¡Empezar!' }));
+    await userEvent.click(screen.getByRole('button', { name: '¡Comienza a explorar!' }));
     await userEvent.type(screen.getByLabelText('Tu nombre'), 'Lucía');
     await userEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
 
@@ -113,7 +113,7 @@ describe('App wizard flow', () => {
 
   it('cancels a pending auto-advance when the user navigates back before it fires', async () => {
     render(<App />);
-    await userEvent.click(screen.getByRole('button', { name: '¡Empezar!' }));
+    await userEvent.click(screen.getByRole('button', { name: '¡Comienza a explorar!' }));
     await userEvent.type(screen.getByLabelText('Tu nombre'), 'Lucía');
     await userEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
 
@@ -136,7 +136,7 @@ describe('App wizard flow', () => {
       });
 
       render(<App />);
-      await userEvent.click(screen.getByRole('button', { name: '¡Empezar!' }));
+      await userEvent.click(screen.getByRole('button', { name: '¡Comienza a explorar!' }));
       await userEvent.type(screen.getByLabelText('Tu nombre'), 'Lucía');
       await userEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
 
