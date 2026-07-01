@@ -31,7 +31,7 @@ export interface GenerateDinoResponse {
 }
 
 export interface ApiErrorResponse {
-  error: 'RATE_LIMITED' | 'API_ERROR';
+  error: 'RATE_LIMITED' | 'GLOBAL_BUDGET_EXCEEDED' | 'API_ERROR';
   message?: string;
   retryAfterSeconds?: number;
 }

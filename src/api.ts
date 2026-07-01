@@ -14,6 +14,12 @@ export class RateLimitError extends Error {
   }
 }
 
+export class GlobalBudgetError extends Error {
+  constructor() {
+    super('GLOBAL_BUDGET_EXCEEDED');
+  }
+}
+
 export class DinoApiError extends Error {}
 
 export async function generateDino(req: GenerateDinoRequest): Promise<GenerateDinoResponse> {
@@ -36,6 +42,9 @@ export async function generateDino(req: GenerateDinoRequest): Promise<GenerateDi
   const errorBody = (await response.json()) as ApiErrorResponse;
   if (errorBody.error === 'RATE_LIMITED') {
     throw new RateLimitError(errorBody.retryAfterSeconds ?? 3600);
+  }
+  if (errorBody.error === 'GLOBAL_BUDGET_EXCEEDED') {
+    throw new GlobalBudgetError();
   }
   throw new DinoApiError(errorBody.message ?? 'Error desconocido');
 }

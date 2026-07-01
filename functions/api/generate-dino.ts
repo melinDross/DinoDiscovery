@@ -1,6 +1,7 @@
 import type { DinoAttributes, GenerateDinoRequest } from '../../shared/types';
 import { computeCacheKey } from '../lib/hash';
 import { checkAndIncrementRateLimit, type KVLike } from '../lib/rateLimit';
+import { checkAndIncrementGlobalBudget } from '../lib/globalBudget';
 import { getCachedDino, setCachedDino } from '../lib/cache';
 import { generateDinoText } from '../lib/anthropic';
 import { generateDinoImage } from '../lib/openai';
@@ -95,9 +96,30 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     });
   }
 
+  // Only cache-miss generations (the ones that actually call Anthropic +
+  // OpenAI) count against the daily global budget — a cache hit above never
+  // reaches here. This is a separate, higher ceiling than the per-IP rate
+  // limit: that one bounds a single visitor's worst case, this one bounds
+  // the project owner's total daily spend if many different IPs hit
+  // uncached combos at once (e.g. a traffic spike from the project being
+  // shared somewhere). Admins bypass this the same way they bypass the
+  // per-IP limit.
+  if (!isAdmin) {
+    const budgetResult = await checkAndIncrementGlobalBudget(env.RATE_LIMIT_KV);
+    if (!budgetResult.allowed) {
+      return Response.json(
+        {
+          error: 'GLOBAL_BUDGET_EXCEEDED',
+          message: 'Se alcanzó el límite diario de nuevos descubrimientos. ¡Vuelve mañana!',
+        },
+        { status: 429 }
+      );
+    }
+  }
+
   // KV reads are eventually consistent, so two concurrent requests for the
   // same uncached combo can both miss here and both call the upstream APIs.
-  // Accepted for the MVP's traffic scale (bounded by the 5/hour rate limit);
+  // Accepted for the MVP's traffic scale (bounded by the 3/hour rate limit);
   // the last cache write simply wins.
   try {
     const [text, base64Image] = await Promise.all([

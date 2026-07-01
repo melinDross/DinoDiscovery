@@ -9,7 +9,14 @@ import { EmailGateModal } from './components/EmailGateModal';
 import { Card } from './components/Card';
 import { SIZES, HABITATS, DIETS, FEATURES, PERSONALITIES } from './data/attributes';
 import { isSelectionComplete } from './validation';
-import { generateDino, subscribeEmail, fetchResult, RateLimitError, DinoApiError } from './api';
+import {
+  generateDino,
+  subscribeEmail,
+  fetchResult,
+  RateLimitError,
+  GlobalBudgetError,
+  DinoApiError,
+} from './api';
 import { captureCertificateAsPng } from './certificate';
 import { captureAdminKeyFromUrl } from './adminAuth';
 import type {
@@ -111,7 +118,9 @@ export default function App() {
     } catch (err) {
       if (err instanceof RateLimitError) {
         const minutes = Math.ceil(err.retryAfterSeconds / 60);
-        setErrorMessage(`¡Has descubierto muchos dinosaurios hoy! Vuelve en unos ${minutes} minutos.`);
+        setErrorMessage(`¡Has descubierto muchos dinosaurios! Vuelve en unos ${minutes} minutos.`);
+      } else if (err instanceof GlobalBudgetError) {
+        setErrorMessage('¡Hemos alcanzado el límite de nuevos descubrimientos por hoy! Vuelve mañana.');
       } else if (err instanceof DinoApiError) {
         setErrorMessage('¡El dinosaurio se escapó! Inténtalo de nuevo.');
       } else {

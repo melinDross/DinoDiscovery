@@ -211,6 +211,65 @@ describe('onRequestPost /api/generate-dino', () => {
     expect(first.resultId).not.toBe(second.resultId);
   });
 
+  // discovererName isn't part of the cache key (only the 5 attributes are),
+  // so distinct attribute combos are required to force real cache misses —
+  // a mixed-radix decode of `i` over the valid-value lists guarantees each
+  // of the 31 combos below is unique.
+  function comboAt(i: number) {
+    const sizes = ['Diminuto', 'Pequeño', 'Mediano', 'Grande', 'Gigante', 'Coloso'];
+    const habitats = ['Selva', 'Desierto', 'Océano', 'Montaña', 'Volcán', 'Ártico'];
+    const diets = ['Carnívoro', 'Herbívoro', 'Omnívoro', 'Oófago'];
+    const features = ['Cuernos', 'Alas', 'Escamas coloridas', 'Cola poderosa', 'Armadura', 'Súper garras'];
+    const personalities = ['Feroz', 'Amigable', 'Veloz', 'Sigiloso'];
+
+    let n = i;
+    const size = sizes[n % 6];
+    n = Math.floor(n / 6);
+    const habitat = habitats[n % 6];
+    n = Math.floor(n / 6);
+    const diet = diets[n % 4];
+    n = Math.floor(n / 4);
+    const feature = features[n % 6];
+    n = Math.floor(n / 6);
+    const personality = personalities[n % 4];
+
+    return { size, habitat, diet, feature, personality, discovererName: 'Lucía' };
+  }
+
+  it('returns GLOBAL_BUDGET_EXCEEDED once the daily cap of 30 fresh generations is hit', async () => {
+    const env = createEnv();
+    for (let i = 0; i < 30; i++) {
+      const response = await onRequestPost({
+        request: createRequest(comboAt(i), `10.0.0.${i}`),
+        env,
+      } as any);
+      expect(response.status).toBe(200);
+    }
+
+    const response = await onRequestPost({
+      request: createRequest(comboAt(30), '10.0.1.1'),
+      env,
+    } as any);
+    expect(response.status).toBe(429);
+    const json = (await response.json()) as any;
+    expect(json.error).toBe('GLOBAL_BUDGET_EXCEEDED');
+  });
+
+  it('does not count cache hits against the daily global budget', async () => {
+    const env = createEnv();
+    // 40 requests for the *same* combo (only distinct IPs, to dodge the
+    // per-IP limit) — just 1 real generation, the other 39 are cache hits
+    // and must not trip the 30/day global cap.
+    for (let i = 0; i < 40; i++) {
+      const response = await onRequestPost({
+        request: createRequest(validBody, `10.1.0.${i}`),
+        env,
+      } as any);
+      expect(response.status).toBe(200);
+    }
+    expect(generateDinoText).toHaveBeenCalledTimes(1);
+  });
+
   it('returns 502 with a generic message when an upstream API fails', async () => {
     const env = createEnv();
     vi.mocked(generateDinoText).mockRejectedValueOnce(new Error('Anthropic API error: 500'));

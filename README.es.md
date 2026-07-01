@@ -213,3 +213,7 @@ Para el stack completo en local (frontend + Cloudflare Pages Functions), copia `
 ## 🔗 Repositorio
 
 [github.com/melinDross/DinoDiscovery](https://github.com/melinDross/DinoDiscovery)
+
+---
+
+¿Encontraste un bug, tienes una idea, o solo quieres saludar? [Abre un issue](https://github.com/melinDross/DinoDiscovery/issues) — leo todos. Si te gustó el proyecto y quieres ayudar con los costes de API de mantener la demo en vivo, [GitHub Sponsors](https://github.com/sponsors/melinDross) se agradece mucho. ☕
