@@ -3,7 +3,7 @@ export interface KVLike {
   put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
 }
 
-const LIMIT = 5;
+const LIMIT = 3;
 const WINDOW_SECONDS = 3600;
 
 interface RateLimitRecord {

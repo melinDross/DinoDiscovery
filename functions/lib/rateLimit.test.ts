@@ -24,15 +24,15 @@ describe('checkAndIncrementRateLimit', () => {
     vi.useRealTimers();
   });
 
-  it('allows the first 5 requests from an IP', async () => {
-    for (let i = 0; i < 5; i++) {
+  it('allows the first 3 requests from an IP', async () => {
+    for (let i = 0; i < 3; i++) {
       const result = await checkAndIncrementRateLimit(kv, '1.2.3.4');
       expect(result.allowed).toBe(true);
     }
   });
 
-  it('rejects the 6th request from the same IP within the window', async () => {
-    for (let i = 0; i < 5; i++) {
+  it('rejects the 4th request from the same IP within the window', async () => {
+    for (let i = 0; i < 3; i++) {
       await checkAndIncrementRateLimit(kv, '1.2.3.4');
     }
     const result = await checkAndIncrementRateLimit(kv, '1.2.3.4');
@@ -41,7 +41,7 @@ describe('checkAndIncrementRateLimit', () => {
   });
 
   it('tracks different IPs independently', async () => {
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 3; i++) {
       await checkAndIncrementRateLimit(kv, '1.1.1.1');
     }
     const result = await checkAndIncrementRateLimit(kv, '2.2.2.2');
@@ -53,7 +53,7 @@ describe('checkAndIncrementRateLimit', () => {
     const start = new Date('2026-01-01T00:00:00Z');
     vi.setSystemTime(start);
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 3; i++) {
       await checkAndIncrementRateLimit(kv, '5.5.5.5');
     }
     expect((await checkAndIncrementRateLimit(kv, '5.5.5.5')).allowed).toBe(false);
@@ -68,7 +68,7 @@ describe('checkAndIncrementRateLimit', () => {
     const start = new Date('2026-01-01T00:00:00Z');
     vi.setSystemTime(start);
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 3; i++) {
       await checkAndIncrementRateLimit(kv, '7.7.7.7');
     }
 

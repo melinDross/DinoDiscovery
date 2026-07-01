@@ -77,7 +77,7 @@ describe('onRequestPost /api/generate-dino', () => {
 
   it('returns 429 when the IP has exceeded the rate limit', async () => {
     const env = createEnv();
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 3; i++) {
       await onRequestPost({ request: createRequest(validBody), env } as any);
     }
     const response = await onRequestPost({ request: createRequest(validBody), env } as any);
@@ -99,7 +99,7 @@ describe('onRequestPost /api/generate-dino', () => {
 
   it('does not bypass the rate limit when the X-Admin-Key header is wrong', async () => {
     const env = createEnv();
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 3; i++) {
       await onRequestPost({
         request: createRequest(validBody, '9.8.7.6', 'totally-wrong-key'),
         env,
