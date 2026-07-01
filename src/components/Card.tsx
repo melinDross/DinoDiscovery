@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useState } from 'react';
+import { forwardRef, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react';
 import type { GenerateDinoResponse, DinoAttributes } from '../../shared/types';
 import { generateSpeciesId, calculateRarity, calculateRarityScore, type Rarity } from '../utils/speciesHash';
 import { cutoutDinoImage } from '../utils/dinoCutout';
@@ -34,6 +34,7 @@ const RARITY_BADGE_TEXT_COLOR = '#04121a';
 const FOOTER_TEXT_COLOR = '#5fd9d1';
 const LABEL_TEXT_COLOR = '#5fd9d1';
 const BADGE_BG = `${FRAME_BG}e6`;
+const WATERMARK_TEXT = 'DINO-DISCOVERY.PAGES.DEV';
 
 // Strips the dino image's known solid background (see src/utils/dinoCutout.ts)
 // so it composites as a true cutout over the habitat art, with its own
@@ -59,6 +60,57 @@ function useDinoCutout(imageUrl: string): string {
   return src;
 }
 
+const DESCRIPTION_MAX_LINES = 4;
+
+// The description is always exactly 3 short sentences (see the generation
+// prompt in functions/lib/anthropic.ts), but at the card's fixed 420px
+// width they don't always fit in 4 lines. CSS line-clamp would cut the
+// last visible line mid-word/mid-sentence and append "…", which reads
+// worse for a kids' app than just dropping the trailing sentence(s)
+// entirely. This measures the rendered height against a 4-line budget and,
+// if it overflows, drops sentences from the end (always at a ". " boundary)
+// until it fits — so the shown text is always either the full description
+// or a whole number of complete sentences, never a mid-sentence cut.
+function useDescriptionClamp(description: string): {
+  ref: RefObject<HTMLParagraphElement | null>;
+  displayed: string;
+} {
+  const ref = useRef<HTMLParagraphElement>(null);
+  const [displayed, setDisplayed] = useState(description);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) {
+      setDisplayed(description);
+      return;
+    }
+
+    const sentences = description.match(/[^.!?]+[.!?]+(\s+|$)/g) ?? [description];
+    const lineHeight = parseFloat(getComputedStyle(el).lineHeight) || 0;
+    const maxHeight = lineHeight * DESCRIPTION_MAX_LINES + 1; // +1px rounding slack
+
+    el.textContent = description;
+    if (!lineHeight || el.scrollHeight <= maxHeight) {
+      setDisplayed(description);
+      return;
+    }
+
+    let fitted = description;
+    for (let count = sentences.length - 1; count >= 1; count--) {
+      const candidate = sentences.slice(0, count).join('').trim();
+      el.textContent = candidate;
+      if (el.scrollHeight <= maxHeight) {
+        fitted = candidate;
+        break;
+      }
+      fitted = candidate;
+    }
+    setDisplayed(fitted);
+  }, [description]);
+
+  return { ref, displayed };
+}
+
 export interface CardProps {
   discovererName: string;
   result: GenerateDinoResponse;
@@ -69,6 +121,15 @@ export interface CardProps {
   // so Card can still be used standalone (e.g. the hidden html2canvas
   // capture node in App.tsx) without CardScene wiring this through.
   foilTilt?: { x: number; y: number };
+  // Shows a repeating diagonal watermark over the whole card. Only ever
+  // passed by CardScene (the interactive, on-screen card) — the hidden
+  // capture node in App.tsx that html2canvas actually downloads renders a
+  // bare Card without this prop, so it stays clean. A phone screenshot of
+  // the on-screen card carries the watermark; the official PNG from the
+  // email-gate download doesn't — the goal isn't blocking screenshots
+  // (not possible from a web page), it's making the email-gated download
+  // the visibly better artifact so people use it instead of a screenshot.
+  watermark?: boolean;
 }
 
 // Rarity tiers eligible for the holo-foil sheen — same tiers that got the
@@ -86,7 +147,8 @@ const CARD_BORDER_PX = 20;
 const ART_HEIGHT_PX = 440;
 
 export const Card = forwardRef<HTMLDivElement, CardProps>(
-  ({ discovererName, result, attrs, foilTilt = { x: 0, y: 0 } }, ref) => {
+  ({ discovererName, result, attrs, foilTilt = { x: 0, y: 0 }, watermark = false }, ref) => {
+    const { ref: descriptionRef, displayed: displayedDescription } = useDescriptionClamp(result.description);
     const discoveryDate = new Date().toLocaleDateString('es-ES', {
       year: 'numeric',
       month: 'long',
@@ -291,19 +353,28 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             </span>
           </div>
           <div
-            className="absolute bottom-0 left-0 right-0 px-4 pt-20 pb-3"
+            className="absolute bottom-0 left-0 right-0 px-4 pt-14 pb-3"
             style={{
               background: `linear-gradient(to top, ${FRAME_BG} 0%, ${BADGE_BG} 55%, transparent 100%)`,
             }}
           >
+            {/* pt-14 (was pt-20): the habitat tag used to float over this
+                gradient block as a horizontal pill, so extra top padding
+                kept the name clear of it. Now that the tag lives in the
+                left-edge strip (see above), that clearance isn't needed —
+                freeing the name/sci-name/description to sit a bit higher. */}
             <h2 className="font-mono uppercase tracking-widest text-xl text-center" style={{ color: TEXT_COLOR }}>
               {result.commonName}
             </h2>
             <p className="italic text-xs text-center opacity-80 font-mono" style={{ color: TEXT_COLOR }}>
               {result.scientificName}
             </p>
-            <p className="italic text-center text-xs mt-2 line-clamp-3 font-mono" style={{ color: TEXT_COLOR }}>
-              {result.description}
+            <p
+              ref={descriptionRef}
+              className="italic text-center text-xs mt-2 font-mono"
+              style={{ color: TEXT_COLOR }}
+            >
+              {displayedDescription}
             </p>
           </div>
         </div>
@@ -454,6 +525,32 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
               maskImage: 'linear-gradient(to bottom, black 0%, black 72%, transparent 100%)',
             }}
           />
+        )}
+
+        {/* On-screen-only watermark deterrent (see the `watermark` prop
+            doc above): repeating diagonal rows of the site URL, low
+            opacity, above every other layer (z-50) so it survives
+            regardless of dino pose/foil. `select-none` + pointer-events-none
+            so it never interferes with the drag-tilt-flip interaction or
+            reads as selectable/copyable text. */}
+        {watermark && (
+          <div className="absolute inset-0 z-50 pointer-events-none select-none overflow-hidden rounded-[28px]">
+            {[12, 32, 52, 72, 92].map((top) => (
+              <div
+                key={top}
+                className="absolute left-1/2 whitespace-nowrap font-mono font-bold uppercase"
+                style={{
+                  top: `${top}%`,
+                  fontSize: 11,
+                  letterSpacing: '0.18em',
+                  color: 'rgba(255,255,255,0.16)',
+                  transform: 'translate(-50%, -50%) rotate(-18deg)',
+                }}
+              >
+                {WATERMARK_TEXT} • {WATERMARK_TEXT} • {WATERMARK_TEXT}
+              </div>
+            ))}
+          </div>
         )}
       </div>
     );

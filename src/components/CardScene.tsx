@@ -296,6 +296,7 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
                   discovererName={discovererName}
                   result={result}
                   attrs={attrs}
+                  watermark
                   foilTilt={{
                     // Driven by the card's actual total rotation (not just
                     // live hover/drag tilt) so the foil visibly shifts as
