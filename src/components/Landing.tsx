@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface LandingProps {
   onStart: () => void;
@@ -30,6 +30,30 @@ export function Landing({ onStart }: LandingProps) {
       setDiscoveryCount((c) => c + 1);
     }, DISCOVERY_COUNT_INTERVAL_MS);
     return () => clearInterval(id);
+  }, []);
+
+  // Memoized with an empty dep array so its identity is stable across
+  // re-renders — a plain inline arrow function here (the previous version)
+  // gets a *new* identity every render, and React detaches+reattaches a
+  // ref whenever its callback identity changes, re-running this on every
+  // re-render. Since `discoveryCount` ticks every
+  // DISCOVERY_COUNT_INTERVAL_MS (4s) and re-renders Landing, that caused
+  // .play() to fire again every ~4s — the video "looping" was actually
+  // this being retriggered repeatedly, not an actual <video loop> attribute
+  // (there isn't one). Muting still has to happen here (not in a
+  // useEffect) since it must be set synchronously during the ref-attach
+  // commit, before the browser evaluates the `autoPlay` attribute — a
+  // useEffect runs after paint, which reintroduces the iOS Safari
+  // muted-autoplay bug this ref callback exists to work around.
+  const handleVideoRef = useCallback((el: HTMLVideoElement | null) => {
+    videoRef.current = el;
+    if (el) {
+      el.muted = true;
+      // play() exists but may return undefined in test environments
+      // (jsdom) rather than a Promise — guard before calling .catch().
+      const p = typeof el.play === 'function' ? el.play() : undefined;
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    }
   }, []);
 
   function handleVideoTap() {
@@ -86,17 +110,7 @@ export function Landing({ onStart }: LandingProps) {
           </span>
           <div className="relative rounded-xl overflow-hidden shadow-[0_0_40px_rgba(236,26,143,0.20),0_8px_32px_rgba(0,0,0,0.6)]">
             <video
-              ref={(el) => {
-                (videoRef as React.MutableRefObject<HTMLVideoElement | null>).current = el;
-                if (el) {
-                  el.muted = true;
-                  // play() exists but may return undefined in test
-                  // environments (jsdom) rather than a Promise — guard
-                  // before calling .catch().
-                  const p = typeof el.play === 'function' ? el.play() : undefined;
-                  if (p && typeof p.catch === 'function') p.catch(() => {});
-                }
-              }}
+              ref={handleVideoRef}
               src="/dino-landing.mp4"
               autoPlay
               muted
