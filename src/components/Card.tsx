@@ -306,6 +306,42 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             }}
           />
         )}
+
+        {/* Specular glare — a second, independent foil layer on top of the
+            rainbow sheen above. One gradient reacting to tilt reads as "a
+            stripe sliding across the card," not "shimmering" — real foil
+            (and the well-known CSS holo-card techniques it's modeled on)
+            gets its liveliness from *two* things moving differently at
+            once: a slow, broad rainbow sweep (above) and a small, fast
+            bright glint that moves like a reflected light source (this
+            layer). Both read `foilTilt`, but this one uses a much larger
+            multiplier so it visibly darts around while the rainbow layer
+            is still gently sweeping — that speed difference between the
+            two layers is what actually sells "alive" instead of "sliding".
+            `mix-blend-screen` (not overlay, used above) always brightens
+            like a highlight would, which is correct for a glint but would
+            wash out the habitat art if used for the broad rainbow layer
+            (see the overlay-vs-color-dodge note above). */}
+        {isFoilEligible && (
+          <div
+            aria-hidden="true"
+            className="absolute pointer-events-none mix-blend-screen z-40"
+            style={{
+              ...artLayerStyle,
+              borderTopLeftRadius: 8,
+              borderTopRightRadius: 8,
+              opacity: 0.4,
+              backgroundImage:
+                'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.25) 35%, transparent 65%)',
+              backgroundSize: '55% 55%',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: `${50 + foilTilt.x * 65}% ${50 + foilTilt.y * 65}%`,
+              WebkitMaskImage:
+                'linear-gradient(to bottom, black 0%, black 72%, transparent 100%)',
+              maskImage: 'linear-gradient(to bottom, black 0%, black 72%, transparent 100%)',
+            }}
+          />
+        )}
       </div>
     );
   }
