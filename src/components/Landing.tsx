@@ -5,6 +5,7 @@ interface LandingProps {
 }
 
 const ROAR_START_SECONDS = 8;
+const APP_VERSION = 'v0.4';
 
 export function Landing({ onStart }: LandingProps) {
   // React doesn't reliably serialize the `muted` prop to the real DOM
@@ -78,6 +79,9 @@ export function Landing({ onStart }: LandingProps) {
       >
         ¡Empezar!
       </button>
+      <span className="mt-4 sm:mt-6 text-xs tracking-[2px] text-sage/50">
+        {APP_VERSION}
+      </span>
     </div>
   );
 }

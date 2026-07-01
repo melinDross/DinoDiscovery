@@ -99,15 +99,22 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
   const rarity = calculateRarity(attrs);
   const glowColor = GLOW_RGB_BY_RARITY[rarity];
 
-  // JS-driven glow loop — imperative rAF writes box-shadow directly on the
-  // wrapper div every frame instead of using a CSS animation. CSS animation
-  // would promote .card-glow-wrapper to its own GPU compositing layer, which
-  // on iOS Safari makes the dino/text layers fail to composite into the 3D
-  // scene and causes the raw habitat background to show on drag. rAF-driven
-  // inline style updates don't trigger layer promotion.
+  // JS-driven glow loop — imperative rAF writes `filter` directly on
+  // innerRef (.card-scene-wrapper) every frame instead of using a CSS
+  // animation. This must target the wrapper *outside* .card-perspective,
+  // not flipperRef (.card-flipper): that element lives inside the 3D
+  // transform context, and continuously mutating any visual property on it
+  // — even via rAF, not just CSS `animation` — reintroduces the same iOS
+  // Safari bug the card-scene-wrapper split exists to avoid (raw habitat
+  // background showing through during drag). Animating `filter` here
+  // composes with the wrapper's own static drop-shadow (see index.css) by
+  // concatenating filter functions each frame.
   useEffect(() => {
-    const el = flipperRef.current;
+    const el = innerRef.current;
     if (!glowColor || !el) return;
+
+    const baseFilter =
+      'drop-shadow(0 20px 40px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 30px rgba(178, 255, 0, 0.10))';
 
     const startTime = performance.now();
     const BURST_MS = 600;      // entrance flash duration
@@ -139,9 +146,10 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
       }
 
       if (!el) return;
-      el.style.boxShadow =
-        `0 0 ${innerPx}px ${innerPx / 4}px rgba(${glowColor},${innerA}),` +
-        `0 0 ${outerPx}px ${outerPx / 4}px rgba(${glowColor},${outerA})`;
+      el.style.filter =
+        `${baseFilter} ` +
+        `drop-shadow(0 0 ${innerPx}px rgba(${glowColor},${innerA})) ` +
+        `drop-shadow(0 0 ${outerPx}px rgba(${glowColor},${outerA}))`;
 
       rafId = requestAnimationFrame(frame);
     }
@@ -149,7 +157,7 @@ export function CardScene({ discovererName, result, attrs }: CardSceneProps) {
     rafId = requestAnimationFrame(frame);
     return () => {
       cancelAnimationFrame(rafId);
-      if (flipperRef.current) flipperRef.current.style.boxShadow = '';
+      if (innerRef.current) innerRef.current.style.filter = '';
     };
   }, [glowColor]);
 
