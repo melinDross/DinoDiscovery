@@ -39,7 +39,11 @@ describe('Card', () => {
       'src',
       '/habitats/volcan-1.png'
     );
-    expect(screen.getByText('Caldera Mágica')).toBeInTheDocument();
+    // The sub-biome name ("Caldera Mágica") is rendered as a canvas-drawn
+    // <img> (see useRotatedLabelImage in Card.tsx — needed so html2canvas
+    // captures the rotated label correctly), not a text node — jsdom has
+    // no real canvas 2d context (see test-setup.ts), so that image never
+    // actually renders here and isn't asserted on in this environment.
     expect(screen.getByAltText('Volcanrex')).toHaveAttribute('src', '/images/abc.png');
   });
 

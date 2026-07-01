@@ -111,6 +111,48 @@ function useDescriptionClamp(description: string): {
   return { ref, displayed };
 }
 
+// The habitat tag's rotated label is pre-rendered onto a <canvas> and shown
+// as a plain <img> data URL, rather than rotated HTML/CSS or SVG text.
+// html2canvas does not reliably capture a CSS `transform: rotate()` on
+// text — three different approaches (flex-centered rotate, absolute-
+// positioned translate+rotate, and writing-mode:vertical-rl) all rendered
+// correctly live in the browser but came out completely blank in the
+// captured PNG, and an SVG <text> with an SVG-native rotate transform
+// mis-measured its own layout and clipped most of the text even live. A
+// canvas-drawn bitmap sidesteps all of this: html2canvas just copies
+// `<img>` bitmaps directly, so what's on screen is pixel-identical to
+// what gets captured.
+function useRotatedLabelImage(
+  text: string,
+  widthPx: number,
+  heightPx: number,
+  color: string
+): string | null {
+  const [dataUrl, setDataUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const dpr = typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1;
+    const canvas = document.createElement('canvas');
+    canvas.width = widthPx * dpr;
+    canvas.height = heightPx * dpr;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.scale(dpr, dpr);
+    ctx.translate(widthPx / 2, heightPx / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillStyle = color;
+    ctx.font = '600 11px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text.toUpperCase(), 0, 0);
+
+    setDataUrl(canvas.toDataURL('image/png'));
+  }, [text, widthPx, heightPx, color]);
+
+  return dataUrl;
+}
+
 export interface CardProps {
   discovererName: string;
   result: GenerateDinoResponse;
@@ -146,6 +188,12 @@ const FOIL_ELIGIBLE_RARITIES: ReadonlySet<Rarity> = new Set(['rare', 'epic', 'le
 const CARD_BORDER_PX = 20;
 const ART_HEIGHT_PX = 440;
 
+// The habitat tag strip's own fixed pixel size (must match its `w-7` class
+// and its `top-[20%] bottom-[20%]` of ART_HEIGHT_PX) — see the SVG rotated
+// text note further down for why these need to be plain numbers.
+const HABITAT_TAG_STRIP_WIDTH_PX = 28;
+const HABITAT_TAG_STRIP_HEIGHT_PX = ART_HEIGHT_PX * 0.6;
+
 export const Card = forwardRef<HTMLDivElement, CardProps>(
   ({ discovererName, result, attrs, foilTilt = { x: 0, y: 0 }, watermark = false }, ref) => {
     const { ref: descriptionRef, displayed: displayedDescription } = useDescriptionClamp(result.description);
@@ -161,6 +209,12 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     const stars = '★'.repeat(RARITY_STAR_COUNT[rarity]);
     const cutoutImageUrl = useDinoCutout(result.imageUrl);
     const habitatBackground = pickHabitatBackground(attrs);
+    const habitatTagImage = useRotatedLabelImage(
+      habitatBackground.name,
+      HABITAT_TAG_STRIP_WIDTH_PX,
+      HABITAT_TAG_STRIP_HEIGHT_PX,
+      TEXT_COLOR
+    );
 
     const cells: Array<{ icon: string; alt: string; label: string; value: string }> = [
       {
@@ -291,16 +345,6 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         </div>
         </div>
 
-        {/* The dino: above the framed box and not clipped by it, so a large
-            enough creature can visually pop a claw/tail/horn past the card's
-            border for a 3D effect. `object-top` (instead of the object-contain
-            default of centering) anchors the artwork to the top of its box, so
-            any letterboxing slack from a non-matching aspect ratio collects at
-            the bottom — keeping the creature's feet/tail clear of the
-            medallion panel below instead of riding right up against it. The
-            scale was also pulled back from 110% to 105% (less aggressive
-            bleed) after real-device testing showed dinos getting visually
-            cropped at the bottom edge. */}
         {/* Habitat sub-biome tag: a bar flush against the left edge of
             the art, like a spine label on a book — the text is centered
             within the strip and rotated -90deg, rather than floating over
@@ -319,20 +363,39 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             badges and name/description block stay in the z-30 overlay
             above the dino since those need to stay legible regardless of
             dino pose (see below), but the habitat tag has no such
-            requirement — it reads fine partially covered. */}
+            requirement — it reads fine partially covered.
+
+            The rotated label itself is a pre-rendered canvas image
+            (`useRotatedLabelImage`), not rotated HTML/CSS or SVG text —
+            see that hook's comment for why: html2canvas doesn't reliably
+            capture a CSS `transform: rotate()` on text, and an SVG
+            `<text>` with an SVG-native rotate mis-measured its own layout
+            and clipped most of the string even in the live browser. */}
         <div className="absolute z-[15] pointer-events-none" style={artLayerStyle}>
           <div
-            className="absolute left-0 top-[20%] bottom-[20%] w-7 flex items-center justify-center border-r shadow-lg"
+            className="absolute left-0 top-[20%] bottom-[20%] w-7 border-r shadow-lg"
             style={{ backgroundColor: BADGE_BG, borderColor: PANEL_BORDER_COLOR }}
           >
-            <span
-              className="text-[11px] uppercase tracking-wide whitespace-nowrap"
-              style={{ color: TEXT_COLOR, transform: 'rotate(-90deg)' }}
-            >
-              {habitatBackground.name}
-            </span>
+            {habitatTagImage && (
+              <img
+                src={habitatTagImage}
+                alt={habitatBackground.name}
+                className="absolute inset-0 w-full h-full"
+              />
+            )}
           </div>
         </div>
+
+        {/* The dino: above the framed box and not clipped by it, so a large
+            enough creature can visually pop a claw/tail/horn past the card's
+            border for a 3D effect. `object-top` (instead of the object-contain
+            default of centering) anchors the artwork to the top of its box, so
+            any letterboxing slack from a non-matching aspect ratio collects at
+            the bottom — keeping the creature's feet/tail clear of the
+            medallion panel below instead of riding right up against it. The
+            scale was also pulled back from 110% to 105% (less aggressive
+            bleed) after real-device testing showed dinos getting visually
+            cropped at the bottom edge. */}
 
         <img
           src={cutoutImageUrl}
@@ -546,21 +609,27 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             regardless of dino pose/foil. `select-none` + pointer-events-none
             so it never interferes with the drag-tilt-flip interaction or
             reads as selectable/copyable text. */}
+        {/* Two rows, single instance each (no repeated "• text • text"),
+            low opacity, normal weight, confined to the art area (not the
+            medallion panel/footer below it) — an earlier version used 5
+            rows tripled across the *entire* card and read as overwhelming
+            rather than subtle, fighting with the artwork and medallions
+            instead of sitting quietly behind them. */}
         {watermark && (
-          <div className="absolute inset-0 z-50 pointer-events-none select-none overflow-hidden rounded-[28px]">
-            {[12, 32, 52, 72, 92].map((top) => (
+          <div className="absolute z-50 pointer-events-none select-none overflow-hidden" style={artLayerStyle}>
+            {[30, 70].map((top) => (
               <div
                 key={top}
-                className="absolute left-1/2 whitespace-nowrap font-mono font-bold uppercase"
+                className="absolute left-1/2 whitespace-nowrap font-mono uppercase"
                 style={{
                   top: `${top}%`,
-                  fontSize: 11,
-                  letterSpacing: '0.18em',
-                  color: 'rgba(255,255,255,0.16)',
+                  fontSize: 10,
+                  letterSpacing: '0.15em',
+                  color: 'rgba(255,255,255,0.10)',
                   transform: 'translate(-50%, -50%) rotate(-18deg)',
                 }}
               >
-                {WATERMARK_TEXT} • {WATERMARK_TEXT} • {WATERMARK_TEXT}
+                {WATERMARK_TEXT}
               </div>
             ))}
           </div>
