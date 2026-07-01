@@ -155,7 +155,7 @@ export function Landing({ onStart }: LandingProps) {
       <button
         type="button"
         onClick={onStart}
-        className="mt-6 sm:mt-8 w-full max-w-xs sm:max-w-sm px-6 py-3 sm:py-4 text-white font-display2 font-semibold text-xl uppercase tracking-[2px] rounded-[999px] bg-brand hover:shadow-[6px_6px_0_0_#f5e6c8] transition-shadow"
+        className="mt-6 sm:mt-8 w-full max-w-xs sm:max-w-sm px-6 py-3 sm:py-4 text-white font-display2 font-semibold text-base sm:text-xl uppercase tracking-[1px] sm:tracking-[2px] whitespace-nowrap rounded-[999px] bg-brand hover:shadow-[6px_6px_0_0_#f5e6c8] transition-shadow"
       >
         ¡Comienza a explorar!
       </button>
