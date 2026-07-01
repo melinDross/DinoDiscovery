@@ -301,6 +301,39 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
             scale was also pulled back from 110% to 105% (less aggressive
             bleed) after real-device testing showed dinos getting visually
             cropped at the bottom edge. */}
+        {/* Habitat sub-biome tag: a bar flush against the left edge of
+            the art, like a spine label on a book — the text is centered
+            within the strip and rotated -90deg, rather than floating over
+            the art as a horizontal pill, so it reads as part of the
+            frame's structure. Chosen from a 3-way live-preview comparison
+            (a rotated version of the old pill, and a bookmark-ribbon tab
+            poking past the edge — both since deleted). Spans the middle
+            60% of the art height (not the full height) so it doesn't
+            collide with the species-ID pill in the top-left corner.
+
+            Deliberately its own sibling at z-15, *below* the dino (z-20)
+            — not inside the z-30 text/tag overlay with the other badges.
+            When a big dino's cutout scale/pose pushes it toward the left
+            edge, it needs to visually cover this tag rather than the tag
+            floating on top of the dino's silhouette; the species-ID/rarity
+            badges and name/description block stay in the z-30 overlay
+            above the dino since those need to stay legible regardless of
+            dino pose (see below), but the habitat tag has no such
+            requirement — it reads fine partially covered. */}
+        <div className="absolute z-[15] pointer-events-none" style={artLayerStyle}>
+          <div
+            className="absolute left-0 top-[20%] bottom-[20%] w-7 flex items-center justify-center border-r shadow-lg"
+            style={{ backgroundColor: BADGE_BG, borderColor: PANEL_BORDER_COLOR }}
+          >
+            <span
+              className="text-[11px] uppercase tracking-wide whitespace-nowrap"
+              style={{ color: TEXT_COLOR, transform: 'rotate(-90deg)' }}
+            >
+              {habitatBackground.name}
+            </span>
+          </div>
+        </div>
+
         <img
           src={cutoutImageUrl}
           alt={result.commonName}
@@ -313,8 +346,8 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         />
 
         {/* Text/tag overlay: above the dino, so the species ID, rarity
-            badge, sub-biome name and the name/description gradient stay
-            legible regardless of how far the dino pose reaches. */}
+            badge, and name/description gradient stay legible regardless of
+            how far the dino pose reaches. */}
         <div className="absolute z-30 pointer-events-none" style={artLayerStyle}>
           <span
             className="absolute top-3 left-3 px-2 py-1 shadow-lg text-xs border font-mono rounded-[4px]"
@@ -332,26 +365,6 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
           >
             {RARITY_LABELS[rarity]}
           </span>
-          {/* Habitat sub-biome tag: a bar flush against the left edge of
-              the art, like a spine label on a book — the text is centered
-              within the strip and rotated -90deg, rather than floating
-              over the art as a horizontal pill, so it reads as part of the
-              frame's structure. Chosen from a 3-way live-preview comparison
-              (a rotated version of the old pill, and a bookmark-ribbon tab
-              poking past the edge — both since deleted). Spans the middle
-              60% of the art height (not the full height) so it doesn't
-              collide with the species-ID pill in the top-left corner. */}
-          <div
-            className="absolute left-0 top-[20%] bottom-[20%] w-7 flex items-center justify-center border-r shadow-lg"
-            style={{ backgroundColor: BADGE_BG, borderColor: PANEL_BORDER_COLOR }}
-          >
-            <span
-              className="text-[11px] uppercase tracking-wide whitespace-nowrap"
-              style={{ color: TEXT_COLOR, transform: 'rotate(-90deg)' }}
-            >
-              {habitatBackground.name}
-            </span>
-          </div>
           <div
             className="absolute bottom-0 left-0 right-0 px-4 pt-14 pb-3"
             style={{
