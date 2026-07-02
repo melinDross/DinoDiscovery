@@ -20,7 +20,7 @@ export function EmailGateModal({ onConfirm, onCancel }: EmailGateModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 pt-[max(1rem,env(safe-area-inset-top))] pr-[max(1rem,env(safe-area-inset-right))] pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] overflow-y-auto">
       <div className="bg-bg border border-brand p-6 max-w-sm w-full my-auto max-h-[90vh] overflow-y-auto">
         <h3 className="font-display2 font-semibold text-xl text-cream mb-2 uppercase tracking-wide">¡Casi listo!</h3>
         <p className="text-sage mb-4">

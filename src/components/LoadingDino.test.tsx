@@ -22,7 +22,7 @@ describe('LoadingDino', () => {
   it('starts on the intact-egg phase', () => {
     render(<LoadingDino isDone={false} onTransitionEnd={() => {}} />);
     expect(screen.getByText('Señal detectada en el sector...')).toBeInTheDocument();
-    expect(screen.getByRole('img')).toHaveAttribute('src', '/loading/egg-1-intact.png');
+    expect(screen.getByRole('img')).toHaveAttribute('src', '/loading/egg-1-intact.webp');
   });
 
   it('advances through phases 2-4 every 4 seconds', () => {
@@ -33,7 +33,7 @@ describe('LoadingDino', () => {
       vi.advanceTimersByTime(4000);
     });
     expect(screen.getByText('Analizando secuencia de ADN fósil...')).toBeInTheDocument();
-    expect(screen.getByRole('img')).toHaveAttribute('src', '/loading/egg-2-wobble.png');
+    expect(screen.getByRole('img')).toHaveAttribute('src', '/loading/egg-2-wobble.webp');
 
     act(() => {
       vi.advanceTimersByTime(4000);
@@ -53,7 +53,7 @@ describe('LoadingDino', () => {
     act(() => {
       vi.advanceTimersByTime(16000);
     });
-    expect(screen.getByRole('img')).toHaveAttribute('src', '/loading/egg-5-claws.png');
+    expect(screen.getByRole('img')).toHaveAttribute('src', '/loading/egg-5-claws.webp');
     expect(
       screen.getByText('Tu dinosaurio es un poco tímido, está tardando un poco más...')
     ).toBeInTheDocument();
@@ -68,7 +68,7 @@ describe('LoadingDino', () => {
     act(() => {
       vi.advanceTimersByTime(20000);
     });
-    expect(screen.getByRole('img')).toHaveAttribute('src', '/loading/egg-5-claws.png');
+    expect(screen.getByRole('img')).toHaveAttribute('src', '/loading/egg-5-claws.webp');
   });
 
   it('shows the burst phase immediately when isDone becomes true, then calls onTransitionEnd', () => {
@@ -82,7 +82,7 @@ describe('LoadingDino', () => {
     rerender(<LoadingDino isDone={true} onTransitionEnd={onTransitionEnd} />);
 
     expect(screen.getByText('¡Has descubierto una nueva especie!')).toBeInTheDocument();
-    expect(screen.getByRole('img')).toHaveAttribute('src', '/loading/egg-6-burst.png');
+    expect(screen.getByRole('img')).toHaveAttribute('src', '/loading/egg-6-burst.webp');
     expect(onTransitionEnd).not.toHaveBeenCalled();
 
     act(() => {

@@ -69,10 +69,10 @@ export const ATTRIBUTE_SLUGS: Record<string, string> = {
 };
 
 export const ATTRIBUTE_MEDALLION_PATHS: Record<string, string> = Object.fromEntries(
-  Object.entries(ATTRIBUTE_SLUGS).map(([value, slug]) => [value, `/icons/medallions/${slug}.png`])
+  Object.entries(ATTRIBUTE_SLUGS).map(([value, slug]) => [value, `/icons/medallions/${slug}.webp`])
 );
 
-export const BRAND_EMBLEM_PATH = '/icons/medallions/emblem.png';
+export const BRAND_EMBLEM_PATH = '/icons/medallions/emblem.webp';
 
 export const HABITAT_SLUGS: Record<Habitat, string> = {
   Selva: 'selva',
@@ -94,28 +94,28 @@ export interface HabitatBackgroundVariant {
 // of attributes always renders the same scene.
 export const HABITAT_BACKGROUND_VARIANTS: Record<Habitat, [HabitatBackgroundVariant, HabitatBackgroundVariant]> = {
   Selva: [
-    { path: '/habitats/selva-1.png', name: 'Canopy Mágico' },
-    { path: '/habitats/selva-2.png', name: 'Raíces Antiguas' },
+    { path: '/habitats/selva-1.webp', name: 'Canopy Mágico' },
+    { path: '/habitats/selva-2.webp', name: 'Raíces Antiguas' },
   ],
   Desierto: [
-    { path: '/habitats/desierto-1.png', name: 'Ruinas Doradas' },
-    { path: '/habitats/desierto-2.png', name: 'Oasis Estelar' },
+    { path: '/habitats/desierto-1.webp', name: 'Ruinas Doradas' },
+    { path: '/habitats/desierto-2.webp', name: 'Oasis Estelar' },
   ],
   Océano: [
-    { path: '/habitats/oceano-1.png', name: 'Arrecife Encantado' },
-    { path: '/habitats/oceano-2.png', name: 'Profundidades Místicas' },
+    { path: '/habitats/oceano-1.webp', name: 'Arrecife Encantado' },
+    { path: '/habitats/oceano-2.webp', name: 'Profundidades Místicas' },
   ],
   Montaña: [
-    { path: '/habitats/montana-1.png', name: 'Cumbre Celestial' },
-    { path: '/habitats/montana-2.png', name: 'Valle de Cristales' },
+    { path: '/habitats/montana-1.webp', name: 'Cumbre Celestial' },
+    { path: '/habitats/montana-2.webp', name: 'Valle de Cristales' },
   ],
   Volcán: [
-    { path: '/habitats/volcan-1.png', name: 'Caldera Mágica' },
-    { path: '/habitats/volcan-2.png', name: 'Cima en Erupción' },
+    { path: '/habitats/volcan-1.webp', name: 'Caldera Mágica' },
+    { path: '/habitats/volcan-2.webp', name: 'Cima en Erupción' },
   ],
   Ártico: [
-    { path: '/habitats/artico-1.png', name: 'Tundra Solar' },
-    { path: '/habitats/artico-2.png', name: 'Caverna de Hielo' },
+    { path: '/habitats/artico-1.webp', name: 'Tundra Solar' },
+    { path: '/habitats/artico-2.webp', name: 'Caverna de Hielo' },
   ],
 };
 
@@ -131,4 +131,4 @@ export function pickHabitatBackground(attrs: DinoAttributes): HabitatBackgroundV
 
 export const RARITY_STAR_COUNT: Record<Rarity, number> = RARITY_TIER_NUMBERS;
 
-export const CARD_BACK_PATH = '/card-back.png';
+export const CARD_BACK_PATH = '/card-back.webp';

@@ -145,7 +145,7 @@ export function Landing({ onStart }: LandingProps) {
           video's own rendered height at each breakpoint (w-52/w-72/w-80
           above), since the clip is close to 1:1 aspect. */}
       <img
-        src="/dino-discovery-logo.png"
+        src="/dino-discovery-logo.webp"
         alt="Dino Discovery"
         className="relative z-10 -mt-[73px] sm:-mt-[101px] md:-mt-[112px] w-full max-w-xs sm:max-w-sm md:max-w-md"
       />

@@ -48,10 +48,10 @@ Severity legend: **Critical** (broken/exposed/legally risky now) → **High** (s
 - **Issue:** Any uncaught render error white-screens the entire app with no recovery path — especially bad for a kids' product where the "explain what went wrong" audience is a child, not a developer.
 - **Fix:** Wrap the app (or at minimum the wizard/result/card subtree) in an ErrorBoundary that falls back to a friendly "something went wrong, try again" screen matching the existing error state styling.
 
-### 2.6 No WebP/AVIF anywhere, PNG-only
+### 2.6 No WebP/AVIF anywhere, PNG-only — ✅ FIXED 2026-07-02
 - **Category:** Performance
-- **Issue:** Every static image asset (medallions, habitats, card back, logo) ships as PNG only, no modern-format alternative. Compounds with 1.1 above.
-- **Fix:** Generate WebP versions alongside PNGs (or replace outright, since generated dino/card PNGs from OpenAI can't be WebP but static assets can) and serve via `<picture>` or a build step.
+- **Issue:** Every static image asset (medallions, habitats, card back, logo, loading eggs, wordmark) shipped as PNG only, no modern-format alternative. Compounded with 1.1 above.
+- **Fix applied:** Extended `scripts/optimize-images.mjs` to emit a `.webp` copy alongside each PNG it processes (also picked up the two assets 1.1 missed: loading eggs and the `dino-discovery-logo.png` wordmark). Switched every code reference (`cardTheme.ts`'s medallion/habitat/card-back paths, `Landing.tsx`'s wordmark, `LoadingDino.tsx`'s egg images) to the `.webp` path, with corresponding test updates. Deliberately **no `<picture>`/PNG fallback** — WebP has near-universal support and this codebase already has hard-won, documented experience that `<picture>`/CSS-transform tricks can silently fail inside `html2canvas`'s capture (used for the card download), so a plain `<img src="*.webp">` was preferred to avoid introducing that risk on the card's habitat/medallion/card-back images. PNG originals are kept in `public/` as source/fallback but aren't referenced by any code path. Verified via Playwright screenshots of the landing page and wizard tiles rendering correctly, plus the full test suite and production build passing unchanged. Total `public/` footprint: ~17MB (10.1MB PNG source + 4.6MB WebP served).
 
 ---
 
@@ -74,11 +74,11 @@ Severity legend: **Critical** (broken/exposed/legally risky now) → **High** (s
 - **Issue:** No `role="dialog"`, `aria-modal="true"`, no focus trap, no Escape-to-close handling. A screen-reader or keyboard user can lose their place or tab out to background content while the modal is open.
 - **Fix:** Add proper dialog ARIA attributes, trap focus within the modal while open, restore focus to the triggering element on close, and support Escape.
 
-### 3.4 `env(safe-area-inset-*)` never used despite `viewport-fit=cover`
+### 3.4 `env(safe-area-inset-*)` never used despite `viewport-fit=cover` — ✅ FIXED 2026-07-02
 - **Category:** Mobile
-- **Location:** `index.html` viewport meta, global CSS
-- **Issue:** The viewport is configured for edge-to-edge rendering but no safe-area insets are applied, so fixed/edge UI (buttons, card, footer) can sit under the iPhone notch or home-indicator bar on modern devices.
-- **Fix:** Add `padding: env(safe-area-inset-*)` to the outermost fixed-position/full-bleed containers.
+- **Location:** `index.html` viewport meta, `src/App.tsx`'s root `<main>`, `src/components/EmailGateModal.tsx`
+- **Issue:** The viewport is configured for edge-to-edge rendering but no safe-area insets were applied, so content near the top/bottom/sides could sit under the iPhone notch/Dynamic Island or home-indicator bar on modern devices.
+- **Fix applied:** Added `env(safe-area-inset-*)` padding to the app's root `<main>` element (covers every screen's content, not just literal `fixed`-position elements) and to `EmailGateModal`'s full-screen overlay (via `max(1rem, env(...))` so it doesn't lose its existing padding on non-notched devices). Falls back to `0` automatically where `env()` is unsupported. This app has no persistent fixed header/footer, so this is a defensive baseline rather than a fix for an observed visual bug — **unverified on a real notched device**, since Chromium/Playwright doesn't simulate safe-area insets.
 
 ### 3.5 No age gate or parental-consent flow
 - **Category:** Privacy/Legal

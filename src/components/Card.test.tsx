@@ -34,10 +34,10 @@ describe('Card', () => {
   it('composites a deterministically-picked habitat sub-biome behind the dino image', () => {
     render(<Card discovererName="Lucía" result={result} attrs={attrs} />);
     // pickHabitatBackground hashes all 5 attribute values; for this fixture
-    // it lands on variant 0 of Volcán: '/habitats/volcan-1.png' / 'Caldera Mágica'.
+    // it lands on variant 0 of Volcán: '/habitats/volcan-1.webp' / 'Caldera Mágica'.
     expect(screen.getByAltText('Entorno: Volcán')).toHaveAttribute(
       'src',
-      '/habitats/volcan-1.png'
+      '/habitats/volcan-1.webp'
     );
     // The sub-biome name ("Caldera Mágica") is rendered as a canvas-drawn
     // <img> (see useRotatedLabelImage in Card.tsx — needed so html2canvas
@@ -51,23 +51,23 @@ describe('Card', () => {
     render(<Card discovererName="Lucía" result={result} attrs={attrs} />);
     expect(screen.getByAltText('Tamaño: Gigante')).toHaveAttribute(
       'src',
-      '/icons/medallions/gigante.png'
+      '/icons/medallions/gigante.webp'
     );
     expect(screen.getByAltText('Dieta: Carnívoro')).toHaveAttribute(
       'src',
-      '/icons/medallions/carnivoro.png'
+      '/icons/medallions/carnivoro.webp'
     );
     expect(screen.getByAltText('Característica: Cuernos')).toHaveAttribute(
       'src',
-      '/icons/medallions/cuernos.png'
+      '/icons/medallions/cuernos.webp'
     );
     expect(screen.getByAltText('Personalidad: Feroz')).toHaveAttribute(
       'src',
-      '/icons/medallions/feroz.png'
+      '/icons/medallions/feroz.webp'
     );
     expect(screen.getByAltText('Hábitat: Volcán')).toHaveAttribute(
       'src',
-      '/icons/medallions/volcan.png'
+      '/icons/medallions/volcan.webp'
     );
   });
 

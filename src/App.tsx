@@ -215,7 +215,7 @@ export default function App() {
   }
 
   return (
-    <main className="min-h-screen grid-overlay text-cream font-body">
+    <main className="min-h-screen grid-overlay text-cream font-body pt-[env(safe-area-inset-top)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]">
       {flowState === 'landing' && <Landing onStart={() => setFlowState('wizard')} />}
 
       {flowState === 'wizard' && wizardStep === 0 && (
