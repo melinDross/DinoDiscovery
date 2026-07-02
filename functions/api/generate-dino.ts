@@ -8,6 +8,7 @@ import { generateDinoImage } from '../lib/openai';
 import { storeImageInR2, type R2BucketLike } from '../lib/r2';
 import { isValidAdminKey } from '../lib/adminAuth';
 import { saveResult } from '../lib/results';
+import { readJsonBody } from '../lib/requestBody';
 
 interface Env {
   RATE_LIMIT_KV: KVLike;
@@ -24,6 +25,11 @@ const VALID_HABITATS = ['Selva', 'Desierto', 'Océano', 'Montaña', 'Volcán', '
 const VALID_DIETS = ['Carnívoro', 'Herbívoro', 'Omnívoro', 'Oófago'];
 const VALID_FEATURES = ['Cuernos', 'Alas', 'Escamas coloridas', 'Cola poderosa', 'Armadura', 'Súper garras'];
 const VALID_PERSONALITIES = ['Feroz', 'Amigable', 'Veloz', 'Sigiloso'];
+// The whole request is 5 short enum strings plus a capped discoverer name —
+// nowhere near this generous, but it bounds a malicious oversized body.
+const MAX_BODY_BYTES = 2000;
+const MAX_DISCOVERER_NAME_LENGTH = 40;
+const CONTROL_CHARS = /[\x00-\x1f\x7f]/g;
 
 function isValidRequest(body: unknown): body is GenerateDinoRequest {
   if (typeof body !== 'object' || body === null) return false;
@@ -37,6 +43,10 @@ function isValidRequest(body: unknown): body is GenerateDinoRequest {
     typeof b.discovererName === 'string' &&
     b.discovererName.trim().length > 0
   );
+}
+
+function sanitizeDiscovererName(name: string): string {
+  return name.replace(CONTROL_CHARS, '').trim().slice(0, MAX_DISCOVERER_NAME_LENGTH);
 }
 
 export async function onRequestPost(context: { request: Request; env: Env }): Promise<Response> {
@@ -54,14 +64,18 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     }
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ error: 'API_ERROR', message: 'Cuerpo de la petición inválido' }, { status: 400 });
+  const bodyResult = await readJsonBody(request, MAX_BODY_BYTES);
+  if (!bodyResult.ok) {
+    return Response.json({ error: 'API_ERROR', message: bodyResult.message }, { status: bodyResult.status });
   }
+  const body = bodyResult.body;
 
   if (!isValidRequest(body)) {
+    return Response.json({ error: 'API_ERROR', message: 'Atributos inválidos' }, { status: 400 });
+  }
+
+  const discovererName = sanitizeDiscovererName(body.discovererName);
+  if (discovererName.length === 0) {
     return Response.json({ error: 'API_ERROR', message: 'Atributos inválidos' }, { status: 400 });
   }
 
@@ -82,7 +96,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       commonName: cached.commonName,
       description: cached.description,
       imageKey: cached.imageKey,
-      discovererName: body.discovererName,
+      discovererName,
       attrs,
       createdAt: Date.now(),
       email: null,
@@ -142,7 +156,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       commonName: text.commonName,
       description: text.description,
       imageKey: cacheKey,
-      discovererName: body.discovererName,
+      discovererName,
       attrs,
       createdAt: Date.now(),
       email: null,

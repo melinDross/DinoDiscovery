@@ -54,4 +54,9 @@ describe('ResultScreen', () => {
     expect(screen.getAllByText(/^DX-[0-9A-Z]{3}-[0-9A-Z]{3}$/).length).toBeGreaterThan(0);
     expect(screen.getAllByText('Raro').length).toBeGreaterThan(0);
   });
+
+  it('announces the discovered dino to screen readers via an aria-live region', () => {
+    render(<ResultScreen result={result} attrs={attrs} discovererName="Lucía" onDownloadClick={() => {}} onRestart={() => {}} />);
+    expect(screen.getByRole('status')).toHaveTextContent('Volcanrex');
+  });
 });

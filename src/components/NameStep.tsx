@@ -18,7 +18,7 @@ export function NameStep({ value, onChange, onNext }: NameStepProps) {
         onChange={(e) => onChange(e.target.value)}
         placeholder="Escribe tu nombre"
         aria-label="Tu nombre"
-        className="w-full px-4 py-3 bg-bg border-2 border-brand/20 focus:outline-none focus:border-brand text-lg text-center text-cream placeholder:text-moss"
+        className="w-full px-4 py-3 bg-bg border-2 border-brand/20 focus:outline-none focus:border-brand focus-visible:ring-2 focus-visible:ring-brand-light text-lg text-center text-cream placeholder:text-moss"
       />
       <button
         type="button"

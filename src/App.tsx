@@ -1,12 +1,20 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Landing } from './components/Landing';
 import { WizardShell } from './components/WizardShell';
 import { NameStep } from './components/NameStep';
 import { AttributeGroup } from './components/AttributeGroup';
 import { LoadingDino } from './components/LoadingDino';
-import { ResultScreen } from './components/ResultScreen';
 import { EmailGateModal } from './components/EmailGateModal';
-import { Card } from './components/Card';
+
+// Only needed once a discovery is complete (flowState === 'result') — split
+// out of the main bundle so visitors who bounce earlier in the wizard don't
+// pay for the card's rendering/rarity/foil logic. Card is a forwardRef
+// component; ref forwarding through React.lazy works fine (React resolves
+// the lazy element to the real component before attaching the ref).
+const ResultScreen = lazy(() =>
+  import('./components/ResultScreen').then((m) => ({ default: m.ResultScreen }))
+);
+const Card = lazy(() => import('./components/Card').then((m) => ({ default: m.Card })));
 import { SIZES, HABITATS, DIETS, FEATURES, PERSONALITIES } from './data/attributes';
 import { isSelectionComplete } from './validation';
 import {
@@ -310,7 +318,7 @@ export default function App() {
       )}
 
       {flowState === 'result' && result && currentAttrs && (
-        <>
+        <Suspense fallback={<LoadingDino isDone={false} onTransitionEnd={() => {}} />}>
           <ResultScreen
             result={result}
             attrs={currentAttrs}
@@ -321,7 +329,7 @@ export default function App() {
           <div className="fixed -left-[9999px] top-0" aria-hidden="true">
             <Card ref={certificateRef} discovererName={discovererName} result={result} attrs={currentAttrs} />
           </div>
-        </>
+        </Suspense>
       )}
 
       {showEmailGate && (

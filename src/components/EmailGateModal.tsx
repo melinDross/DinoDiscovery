@@ -36,7 +36,7 @@ export function EmailGateModal({ onConfirm, onCancel }: EmailGateModalProps) {
           autoComplete="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full px-3 py-2 bg-surface2 border border-brand/20 text-cream focus:outline-none focus:border-brand"
+          className="w-full px-3 py-2 bg-surface2 border border-brand/20 text-cream focus:outline-none focus:border-brand focus-visible:ring-2 focus-visible:ring-brand-light"
         />
         {error && <p className="text-red-400 mt-1 text-sm">{error}</p>}
         <div className="flex gap-2 mt-4">

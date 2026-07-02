@@ -279,4 +279,47 @@ describe('onRequestPost /api/generate-dino', () => {
     expect(json.error).toBe('API_ERROR');
     expect(json.message).not.toMatch(/Anthropic/);
   });
+
+  it('truncates a discoverer name longer than 40 characters before storing it', async () => {
+    const env = createEnv();
+    const longName = 'A'.repeat(100);
+    const response = await onRequestPost({
+      request: createRequest({ ...validBody, discovererName: longName }, '11.0.0.1'),
+      env,
+    } as any);
+    const json = (await response.json()) as any;
+    const stored = JSON.parse((await env.RESULTS_KV.get(`result:${json.resultId}`))!);
+    expect(stored.discovererName).toBe('A'.repeat(40));
+  });
+
+  it('strips control characters from the discoverer name', async () => {
+    const env = createEnv();
+    const response = await onRequestPost({
+      request: createRequest({ ...validBody, discovererName: 'Lu\x00c\x1fía' }, '11.0.0.2'),
+      env,
+    } as any);
+    const json = (await response.json()) as any;
+    const stored = JSON.parse((await env.RESULTS_KV.get(`result:${json.resultId}`))!);
+    expect(stored.discovererName).toBe('Lucía');
+  });
+
+  it('rejects a discoverer name that is only control characters after sanitizing', async () => {
+    const env = createEnv();
+    const response = await onRequestPost({
+      request: createRequest({ ...validBody, discovererName: '\x00\x01\x02' }, '11.0.0.3'),
+      env,
+    } as any);
+    expect(response.status).toBe(400);
+  });
+
+  it('rejects a request body larger than the size limit', async () => {
+    const env = createEnv();
+    const request = new Request('https://example.com/api/generate-dino', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'CF-Connecting-IP': '11.0.0.4' },
+      body: JSON.stringify({ ...validBody, discovererName: 'A'.repeat(5000) }),
+    });
+    const response = await onRequestPost({ request, env } as any);
+    expect(response.status).toBe(413);
+  });
 });

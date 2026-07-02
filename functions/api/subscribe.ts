@@ -2,6 +2,11 @@ import { checkAndIncrementRateLimit, type KVLike } from '../lib/rateLimit';
 import { getResult, setResultEmail } from '../lib/results';
 import { subscribeToKitForm } from '../lib/kit';
 import { isValidEmail } from '../../shared/validateEmail';
+import { readJsonBody } from '../lib/requestBody';
+
+// A resultId (UUID) plus an email address — nowhere near this generous,
+// but it bounds a malicious oversized body.
+const MAX_BODY_BYTES = 2000;
 
 interface Env {
   RATE_LIMIT_KV: KVLike;
@@ -33,12 +38,11 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     );
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ error: 'API_ERROR', message: 'Cuerpo de la petición inválido' }, { status: 400 });
+  const bodyResult = await readJsonBody(request, MAX_BODY_BYTES);
+  if (!bodyResult.ok) {
+    return Response.json({ error: 'API_ERROR', message: bodyResult.message }, { status: bodyResult.status });
   }
+  const body = bodyResult.body;
 
   if (!isValidRequest(body)) {
     return Response.json({ error: 'API_ERROR', message: 'Petición inválida' }, { status: 400 });

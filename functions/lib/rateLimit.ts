@@ -11,11 +11,23 @@ interface RateLimitRecord {
   windowStart: number;
 }
 
+// IPs are PII; hashing before use as a KV key means the raw address isn't
+// sitting in plaintext in KV values/keys (visible via dashboard access,
+// backups, etc.) for something that's only ever used as an opaque bucket
+// identifier, never read back as an address.
+async function hashIdentifier(identifier: string): Promise<string> {
+  const bytes = new TextEncoder().encode(identifier);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 export async function checkAndIncrementRateLimit(
   kv: KVLike,
   ip: string
 ): Promise<{ allowed: boolean; retryAfterSeconds: number }> {
-  const key = `ratelimit:${ip}`;
+  const key = `ratelimit:${await hashIdentifier(ip)}`;
   const raw = await kv.get(key);
   const now = Date.now();
 

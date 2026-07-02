@@ -119,19 +119,21 @@ Status legend: ✅ fixed · 🟡 partially fixed · (no marker) not yet addresse
 
 ---
 
-## 4. Low
+## ✅ 4. Low
 
-- **Discoverer name has no length/content cap** — unbounded KV value growth from freeform input. (`functions/api/generate-dino.ts`) — cap length server-side (e.g. 40 chars) and strip control characters.
-- **No app-level request-body size limit** on `/api/generate-dino` / `/api/subscribe` — add an explicit byte-size check before parsing JSON.
-- **No CSP or other security headers** (no `public/_headers` file) — add a baseline CSP, `X-Content-Type-Options: nosniff`, `Referrer-Policy` via Cloudflare Pages `_headers`.
-- **`functions/images/[key].ts` passes the URL param straight to R2 `.get()`** with no allowlist/format check — low risk since R2 bucket scoping already contains blast radius, but worth a basic key-format validation (expects only generated hash-like keys).
-- **Raw (unhashed) IP used as a KV key component** for rate limiting — consider hashing (e.g. SHA-256) the IP before using it as a key, since it's PII and KV values/keys may be more widely visible (dashboard access, backups) than necessary.
-- **No `robots.txt` / `sitemap.xml`** — add both; trivial and free SEO hygiene for a public site.
-- **No JSON-LD structured data** — add a minimal `WebApplication` or `Product`/`Game`-type JSON-LD block to `index.html`.
-- **Text inputs' focus state is border-color only, no visible ring** — add a visible `focus-visible` ring for keyboard users, since color-only focus indication can fail WCAG 2.4.7 for users with low contrast sensitivity.
-- **No `aria-live` announcement on result-screen transition** — after the loading screen completes, screen-reader users get no announcement that the result is ready; add a visually-hidden `aria-live="polite"` region.
-- **Single JS bundle, no code-splitting** (436KB/122KB gzip) — not large enough to be urgent, but `React.lazy`-splitting the result/card screens from the landing/wizard bundle would shrink initial load.
-- **`discovererName` freeform, exposed via unauthenticated `/r/:id`** — low risk (no auth data attached), but worth noting the shared-link path has zero access control by design; confirm this is intentional and acceptable.
+All items below fixed 2026-07-02, except the last one (reviewed and confirmed intentional, no change needed).
+
+- ✅ **Discoverer name has no length/content cap** — `sanitizeDiscovererName` in `generate-dino.ts` now trims to 40 characters and strips control characters before the name is ever written to KV; a name that's nothing left after sanitizing (e.g. control-characters-only) is rejected with the standard 400. Tests added for both truncation and control-character stripping.
+- ✅ **No app-level request-body size limit** — new `functions/lib/requestBody.ts`'s `readJsonBody(request, maxBytes)` rejects oversized bodies via `Content-Length` up front (no read) and re-checks actual byte length as a fallback for clients that omit/lie about that header; wired into both `/api/generate-dino` and `/api/subscribe` with a 2000-byte cap (every real payload for either is a handful of short strings). Tests cover both rejection paths plus the valid/invalid-JSON cases.
+- ✅ **No CSP or other security headers** — added `public/_headers` with a baseline CSP (`default-src 'self'` plus targeted allowances for Google Fonts and the dino-cutout's `data:` image URLs), `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY`. Verified locally via `wrangler pages dev dist` (only real Cloudflare Pages serving honors `_headers`, not `vite preview`) plus a Playwright pass through the landing page and wizard — zero CSP violations logged.
+- ✅ **`functions/images/[key].ts` passes the URL param straight to R2 `.get()`** — now validated against `/^[a-f0-9]{64}\.png$/` (the exact shape every real image key has) before it ever reaches R2; anything else 404s immediately. Tests cover wrong-length, wrong-extension, and path-traversal-shaped keys never reaching the R2 mock.
+- ✅ **Raw (unhashed) IP used as a KV key component** — `hashIdentifier` in `rateLimit.ts` SHA-256-hashes the identifier before it's used as a KV key, covering both the per-IP limit and the `subscribe:`-prefixed variant. This resets everyone's rate-limit window once on deploy (old plaintext keys are simply orphaned, not migrated) — harmless.
+- ✅ **No `robots.txt` / `sitemap.xml`** — added both to `public/`; sitemap lists only the root `/` (per-result `/r/:id` pages are deliberately excluded — ephemeral, 90-day-TTL, per-visitor content, not stable indexable pages).
+- ✅ **No JSON-LD structured data** — added a `WebApplication` JSON-LD block to `index.html` (`name`, `url`, `description`, a free `Offer`).
+- ✅ **Text inputs' focus state is border-color only, no visible ring** — `NameStep` and `EmailGateModal`'s inputs both gained `focus-visible:ring-2 focus-visible:ring-brand-light` alongside their existing `focus:border-brand`.
+- ✅ **No `aria-live` announcement on result-screen transition** — `ResultScreen` now renders a visually-hidden `role="status" aria-live="polite"` paragraph announcing the discovered dino's name on mount. Test added asserting the announcement's content.
+- ✅ **Single JS bundle, no code-splitting** — `ResultScreen` and `Card` are now `React.lazy`-loaded from `App.tsx` behind one `<Suspense>` boundary (fallback reuses the existing `LoadingDino` component, no new asset). Main bundle: 213KB (68KB gzip), down further from the html2canvas-splitting fix; `Card`/`ResultScreen` load as separate ~10KB/~16KB chunks only once a discovery completes. `Card`'s `forwardRef` still works fine through `lazy()` for the hidden `html2canvas` capture node.
+- **`discovererName` freeform, exposed via unauthenticated `/r/:id`** — reviewed, not changed: confirmed intentional. The route has no sensitive data to protect (no auth, no PII beyond a freeform name) and the whole point is a shareable link that works for anyone holding it, matching the physical-card metaphor the app is built around.
 
 ---
 
