@@ -35,7 +35,10 @@ node scripts/generate-landing-logo.mjs          # public/landing-logo.png
 node scripts/generate-medallion-icons.mjs       # public/icons/medallions/*.png (27 files)
 node scripts/remove-medallion-backgrounds.mjs   # post-process: adds real alpha transparency (no API key needed)
 node scripts/generate-card-back.mjs             # public/card-back.png
+node scripts/optimize-images.mjs                # resizes+recompresses all committed PNGs in place (no API key needed)
 ```
+
+**`scripts/optimize-images.mjs`**: a one-off (not part of the build) that resizes+recompresses the committed static PNGs in `public/` down to roughly their real display resolution (medallions to 320px max side, habitat art and card-back to 900px wide, landing-logo to 640px wide) using `sharp`'s palette/imagequant PNG encoder, overwriting the files in place. Run once already — took the asset set from ~106MB to ~10MB with no visible quality loss (spot-checked via Read on several medallions/habitats/card-back before committing). **Any future asset-generation script (`generate-medallion-icons.mjs`, `generate-card-back.mjs`, etc.) outputs full-resolution, uncompressed PNGs from the image API** — re-run `optimize-images.mjs` after regenerating any asset set, or the bloat comes right back.
 
 ### Deploy
 
