@@ -5,11 +5,13 @@ Scope: security, privacy/legal, accessibility, mobile/responsive, SEO/GEO, perfo
 
 Severity legend: **Critical** (broken/exposed/legally risky now) → **High** (should fix soon) → **Medium** → **Low** → **Nitpick/Informational**.
 
+Status legend: ✅ fixed · 🟡 partially fixed · (no marker) not yet addressed.
+
 ---
 
 ## 1. Critical
 
-### 1.1 ~90MB of unoptimized PNG assets served at tiny display sizes — ✅ FIXED 2026-07-02
+### ✅ 1.1 ~90MB of unoptimized PNG assets served at tiny display sizes (fixed 2026-07-02)
 - **Category:** Performance
 - **Location:** `public/icons/medallions/*.png` (~59MB, 27 files), `public/habitats/*.png` (~29MB, 12 files), plus `card-back.png`/`landing-logo.png`
 - **Issue:** Medallion icons render at 48–132px and habitat backgrounds fill a 420px-wide card, but the source PNGs were full-resolution (1024px+), uncompressed assets. This was by far the largest lever on load time, especially on mobile networks.
@@ -48,7 +50,7 @@ Severity legend: **Critical** (broken/exposed/legally risky now) → **High** (s
 - **Issue:** Any uncaught render error white-screens the entire app with no recovery path — especially bad for a kids' product where the "explain what went wrong" audience is a child, not a developer.
 - **Fix:** Wrap the app (or at minimum the wizard/result/card subtree) in an ErrorBoundary that falls back to a friendly "something went wrong, try again" screen matching the existing error state styling.
 
-### 2.6 No WebP/AVIF anywhere, PNG-only — ✅ FIXED 2026-07-02
+### ✅ 2.6 No WebP/AVIF anywhere, PNG-only (fixed 2026-07-02)
 - **Category:** Performance
 - **Issue:** Every static image asset (medallions, habitats, card back, logo, loading eggs, wordmark) shipped as PNG only, no modern-format alternative. Compounded with 1.1 above.
 - **Fix applied:** Extended `scripts/optimize-images.mjs` to emit a `.webp` copy alongside each PNG it processes (also picked up the two assets 1.1 missed: loading eggs and the `dino-discovery-logo.png` wordmark). Switched every code reference (`cardTheme.ts`'s medallion/habitat/card-back paths, `Landing.tsx`'s wordmark, `LoadingDino.tsx`'s egg images) to the `.webp` path, with corresponding test updates. Deliberately **no `<picture>`/PNG fallback** — WebP has near-universal support and this codebase already has hard-won, documented experience that `<picture>`/CSS-transform tricks can silently fail inside `html2canvas`'s capture (used for the card download), so a plain `<img src="*.webp">` was preferred to avoid introducing that risk on the card's habitat/medallion/card-back images. PNG originals are kept in `public/` as source/fallback but aren't referenced by any code path. Verified via Playwright screenshots of the landing page and wizard tiles rendering correctly, plus the full test suite and production build passing unchanged. Total `public/` footprint: ~17MB (10.1MB PNG source + 4.6MB WebP served).
@@ -74,7 +76,7 @@ Severity legend: **Critical** (broken/exposed/legally risky now) → **High** (s
 - **Issue:** No `role="dialog"`, `aria-modal="true"`, no focus trap, no Escape-to-close handling. A screen-reader or keyboard user can lose their place or tab out to background content while the modal is open.
 - **Fix:** Add proper dialog ARIA attributes, trap focus within the modal while open, restore focus to the triggering element on close, and support Escape.
 
-### 3.4 `env(safe-area-inset-*)` never used despite `viewport-fit=cover` — ✅ FIXED 2026-07-02
+### ✅ 3.4 `env(safe-area-inset-*)` never used despite `viewport-fit=cover` (fixed 2026-07-02)
 - **Category:** Mobile
 - **Location:** `index.html` viewport meta, `src/App.tsx`'s root `<main>`, `src/components/EmailGateModal.tsx`
 - **Issue:** The viewport is configured for edge-to-edge rendering but no safe-area insets were applied, so content near the top/bottom/sides could sit under the iPhone notch/Dynamic Island or home-indicator bar on modern devices.
@@ -85,7 +87,7 @@ Severity legend: **Critical** (broken/exposed/legally risky now) → **High** (s
 - **Issue:** Explicitly a kids' app, but nothing gates entry by age or requires a parent's involvement before the email-capture step. Low likelihood of enforcement action for a portfolio project, but worth a conscious decision rather than an oversight.
 - **Fix:** At minimum, add a short note near the email gate ("ask a grown-up to enter their email") — a full COPPA-compliant flow is likely out of scope for a prototype but should be a documented, deliberate choice.
 
-### 3.6 API keys never validated as non-empty before use — ✅ FIXED 2026-07-02
+### ✅ 3.6 API keys never validated as non-empty before use (fixed 2026-07-02)
 - **Category:** Code quality / Security
 - **Location:** `functions/lib/anthropic.ts`, `functions/lib/openai.ts`
 - **Issue:** If `ANTHROPIC_API_KEY`/`OPENAI_API_KEY` are missing or empty (misconfigured secret), the failure only surfaced as an opaque 401/500 from the upstream API deep in the request path, making misconfiguration hard to diagnose.
@@ -96,19 +98,19 @@ Severity legend: **Critical** (broken/exposed/legally risky now) → **High** (s
 - **Issue:** Once subscribed via Kit, the app gives no in-app way to find out how to unsubscribe (Kit's own emails presumably have an unsubscribe link, but this isn't verifiable from the repo and isn't mentioned anywhere in-app).
 - **Fix:** Mention in the consent copy that standard unsubscribe links will be included in emails.
 
-### 3.8 8 frontend files with no test coverage — mostly already false; remaining gap fixed 2026-07-02
+### ✅ 3.8 8 frontend files with no test coverage — mostly already false; remaining gap fixed 2026-07-02
 - **Category:** Code quality
 - **Location:** `utils/dinoCutout.ts`
 - **Issue:** On investigation, 7 of the 8 files this originally listed (`AttributeGroup`, `EmailGateModal`, `Landing`, `LoadingDino`, `NameStep`, `ResultScreen`, `WizardShell`) already had real `.test.tsx` files with meaningful assertions — this finding was stale/inaccurate for those. Only `utils/dinoCutout.ts`, the one CLAUDE.md itself calls out as "fragile" with a silent-failure mode, genuinely had zero coverage.
 - **Fix applied:** Extracted the chroma-key pixel math (previously inline in `cutoutDinoImage`) into an exported pure function `applyChromaKey(data: Uint8ClampedArray)`, so it's testable against a plain typed array without needing a real `<canvas>` 2D context (jsdom has none). Added `dinoCutout.test.ts` covering: exact-background-color pixels going fully transparent, far-from-background pixels staying fully opaque, the feather zone partially fading, multiple pixels being processed independently, and `cutoutDinoImage`'s fallback-to-original-URL path when `getContext('2d')` returns `null`.
 
-### 3.9 Render-blocking Google Fonts, possibly one unused family — ✅ FIXED 2026-07-02
+### ✅ 3.9 Render-blocking Google Fonts, possibly one unused family (fixed 2026-07-02)
 - **Category:** Performance
 - **Location:** `index.html`, `tailwind.config.js`
 - **Issue:** `preconnect` and `display=swap` were, on inspection, already in place — that part of the original finding was inaccurate. But `Bangers` (the `font-display` Tailwind token) was confirmed genuinely unused anywhere in `src/` (grepped for `font-display` excluding `font-display2`) — the card's "Terminal ARG" restyle moved it onto `font-mono` a while back and nothing else ever picked it up, so the font file was being downloaded on every page load for zero visual effect.
 - **Fix applied:** Removed `Bangers` from the Google Fonts request in `index.html` and deleted the corresponding `display` entry from `tailwind.config.js`'s `fontFamily` config, down to the two fonts (`Fredoka`/`display2`, `Space Grotesk`/`body`) that are actually used. Verified visually via Playwright that the landing page still renders correctly with the remaining fonts.
 
-### 3.10 No lazy-loading; `html2canvas` statically imported — partially fixed 2026-07-02
+### 🟡 3.10 No lazy-loading; `html2canvas` statically imported (partially fixed 2026-07-02)
 - **Category:** Performance
 - **Location:** `src/certificate.ts`
 - **Issue:** `html2canvas` (~200KB/46KB gzip) was only needed at the final "download card" step but was bundled into the main chunk, paid for by every visitor regardless of whether they ever reach that step.
