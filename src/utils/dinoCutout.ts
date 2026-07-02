@@ -17,20 +17,11 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-export async function cutoutDinoImage(imageUrl: string): Promise<string> {
-  const img = await loadImage(imageUrl);
-  const canvas = document.createElement('canvas');
-  canvas.width = img.naturalWidth;
-  canvas.height = img.naturalHeight;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) {
-    return imageUrl;
-  }
-
-  ctx.drawImage(img, 0, 0);
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const data = imageData.data;
-
+// Extracted so the chroma-key math itself can be unit-tested against a plain
+// Uint8ClampedArray, without needing a real <canvas> 2D context (jsdom has
+// none — see test-setup.ts). Mutates `data` in place, same as putImageData
+// expects. `data` is RGBA bytes, 4 per pixel.
+export function applyChromaKey(data: Uint8ClampedArray): void {
   for (let i = 0; i < data.length; i += 4) {
     const dr = data[i] - BACKGROUND_COLOR.r;
     const dg = data[i + 1] - BACKGROUND_COLOR.g;
@@ -44,7 +35,21 @@ export async function cutoutDinoImage(imageUrl: string): Promise<string> {
       data[i + 3] = Math.round(data[i + 3] * featherRatio);
     }
   }
+}
 
+export async function cutoutDinoImage(imageUrl: string): Promise<string> {
+  const img = await loadImage(imageUrl);
+  const canvas = document.createElement('canvas');
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    return imageUrl;
+  }
+
+  ctx.drawImage(img, 0, 0);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  applyChromaKey(imageData.data);
   ctx.putImageData(imageData, 0, 0);
   return canvas.toDataURL('image/png');
 }

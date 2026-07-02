@@ -55,4 +55,13 @@ describe('generateDinoImage', () => {
     expect(body.prompt).toContain('solid background color #0d1a0f');
     expect(body.prompt).not.toContain('white background');
   });
+
+  it('fails fast with a clear error when the API key is empty, without calling fetch', async () => {
+    const fakeFetch = vi.fn();
+
+    await expect(
+      generateDinoImage(attrs, '', fakeFetch as unknown as typeof fetch)
+    ).rejects.toThrow('OPENAI_API_KEY is missing or empty');
+    expect(fakeFetch).not.toHaveBeenCalled();
+  });
 });

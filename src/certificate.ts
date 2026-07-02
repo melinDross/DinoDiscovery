@@ -1,5 +1,3 @@
-import html2canvas from 'html2canvas';
-
 async function shareOrDownload(
   blob: Blob,
   fileName: string,
@@ -25,6 +23,11 @@ async function shareOrDownload(
 }
 
 export async function captureCertificateAsPng(element: HTMLElement, fileName: string): Promise<void> {
+  // Dynamically imported: html2canvas is only needed at this final
+  // "download the card" step, not on initial page load, so it shouldn't sit
+  // in the main bundle for every visitor who never gets this far.
+  const { default: html2canvas } = await import('html2canvas');
+
   // useCORS/allowTaint: defensive against the canvas silently "tainting"
   // (which makes toBlob() resolve null / throw with no visible error) if
   // any image this captures is ever served from a different origin than the

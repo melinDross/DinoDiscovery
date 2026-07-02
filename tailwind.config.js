@@ -23,11 +23,13 @@ export default {
         },
       },
       fontFamily: {
-        display: ['Bangers', 'cursive'],
         // Rounded "bubble" display font matching the logo's lettering —
-        // used for buttons project-wide alongside the `brand` palette
-        // above. Kept separate from `display` (Bangers), which the card
-        // and other non-button UI still use.
+        // used for buttons and headings project-wide alongside the `brand`
+        // palette above. The card itself uses Tailwind's built-in `font-mono`
+        // stack instead (see Card.tsx's "Terminal ARG" style), not this or
+        // `body`. An earlier `display`/Bangers token existed for a pre-rebrand
+        // fantasy look but is no longer referenced anywhere — removed along
+        // with the Bangers Google Fonts request once confirmed unused.
         display2: ['Fredoka', 'sans-serif'],
         body: ['"Space Grotesk"', 'sans-serif'],
       },

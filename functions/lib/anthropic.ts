@@ -11,6 +11,10 @@ export async function generateDinoText(
   apiKey: string,
   fetchFn: typeof fetch = fetch
 ): Promise<DinoText> {
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY is missing or empty');
+  }
+
   const prompt = `Crea un dinosaurio ficticio para niños con estos atributos:
 Tamaño: ${attrs.size}
 Hábitat: ${attrs.habitat}

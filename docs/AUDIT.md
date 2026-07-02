@@ -85,34 +85,35 @@ Severity legend: **Critical** (broken/exposed/legally risky now) → **High** (s
 - **Issue:** Explicitly a kids' app, but nothing gates entry by age or requires a parent's involvement before the email-capture step. Low likelihood of enforcement action for a portfolio project, but worth a conscious decision rather than an oversight.
 - **Fix:** At minimum, add a short note near the email gate ("ask a grown-up to enter their email") — a full COPPA-compliant flow is likely out of scope for a prototype but should be a documented, deliberate choice.
 
-### 3.6 API keys never validated as non-empty before use
+### 3.6 API keys never validated as non-empty before use — ✅ FIXED 2026-07-02
 - **Category:** Code quality / Security
 - **Location:** `functions/lib/anthropic.ts`, `functions/lib/openai.ts`
-- **Issue:** If `ANTHROPIC_API_KEY`/`OPENAI_API_KEY` are missing or empty (misconfigured secret), the failure only surfaces as an opaque 401/500 from the upstream API deep in the request path, making misconfiguration hard to diagnose.
-- **Fix:** Add a cheap startup/early-request check that fails fast with a clear "missing API key" error if the env var is empty.
+- **Issue:** If `ANTHROPIC_API_KEY`/`OPENAI_API_KEY` are missing or empty (misconfigured secret), the failure only surfaced as an opaque 401/500 from the upstream API deep in the request path, making misconfiguration hard to diagnose.
+- **Fix applied:** Both `generateDinoText` and `generateDinoImage` now throw a clear `"ANTHROPIC_API_KEY is missing or empty"` / `"OPENAI_API_KEY is missing or empty"` error immediately if the key is falsy, before making any network call. This is caught by `generate-dino.ts`'s existing try/catch (client still gets the same generic `API_ERROR` 502 response — no API contract change), but the server-side log (`console.error('generate-dino failed:', ...)`) now says exactly what's wrong instead of surfacing an opaque upstream status code. Added tests asserting the error message and that `fetch` is never called when the key is empty.
 
 ### 3.7 No unsubscribe mechanism referenced in-app
 - **Category:** Privacy/Legal
 - **Issue:** Once subscribed via Kit, the app gives no in-app way to find out how to unsubscribe (Kit's own emails presumably have an unsubscribe link, but this isn't verifiable from the repo and isn't mentioned anywhere in-app).
 - **Fix:** Mention in the consent copy that standard unsubscribe links will be included in emails.
 
-### 3.8 8 frontend files with no test coverage
+### 3.8 8 frontend files with no test coverage — mostly already false; remaining gap fixed 2026-07-02
 - **Category:** Code quality
-- **Location:** `AttributeGroup`, `EmailGateModal`, `Landing`, `LoadingDino`, `NameStep`, `ResultScreen`, `WizardShell`, `utils/dinoCutout.ts`
-- **Issue:** `dinoCutout.ts` in particular is called out in CLAUDE.md as "fragile" with a silent-failure mode, yet has no test coverage. The others are core flow components.
-- **Fix:** Prioritize `dinoCutout.ts` (pure-function chroma-key logic is testable without a real DOM/canvas edge cases) and `EmailGateModal` (form validation logic) first.
+- **Location:** `utils/dinoCutout.ts`
+- **Issue:** On investigation, 7 of the 8 files this originally listed (`AttributeGroup`, `EmailGateModal`, `Landing`, `LoadingDino`, `NameStep`, `ResultScreen`, `WizardShell`) already had real `.test.tsx` files with meaningful assertions — this finding was stale/inaccurate for those. Only `utils/dinoCutout.ts`, the one CLAUDE.md itself calls out as "fragile" with a silent-failure mode, genuinely had zero coverage.
+- **Fix applied:** Extracted the chroma-key pixel math (previously inline in `cutoutDinoImage`) into an exported pure function `applyChromaKey(data: Uint8ClampedArray)`, so it's testable against a plain typed array without needing a real `<canvas>` 2D context (jsdom has none). Added `dinoCutout.test.ts` covering: exact-background-color pixels going fully transparent, far-from-background pixels staying fully opaque, the feather zone partially fading, multiple pixels being processed independently, and `cutoutDinoImage`'s fallback-to-original-URL path when `getContext('2d')` returns `null`.
 
-### 3.9 Render-blocking Google Fonts, possibly one unused family
+### 3.9 Render-blocking Google Fonts, possibly one unused family — ✅ FIXED 2026-07-02
 - **Category:** Performance
-- **Location:** `index.html`
-- **Issue:** Three font families loaded via a render-blocking `<link>`; CLAUDE.md's rebrand notes suggest `Bangers`/`font-display` may no longer be used anywhere except intentionally excluded card styling — worth confirming and dropping if truly unused.
-- **Fix:** Add `font-display: swap` (if not already implied by Google Fonts' default), preconnect to `fonts.gstatic.com`, and audit actual usage of each loaded family before keeping all three.
+- **Location:** `index.html`, `tailwind.config.js`
+- **Issue:** `preconnect` and `display=swap` were, on inspection, already in place — that part of the original finding was inaccurate. But `Bangers` (the `font-display` Tailwind token) was confirmed genuinely unused anywhere in `src/` (grepped for `font-display` excluding `font-display2`) — the card's "Terminal ARG" restyle moved it onto `font-mono` a while back and nothing else ever picked it up, so the font file was being downloaded on every page load for zero visual effect.
+- **Fix applied:** Removed `Bangers` from the Google Fonts request in `index.html` and deleted the corresponding `display` entry from `tailwind.config.js`'s `fontFamily` config, down to the two fonts (`Fredoka`/`display2`, `Space Grotesk`/`body`) that are actually used. Verified visually via Playwright that the landing page still renders correctly with the remaining fonts.
 
-### 3.10 No lazy-loading; `html2canvas` statically imported
+### 3.10 No lazy-loading; `html2canvas` statically imported — partially fixed 2026-07-02
 - **Category:** Performance
-- **Location:** `src/certificate.ts` (or wherever `html2canvas` is imported), general image tags
-- **Issue:** `html2canvas` is only needed at the final "download card" step but is bundled into the main chunk. No images use `loading="lazy"`.
-- **Fix:** Dynamic `import('html2canvas')` at the point of use; add `loading="lazy"` to below-fold images (habitat/medallion galleries if any exist outside the active card).
+- **Location:** `src/certificate.ts`
+- **Issue:** `html2canvas` (~200KB/46KB gzip) was only needed at the final "download card" step but was bundled into the main chunk, paid for by every visitor regardless of whether they ever reach that step.
+- **Fix applied:** Changed the top-level `import html2canvas from 'html2canvas'` to a dynamic `await import('html2canvas')` inside `captureCertificateAsPng`, at the point of use. This split the production bundle from one ~436KB (122KB gzip) chunk into a ~238KB (76KB gzip) main chunk plus a separate ~200KB `html2canvas` chunk loaded on demand. `certificate.test.ts`'s `vi.mock('html2canvas', ...)` continues to work transparently through the dynamic import.
+- **Not done:** the `loading="lazy"` half of this finding. On inspection, every `<img>` in this app renders on a single active screen at a time (wizard step, result card, loading animation) with no scrollable off-screen content — there's no genuine "below the fold" image anywhere in the current layout, so `loading="lazy"` has no real target here and risks visibly delaying images that should appear immediately. Revisit if the layout ever grows a scrolling gallery or similar.
 
 ---
 

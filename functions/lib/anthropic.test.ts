@@ -77,4 +77,13 @@ describe('generateDinoText', () => {
       generateDinoText(attrs, 'fake-key', fakeFetch as unknown as typeof fetch)
     ).rejects.toThrow('Anthropic API error: 500');
   });
+
+  it('fails fast with a clear error when the API key is empty, without calling fetch', async () => {
+    const fakeFetch = vi.fn();
+
+    await expect(
+      generateDinoText(attrs, '', fakeFetch as unknown as typeof fetch)
+    ).rejects.toThrow('ANTHROPIC_API_KEY is missing or empty');
+    expect(fakeFetch).not.toHaveBeenCalled();
+  });
 });
