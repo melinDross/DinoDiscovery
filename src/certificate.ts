@@ -23,34 +23,30 @@ async function shareOrDownload(
 }
 
 export async function captureCertificateAsPng(element: HTMLElement, fileName: string): Promise<void> {
-  // Dynamically imported: html2canvas is only needed at this final
-  // "download the card" step, not on initial page load, so it shouldn't sit
-  // in the main bundle for every visitor who never gets this far.
-  const { default: html2canvas } = await import('html2canvas');
-
-  // useCORS/allowTaint: defensive against the canvas silently "tainting"
-  // (which makes toBlob() resolve null / throw with no visible error) if
-  // any image this captures is ever served from a different origin than the
-  // page — currently true (images load same-origin via /images/[key].ts),
-  // but that's an easy invariant to break later without anything here
-  // flagging it.
+  // Dynamically imported: only needed at this final "download the card"
+  // step, not on initial page load, so it shouldn't sit in the main bundle
+  // for every visitor who never gets this far.
   //
-  // backgroundColor: null — html2canvas defaults to an opaque white canvas
-  // background. The card's rounded corners are CSS `overflow-hidden`
-  // clipping on a rectangular element, not an actual alpha shape, so
-  // html2canvas (which rasterizes the full bounding box) was filling the
-  // area outside the rounded corners with solid white instead of leaving
-  // it transparent — a visible white halo/corner artifact in the
-  // downloaded PNG that isn't present on screen. `null` makes the canvas
-  // background transparent, matching what's actually visible on screen
-  // (nothing outside the card's own shape).
-  const canvas = await html2canvas(element, {
+  // modern-screenshot, not html2canvas: html2canvas re-implements CSS
+  // rendering itself (manually redrawing gradients/transforms/filters onto
+  // a canvas), which is exactly why it kept producing bugs here that only
+  // showed up in the captured output, never live — the rotated habitat-tag
+  // label rendering blank, and a white-corner artifact around the card's
+  // rounded corners (see git history / CLAUDE.md for both). modern-screenshot
+  // instead serializes the DOM into an SVG <foreignObject> and lets the
+  // *browser's real rendering engine* draw it, then rasterizes that — so
+  // CSS features render exactly as they do live, by construction, instead
+  // of via a second, imperfect reimplementation.
+  const { domToBlob } = await import('modern-screenshot');
+
+  // backgroundColor: null keeps the canvas transparent outside the card's
+  // own rounded-corner shape, matching what's visible on screen (see the
+  // html2canvas-era white-corner bug this avoided by construction above).
+  const blob = await domToBlob(element, {
     scale: 2,
-    useCORS: true,
-    allowTaint: false,
     backgroundColor: null,
+    type: 'image/png',
   });
-  const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
   if (!blob) {
     throw new Error('No se pudo generar la imagen del certificado');
   }

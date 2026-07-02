@@ -40,10 +40,11 @@ describe('Card', () => {
       '/habitats/volcan-1.webp'
     );
     // The sub-biome name ("Caldera Mágica") is rendered as a canvas-drawn
-    // <img> (see useRotatedLabelImage in Card.tsx — needed so html2canvas
-    // captures the rotated label correctly), not a text node — jsdom has
-    // no real canvas 2d context (see test-setup.ts), so that image never
-    // actually renders here and isn't asserted on in this environment.
+    // <img> (see useRotatedLabelImage in Card.tsx — needed so the rotated
+    // label survives the capture step regardless of capture library), not
+    // a text node — jsdom has no real canvas 2d context (see
+    // test-setup.ts), so that image never actually renders here and isn't
+    // asserted on in this environment.
     expect(screen.getByAltText('Volcanrex')).toHaveAttribute('src', '/images/abc.png');
   });
 

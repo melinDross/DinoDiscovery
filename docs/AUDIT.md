@@ -169,6 +169,16 @@ Of everything above, the two most consequential items that aren't tracked anywhe
 
 ---
 
+## Post-audit follow-up: html2canvas replaced with modern-screenshot (2026-07-02)
+
+Not originally a numbered finding in this audit, but raised directly by the user after this audit shipped: the card download's rendering fidelity had already caused two real, user-reported bugs (the rotated habitat-tag label rendering blank, and a white-corner artifact around the card's rounded corners — both documented in CLAUDE.md). The root cause of both was architectural, not incidental: **html2canvas re-implements CSS rendering itself** (manually redrawing gradients/transforms/filters onto a canvas) rather than using the browser's real rendering engine, so any CSS feature it doesn't perfectly replicate silently breaks only in the captured output, never live — exactly the failure mode both prior bugs had.
+
+**Fix:** swapped to `modern-screenshot` (MIT, actively maintained), which serializes the DOM into an SVG `<foreignObject>` and lets the browser itself render it before rasterizing — CSS features render correctly by construction instead of via a second, imperfect reimplementation. Same call shape, dynamically imported at the point of use as before. Bonus: the on-demand chunk shrank from html2canvas's ~200KB (~47KB gzip) to modern-screenshot's ~24KB (~9KB gzip). The CSP's `connect-src` was defensively widened to allow `fonts.gstatic.com`/`fonts.googleapis.com`, since the library's font-embedding step can fetch font files to inline them (not observed to trigger for the actual captured `Card`, which only uses `font-mono`, but left in for future-proofing). Verified via updated unit tests, a clean production build, and a live `wrangler pages dev` + Playwright pass with zero console/CSP errors.
+
+**Not yet verified:** the actual downloaded PNG's pixels, against a real (non-placeholder) generated card — this environment has no API keys to drive a full generation. Both prior html2canvas bugs were only ever caught by literally running the capture and inspecting the output, not by live-browser or unit-test checks; the same standard applies here before this can be called fully verified. This also doesn't change the separate, still-open item below (dino 3D pop-out clipping at the capture's bounding box) — that's a bounding-box behavior any DOM-capture library shares, not something either library's rendering-fidelity difference fixes.
+
+---
+
 ## Suggested triage order
 
 1. Privacy policy + consent checkbox at email gate (2.1, 2.2) — legal exposure, cheap to add.

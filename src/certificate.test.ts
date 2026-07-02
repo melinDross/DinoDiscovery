@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-vi.mock('html2canvas', () => ({
-  default: vi.fn(),
+vi.mock('modern-screenshot', () => ({
+  domToBlob: vi.fn(),
 }));
 
-import html2canvas from 'html2canvas';
+import { domToBlob } from 'modern-screenshot';
 import { captureCertificateAsPng, shareDinoImage } from './certificate';
 
 describe('captureCertificateAsPng', () => {
@@ -16,12 +16,9 @@ describe('captureCertificateAsPng', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders the element to canvas and triggers a download', async () => {
+  it('renders the element to a blob and triggers a download', async () => {
     const fakeBlob = new Blob(['fake'], { type: 'image/png' });
-    const fakeCanvas = {
-      toBlob: (cb: (blob: Blob | null) => void) => cb(fakeBlob),
-    } as unknown as HTMLCanvasElement;
-    vi.mocked(html2canvas).mockResolvedValue(fakeCanvas);
+    vi.mocked(domToBlob).mockResolvedValue(fakeBlob);
 
     const element = document.createElement('div');
     const clickSpy = vi.fn();
@@ -34,13 +31,21 @@ describe('captureCertificateAsPng', () => {
 
     await captureCertificateAsPng(element, 'certificado-volcanrex.png');
 
-    expect(html2canvas).toHaveBeenCalledWith(element, {
+    expect(domToBlob).toHaveBeenCalledWith(element, {
       scale: 2,
-      useCORS: true,
-      allowTaint: false,
       backgroundColor: null,
+      type: 'image/png',
     });
     expect(clickSpy).toHaveBeenCalled();
+  });
+
+  it('throws a clear error when rendering produces no blob', async () => {
+    vi.mocked(domToBlob).mockResolvedValue(null as unknown as Blob);
+    const element = document.createElement('div');
+
+    await expect(captureCertificateAsPng(element, 'certificado-volcanrex.png')).rejects.toThrow(
+      'No se pudo generar la imagen del certificado'
+    );
   });
 });
 

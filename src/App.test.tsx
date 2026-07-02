@@ -77,8 +77,8 @@ describe('App wizard flow', () => {
 
       expect(screen.queryByRole('heading', { name: 'Volcanrex' })).not.toBeInTheDocument();
       // Querying by heading role (not findByText) because the off-screen
-      // Certificate (kept mounted for html2canvas capture) also renders the
-      // dino's commonName as a <p>, so a plain text query matches twice.
+      // Certificate (kept mounted for the download capture) also renders
+      // the dino's commonName as a <p>, so a plain text query matches twice.
       expect(
         await screen.findByRole('heading', { name: 'Volcanrex' }, { timeout: 2000 })
       ).toBeInTheDocument();

@@ -112,16 +112,20 @@ function useDescriptionClamp(description: string): {
 }
 
 // The habitat tag's rotated label is pre-rendered onto a <canvas> and shown
-// as a plain <img> data URL, rather than rotated HTML/CSS or SVG text.
-// html2canvas does not reliably capture a CSS `transform: rotate()` on
-// text — three different approaches (flex-centered rotate, absolute-
-// positioned translate+rotate, and writing-mode:vertical-rl) all rendered
-// correctly live in the browser but came out completely blank in the
-// captured PNG, and an SVG <text> with an SVG-native rotate transform
-// mis-measured its own layout and clipped most of the text even live. A
-// canvas-drawn bitmap sidesteps all of this: html2canvas just copies
-// `<img>` bitmaps directly, so what's on screen is pixel-identical to
-// what gets captured.
+// as a plain <img> data URL, rather than rotated HTML/CSS or SVG text. This
+// dates back to when html2canvas was the capture library (src/certificate.ts
+// — since replaced with modern-screenshot, see that file): html2canvas did
+// not reliably capture a CSS `transform: rotate()` on text — three different
+// approaches (flex-centered rotate, absolute-positioned translate+rotate,
+// and writing-mode:vertical-rl) all rendered correctly live in the browser
+// but came out completely blank in the captured PNG, and an SVG <text> with
+// an SVG-native rotate transform mis-measured its own layout and clipped
+// most of the text even live. A canvas-drawn bitmap sidesteps all of this
+// regardless of which capture library is used — it's just an `<img>`
+// bitmap, so what's on screen is pixel-identical to what gets captured by
+// construction. Kept even after the html2canvas → modern-screenshot swap:
+// it's still the simplest way to guarantee this specific element survives
+// capture, and there's no reason to reintroduce risk here.
 function useRotatedLabelImage(
   text: string,
   widthPx: number,
@@ -160,13 +164,14 @@ export interface CardProps {
   // Normalized -1..1 tilt, from CardScene's live mouse/touch tilt state.
   // Drives the holo-foil sheen's position (see below) so it visibly sweeps
   // as the card is tilted, like real foil trading cards. Optional/defaulted
-  // so Card can still be used standalone (e.g. the hidden html2canvas
-  // capture node in App.tsx) without CardScene wiring this through.
+  // so Card can still be used standalone (e.g. the hidden capture node in
+  // App.tsx, captured via modern-screenshot) without CardScene wiring this
+  // through.
   foilTilt?: { x: number; y: number };
   // Shows a repeating diagonal watermark over the whole card. Only ever
   // passed by CardScene (the interactive, on-screen card) — the hidden
-  // capture node in App.tsx that html2canvas actually downloads renders a
-  // bare Card without this prop, so it stays clean. A phone screenshot of
+  // capture node in App.tsx that gets downloaded renders a bare Card
+  // without this prop, so it stays clean. A phone screenshot of
   // the on-screen card carries the watermark; the official PNG from the
   // email-gate download doesn't — the goal isn't blocking screenshots
   // (not possible from a web page), it's making the email-gated download
@@ -367,10 +372,10 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
 
             The rotated label itself is a pre-rendered canvas image
             (`useRotatedLabelImage`), not rotated HTML/CSS or SVG text —
-            see that hook's comment for why: html2canvas doesn't reliably
-            capture a CSS `transform: rotate()` on text, and an SVG
-            `<text>` with an SVG-native rotate mis-measured its own layout
-            and clipped most of the string even in the live browser. */}
+            see that hook's comment for the full history (an html2canvas
+            capture-time bug, since the capture library was swapped to
+            modern-screenshot) and why this bitmap approach is kept
+            regardless of which capture library is in use. */}
         <div className="absolute z-[15] pointer-events-none" style={artLayerStyle}>
           <div
             className="absolute left-0 top-[20%] bottom-[20%] w-7 border-r shadow-lg"
